@@ -27,24 +27,30 @@ public abstract class RepoService {
     
     public abstract boolean isScanSubmittedComment();
 
-    public void sendMergeComment(ScanRequest request, String comment){
+    public void sendMergeComment(ScanRequest request, String comment,boolean commentUpdate){
 
         try {
-            RepoComment commentToUpdate =
-                    PullRequestCommentsHelper.getCommentToUpdate(getComments(request), comment);
-            if (commentToUpdate !=  null) {
-                log.debug("Got candidate comment to update. comment: {}", commentToUpdate.getComment());
-                if (!PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
-                    log.debug("sendMergeComment: Comment should not be updated");
-                    return;
+            if(commentUpdate){
+                RepoComment commentToUpdate =
+                        PullRequestCommentsHelper.getCommentToUpdate(getComments(request), comment);
+                if (commentToUpdate !=  null) {
+                    log.debug("Got candidate comment to update. comment: {}", commentToUpdate.getComment());
+                    if (!PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
+                        log.debug("sendMergeComment: Comment should not be updated");
+                        return;
+                    }
+                    log.debug("sendMergeComment: Going to update {} pull request comment",
+                            request.getRepoType());
+                    updateComment(commentToUpdate.getCommentUrl(), comment, request);
+                } else {
+                    log.debug("sendMergeComment: Going to create a new {} pull request comment", request.getRepoType());
+                    addComment(request, comment);
                 }
-                log.debug("sendMergeComment: Going to update {} pull request comment",
-                          request.getRepoType());
-                updateComment(commentToUpdate.getCommentUrl(), comment, request);
-            } else {
+            }else {
                 log.debug("sendMergeComment: Going to create a new {} pull request comment", request.getRepoType());
                 addComment(request, comment);
             }
+
         }
         catch (Exception e) {
             // We "swallow" the exception so that the flow will not be terminated because of errors in GIT comments

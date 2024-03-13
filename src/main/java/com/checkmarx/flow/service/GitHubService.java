@@ -138,7 +138,7 @@ public class GitHubService extends RepoService {
     void processPull(ScanRequest request, ScanResults results) {
             String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
-            sendMergeComment(request, comment);
+            sendMergeComment(request, comment,isCommentUpdate());
     }
 
     public void updateComment(String baseUrl, String comment, ScanRequest scanRequest) {
@@ -641,7 +641,7 @@ public class GitHubService extends RepoService {
         }
         return result;
     }
-    
+    public boolean isCommentUpdate(){return this.properties.isCommentUpdate();}
     @Override
     public boolean isScanSubmittedComment() {
     	return this.properties.isScanSubmittedComment();

@@ -39,6 +39,9 @@ public class GitHubProperties extends RepoProperties {
     @Getter
     @Setter
     private Map<FindingSeverity,String> issueslabel;
+    @Getter
+    @Setter
+    private boolean commentUpdate =true;
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
         String format = "%s/%s/%s/issues/%s/comments";

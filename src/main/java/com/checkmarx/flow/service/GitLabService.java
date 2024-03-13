@@ -130,7 +130,7 @@ public class GitLabService extends RepoService {
         try {
             String comment = HTMLHelper.getMergeCommentMD(request, results,  properties);
             log.debug("comment: {}", comment);
-            sendMergeComment(request, comment);
+            sendMergeComment(request, comment,isCommentUpdate());
         } catch (HttpClientErrorException e){
             log.error("Error occurred while creating Merge Request comment", e);
             throw new GitLabClientException();
@@ -523,6 +523,8 @@ public class GitLabService extends RepoService {
                 scanRequest.getAdditionalMetadata(FlowConstants.MERGE_ID),
                 commentId);
     }
+
+    public boolean isCommentUpdate(){return this.properties.isCommentUpdate();}
 
 	@Override
 	public boolean isScanSubmittedComment() {
