@@ -2,7 +2,7 @@ package com.checkmarx.flow.dto.gitlab;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.beans.ConstructorProperties;
 
 public class Note {

@@ -295,7 +295,10 @@ public class BitbucketCloudController extends WebhookController {
                     .gitUrl(gitUrl)
                     .build();
 
-
+            if(body.getPush().getChanges().get(0).getCommits().get(0).getAuthor().getUsername()!=null)
+            {
+                request.setLatestCommitterEmail(body.getPush().getChanges().get(0).getCommits().get(0).getAuthor().getUsername());
+            }
             setScmInstance(controllerRequest, request);
             fillRequestWithAdditionalData(request, repository, body.toString());
             checkForConfigAsCode(request);

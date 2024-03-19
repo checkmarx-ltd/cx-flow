@@ -4,7 +4,6 @@ import com.checkmarx.flow.filter.CaseTransformingFilter;
 import com.checkmarx.flow.utils.ScanUtils;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -49,7 +48,7 @@ public class FlowConfig {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpComponentsClientHttpRequestFactory requestFactory = new
-                HttpComponentsClientHttpRequestFactory(HttpClientBuilder.create().useSystemProperties().build());
+                HttpComponentsClientHttpRequestFactory();
         requestFactory.setConnectTimeout(properties.getHttpConnectionTimeout());
         requestFactory.setReadTimeout(properties.getHttpReadTimeout());
         restTemplate.setRequestFactory(requestFactory);
@@ -82,7 +81,7 @@ public class FlowConfig {
                 .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
                 .build();
         HttpComponentsClientHttpRequestFactory customRequestFactory = new HttpComponentsClientHttpRequestFactory();
-        customRequestFactory.setHttpClient(httpClient);
+        //customRequestFactory.setHttpClient(httpClient);
         return builder.requestFactory(() -> customRequestFactory).build();
     }
 
@@ -158,7 +157,7 @@ public class FlowConfig {
      * @return a filter that transforms parameter case.
      */
     @Bean
-    public javax.servlet.Filter supportKebabCaseInControllerRequests() {
+    public jakarta.servlet.Filter supportKebabCaseInControllerRequests() {
         return new CaseTransformingFilter();
     }
 }

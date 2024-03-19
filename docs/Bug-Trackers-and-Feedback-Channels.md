@@ -655,15 +655,18 @@ cx-xml:
 The file system path as well as the file naming format is required.
 
 ## <a name="json">Json</a>
-The JSON bug-tracker (defined as Json), is useful if you would like to retrieve all of the latest scan results per project (batch mode) from Checkmarx per project, Team, or entire instance. The CxFlow JSON configuration block requires you to specify the path where reports are created and file name format to when creating reports, example:
+The JSON bug-tracker (defined as Json), is useful if you would like to retrieve all the latest scan results per project (batch mode) from Checkmarx per project, Team, or entire instance. The CxFlow JSON configuration block requires you to specify the path where reports are created and file name format to when creating reports, example:
 
 ```
 json:
    file-name-format: "[NAMESPACE]-[REPO]-[BRANCH]-[TIME].xml"
    data-folder: "C:\\tmp
+   latest-committer-email: true
 ```
 
 The report contents will be a JSON representation of the ScanResults object, which includes issues based on the filtering specified in the main config block (cx-flow). You can determine how results Checkmarx found by looking at the "scanSummary" section, and you can determine how many results CxFlow reported after applying filters by looking at the "flow-summary" section. Each vulnerability found will appear in the "xissues" list.
+
+The boolean property `latest-committer-email` needs to be true in order to retrieve the latest committer email. By default, it is false. This property is only compatible with WEB mode.
 
 The "XIssue" item looks like the following sample:
 
