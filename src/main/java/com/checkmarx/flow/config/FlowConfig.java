@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
+import org.apache.http.client.config.RequestConfig;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 
 import javax.net.ssl.SSLContext;
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.Properties;
 
 @Configuration
@@ -45,13 +47,10 @@ public class FlowConfig {
 
     @Bean(name = "flowRestTemplate")
     public RestTemplate getRestTemplate() {
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpComponentsClientHttpRequestFactory requestFactory = new
-                HttpComponentsClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(properties.getHttpConnectionTimeout());
-        requestFactory.setReadTimeout(properties.getHttpReadTimeout());
-        restTemplate.setRequestFactory(requestFactory);
+        RestTemplate restTemplate = new RestTemplateBuilder()
+                .setConnectTimeout(Duration.ofMillis(properties.getHttpConnectionTimeout()))
+                .setReadTimeout(Duration.ofMillis(properties.getHttpReadTimeout()))
+                .build();
 
         restTemplate.getMessageConverters()
                 .add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
