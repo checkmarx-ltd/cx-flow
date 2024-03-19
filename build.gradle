@@ -7,7 +7,7 @@ buildscript {
         CxSBSDK = "0.6.2"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
-        springBootVersion = '3.2.0'
+        springBootVersion = '3.2.3'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -67,7 +67,7 @@ configurations {
 ext['tomcat.version'] = '10.1.16'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '6.1.1'
+ext['spring-core.version'] = '6.1.5'
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -96,7 +96,7 @@ dependencies {
     implementation ("org.apache.commons:commons-text:1.10.0")
     implementation ('commons-codec:commons-codec:1.15')
     implementation ('commons-io:commons-io:2.11.0')
-    implementation ('org.json:json:20230227')
+    implementation ('org.json:json:20231013')
     implementation('org.yaml:snakeyaml:2.1')
     implementation ('com.fasterxml.jackson.core:jackson-databind:2.15.2')
     implementation ('org.springframework.boot:spring-boot-starter-web-services'){
@@ -170,7 +170,7 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.24")
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
-    implementation('ch.qos.logback:logback-classic:1.4.7'){
+    implementation('ch.qos.logback:logback-classic:1.4.12'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -180,7 +180,7 @@ dependencies {
     implementation("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    implementation('ch.qos.logback:logback-core:1.4.7')
+    implementation('ch.qos.logback:logback-core:1.4.12')
     implementation('net.logstash.logback:logstash-logback-encoder:7.3')
     implementation("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     implementation("org.jasypt:jasypt:1.9.3")

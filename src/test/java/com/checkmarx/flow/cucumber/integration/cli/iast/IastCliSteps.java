@@ -213,7 +213,7 @@ public class IastCliSteps {
         Map<Severity, Integer> thresholdsSeverityMap = new HashMap<>();
         for (String s : thresholdsSeverityArray) {
             String[] split = s.split("=");
-            thresholdsSeverityMap.put(Severity.valueOf(split[0]), new Integer(split[1]));
+            thresholdsSeverityMap.put(Severity.valueOf(split[0]),Integer.valueOf(split[1]));
         }
         iastProperties.setThresholdsSeverity(thresholdsSeverityMap);
 
