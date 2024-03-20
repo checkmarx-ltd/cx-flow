@@ -194,7 +194,15 @@ dependencies {
     implementation group:'org.springframework', name:'spring-core', version:property('spring-core.version')
 
     implementation group: 'com.sendgrid', name: 'sendgrid-java', version: '4.9.0'
+
+
+    compile("software.amazon.awssdk:dynamodb:2.21.40")
+    compile("software.amazon.awssdk:regions:2.21.40")
+    compile("software.amazon.awssdk:auth:2.21.40")
+    compile("software.amazon.awssdk:sts:2.21.40")
+
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
+
 }
 
 springBoot {
