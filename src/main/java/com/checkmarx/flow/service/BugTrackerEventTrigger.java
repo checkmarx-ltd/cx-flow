@@ -37,7 +37,7 @@ public class BugTrackerEventTrigger {
         switch (bugTrackerType) {
             case GITLABMERGE:
                 if (gitLabService.isScanSubmittedComment()) {
-                    gitLabService.sendMergeComment(request, SCAN_MESSAGE);
+                    gitLabService.sendMergeComment(request, SCAN_MESSAGE,gitLabService.isCommentUpdate());
                 }
                 gitLabService.startBlockMerge(request);
                 break;
@@ -50,7 +50,7 @@ public class BugTrackerEventTrigger {
 
             case GITHUBPULL:
                 if (gitService.isScanSubmittedComment()) {
-                    gitService.sendMergeComment(request, SCAN_MESSAGE);
+                    gitService.sendMergeComment(request, SCAN_MESSAGE,gitService.isCommentUpdate());
                 }
                 gitService.startBlockMerge(request, cxProperties.getUrl());
                 break;
@@ -108,7 +108,7 @@ public class BugTrackerEventTrigger {
         switch (bugTrackerType) {
             case GITLABMERGE:
                 if (gitLabService.isScanSubmittedComment()) {
-                    gitLabService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                    gitLabService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE,gitLabService.isCommentUpdate());
                 }
                 gitLabService.endBlockMerge(scanRequest);
                 break;
@@ -121,7 +121,7 @@ public class BugTrackerEventTrigger {
 
             case GITHUBPULL:
                 if (gitService.isScanSubmittedComment()) {
-                    gitService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                    gitService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE,gitService.isCommentUpdate());
                 }
                 String targetURL = cxProperties.getBaseUrl().concat(GitHubService.CX_USER_SCAN_QUEUE);
                 gitService.errorBlockMerge(scanRequest, targetURL, SCAN_FAILED_MESSAGE);
@@ -186,7 +186,7 @@ public class BugTrackerEventTrigger {
         switch (bugTrackerType) {
             case GITLABMERGE:
                 if (gitLabService.isScanSubmittedComment()) {
-                    gitLabService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                    gitLabService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE,gitLabService.isCommentUpdate());
                 }
                 gitLabService.endBlockMerge(scanRequest);
                 break;
@@ -199,7 +199,7 @@ public class BugTrackerEventTrigger {
 
             case GITHUBPULL:
                 if (gitService.isScanSubmittedComment()) {
-                    gitService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                    gitService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE,gitService.isCommentUpdate());
                 }
                 String targetURL = cxProperties.getBaseUrl().concat(GitHubService.CX_USER_SCAN_QUEUE);
                 gitService.errorBlockMerge(scanRequest, targetURL, description);

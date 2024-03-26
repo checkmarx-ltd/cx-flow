@@ -27,6 +27,10 @@ public class GitLabProperties extends RepoProperties {
     @Setter
     private Map<FindingSeverity,String> issueslabel;
 
+    @Getter
+    @Setter
+    private boolean commentUpdate =true;
+
 
 
     public String getGitUri(String namespace, String repo){
