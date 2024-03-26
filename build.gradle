@@ -145,7 +145,7 @@ dependencies {
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
     }
     implementation group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
-    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.74'
     implementation('com.auth0:java-jwt:4.3.0')
     // implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     implementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'

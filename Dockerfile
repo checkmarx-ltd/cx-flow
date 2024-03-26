@@ -1,4 +1,4 @@
-FROM alpine:3.18.4 AS java17
+FROM alpine:3.19 AS java17
 
 WORKDIR app
 RUN apk update && \
@@ -17,7 +17,7 @@ EXPOSE 8080
 
 
 
-FROM alpine:3.18.4 AS cxgo8
+FROM alpine:3.19 AS cxgo8
 
 WORKDIR app
 RUN apk update && \
