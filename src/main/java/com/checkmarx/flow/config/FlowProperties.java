@@ -42,6 +42,8 @@ public class FlowProperties {
     private String wikiUrl;
     private String codebashUrl;
     private String zipExclude;
+
+    private String zipInclude;
     private boolean breakBuild = false;
     private Integer webHookQueue = 100;
     private Integer scanResultQueue = 4;
@@ -84,6 +86,13 @@ public class FlowProperties {
 
     public String getToken() {
         return this.token;
+    }
+    public String getZipInclude() {
+        return zipInclude;
+    }
+
+    public void setZipInclude(String zipInclude) {
+        this.zipInclude = zipInclude;
     }
 
     public @NotNull

@@ -18,13 +18,13 @@ public class ZipUtils {
     public ZipUtils() {
     }
 
-    public static File zipToTempFile(String fileToZip, String excludePatterns) throws IOException {
+    public static File zipToTempFile(String fileToZip, String excludePatterns,String includePatterns) throws IOException {
         String targetFilename = "cx.".concat(UUID.randomUUID().toString()).concat(".zip");
         String targetPath = FileSystems.getDefault()
                 .getPath(targetFilename)
                 .toAbsolutePath()
                 .toString();
-        zipFile(fileToZip, targetPath, excludePatterns);
+        zipFile(fileToZip, targetPath, excludePatterns,includePatterns);
         File zippedFile = new File(targetPath);
         log.debug("Creating temp file {}", zippedFile.getPath());
         log.debug("free space {}", zippedFile.getFreeSpace());
@@ -33,16 +33,23 @@ public class ZipUtils {
         return zippedFile;
     }
 
-    public static void zipFile(String fileToZip, String zipFile, String excludePatterns)
+    public static void zipFile(String fileToZip, String zipFile, String excludePatterns,String includePatterns)
             throws IOException {
         List<String> excludeList = null;
+        List<String> includeList = null;
         log.info("Creating zip file {} from contents of path {}", zipFile, fileToZip);
         if(excludePatterns != null) {
             log.info("Applying exclusions: {}", excludePatterns);
         }
+        if(includePatterns != null) {
+            log.info("Applying inclusion: {}", excludePatterns);
+        }
 
         if(!Strings.isNullOrEmpty(excludePatterns)) {
             excludeList = Arrays.asList(excludePatterns.split(","));
+        }
+        if(!Strings.isNullOrEmpty(includePatterns)) {
+            includeList = Arrays.asList(includePatterns.split(","));
         }
 
         zipFile = FileSystems.getDefault().getPath(zipFile).toAbsolutePath().toString();
@@ -51,23 +58,23 @@ public class ZipUtils {
             File srcFile = new File(fileToZip);
             if (srcFile.isDirectory()) {
                 for (String fileName : Objects.requireNonNull(srcFile.list())) {
-                    addToZip("", String.format("%s/%s", fileToZip, fileName), zipFile, zipOut, excludeList);
+                    addToZip("", String.format("%s/%s", fileToZip, fileName), zipFile, zipOut, excludeList,includeList);
                 }
             } else {
-                addToZip("", fileToZip, zipFile, zipOut, excludeList);
+                addToZip("", fileToZip, zipFile, zipOut, excludeList,includeList);
             }
             zipOut.flush();
         }
         log.info("Successfully created {} ", zipFile);
     }
 
-    private static void addToZip(String path, String srcFile, String zipFile, ZipOutputStream zipOut, List<String> excludePatterns)
+    private static void addToZip(String path, String srcFile, String zipFile, ZipOutputStream zipOut, List<String> excludePatterns,List<String> includePatterns)
             throws IOException {
         File file = new File(srcFile);
         String filePath = "".equals(path) ? file.getName() : String.format("%s/%s", path, file.getName());
         if (file.isDirectory()) {
             for (String fileName : Objects.requireNonNull(file.list())) {
-                addToZip(filePath, srcFile + "/" + fileName, zipFile, zipOut, excludePatterns);
+                addToZip(filePath, srcFile + "/" + fileName, zipFile, zipOut, excludePatterns,includePatterns);
             }
         } else {
             String tmpPath = FileSystems.getDefault().getPath(srcFile).toAbsolutePath().toString();
@@ -79,7 +86,8 @@ public class ZipUtils {
                 log.debug("#########Skipping the new zip file {}#########", zipFile);
                 return;
             }
-            if(excludePatterns == null || excludePatterns.isEmpty() || !anyMatches(excludePatterns, filePath)) {
+
+            if((excludePatterns == null || excludePatterns.isEmpty() || !anyMatches(excludePatterns, filePath)) && (includePatterns==null || includePatterns.isEmpty()|| anyMatches(includePatterns, filePath))) {
                 zipOut.putNextEntry(new ZipEntry(filePath));
                 try (FileInputStream in = new FileInputStream(srcFile)) {
                     byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
