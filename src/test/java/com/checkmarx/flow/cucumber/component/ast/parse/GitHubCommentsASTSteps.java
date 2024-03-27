@@ -107,7 +107,7 @@ public class GitHubCommentsASTSteps {
     private void initGitHubServiceMock() {
 
         GitHubServiceAnswerer answerer = new GitHubServiceAnswerer();
-        doAnswer(answerer).when(gitHubService).sendMergeComment(any(), any());
+        doAnswer(answerer).when(gitHubService).sendMergeComment(any(), any(),true);
             
     }
 
