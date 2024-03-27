@@ -157,6 +157,9 @@ public class ScanRequest {
     @Getter @Setter
     private String latestCommitterEmail;
 
+//    @Getter @Setter @Builder.Default
+//    private Boolean overrideProjectSetting = false;
+
     public ScanRequest(ScanRequest other) {
         this.namespace = other.namespace;
         this.application = other.application;
