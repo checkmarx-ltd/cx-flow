@@ -63,7 +63,7 @@ public class Issue extends RepoIssue {
     private String commentsUrl;
 
     @JsonProperty("id")
-    private int id;
+    private long id;
 
     @JsonProperty("repository_url")
     private String repositoryUrl;
@@ -84,7 +84,7 @@ public class Issue extends RepoIssue {
     private String href;
 
     @ConstructorProperties({"pullRequest", "comments", "closedAt", "assignees", "createdAt", "title", "body", "url", "labels", "closedBy", "labelsUrl", "number", "milestone", "updatedAt", "eventsUrl", "htmlUrl", "commentsUrl", "id", "repositoryUrl", "state", "assignee", "locked", "user", "href"})
-    public Issue(PullRequest pullRequest, int comments, Object closedAt, List<AssigneesItem> assignees, String createdAt, String title, String body, String url, List<LabelsItem> labels, ClosedBy closedBy, String labelsUrl, int number, Milestone milestone, String updatedAt, String eventsUrl, String htmlUrl, String commentsUrl, int id, String repositoryUrl, String state, Assignee assignee, boolean locked, User user, String href) {
+    public Issue(PullRequest pullRequest, int comments, Object closedAt, List<AssigneesItem> assignees, String createdAt, String title, String body, String url, List<LabelsItem> labels, ClosedBy closedBy, String labelsUrl, int number, Milestone milestone, String updatedAt, String eventsUrl, String htmlUrl, String commentsUrl, long id, String repositoryUrl, String state, Assignee assignee, boolean locked, User user, String href) {
         this.pullRequest = pullRequest;
         this.comments = comments;
         this.closedAt = closedAt;
@@ -187,7 +187,7 @@ public class Issue extends RepoIssue {
         return this.commentsUrl;
     }
 
-    public int getId() {
+    public long getId() {
         return this.id;
     }
 
@@ -283,7 +283,7 @@ public class Issue extends RepoIssue {
         this.commentsUrl = commentsUrl;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -333,7 +333,7 @@ public class Issue extends RepoIssue {
         private String eventsUrl;
         private String htmlUrl;
         private String commentsUrl;
-        private int id;
+        private long id;
         private String repositoryUrl;
         private String state;
         private Assignee assignee;
@@ -429,7 +429,7 @@ public class Issue extends RepoIssue {
             return this;
         }
 
-        public Issue.IssueBuilder id(int id) {
+        public Issue.IssueBuilder id(long id) {
             this.id = id;
             return this;
         }
