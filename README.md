@@ -5,6 +5,7 @@ After the upgrade, the customers need to use the CxFlow Java.jar file
 
 
 
+
 ![CircleCI](https://img.shields.io/circleci/build/github/checkmarx-ltd/cx-flow)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=checkmarx-ltd_cx-flow&metric=security_rating)](https://sonarcloud.io/dashboard?id=checkmarx-ltd_cx-flow)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=checkmarx-ltd_cx-flow&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=checkmarx-ltd_cx-flow)
