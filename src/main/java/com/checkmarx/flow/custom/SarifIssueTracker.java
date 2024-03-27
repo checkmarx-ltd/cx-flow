@@ -208,7 +208,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         List<Map<String, Object>> additionalDetails = (List<Map<String, Object>>)issue.getAdditionalDetails().get("results");
                         additionalDetails.forEach((element) -> {
                             Map<String, Object> result = element;
-                            Integer pathNodeId = new Integer(1); // First Node is added by Above Issue Detail
+                            Integer pathNodeId = Integer.valueOf(1); // First Node is added by Above Issue Detail
                             while(result.containsKey(pathNodeId.toString())){ // Add all Nodes till Sink
                                 Map<String, String> node = (Map<String, String>)result.get(pathNodeId.toString());
                                 Integer line = (Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?

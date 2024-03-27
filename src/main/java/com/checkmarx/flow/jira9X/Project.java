@@ -101,7 +101,7 @@ public class Project {
         if(this.id!=null)
         {
             try {
-                Long longId = new Long(this.id);
+                Long longId = Long.parseLong(this.id);
                 return longId;
             }
             catch (NumberFormatException e)

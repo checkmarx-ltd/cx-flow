@@ -2,12 +2,10 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
     ext {
-
-
         CxSBSDK = "0.6.3"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
-        springBootVersion = '3.1.4'
+        springBootVersion = '3.2.3'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -64,10 +62,10 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.13'
+ext['tomcat.version'] = '10.1.16'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '6.0.12'
+ext['spring-core.version'] = '6.1.5'
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -96,7 +94,7 @@ dependencies {
     implementation ("org.apache.commons:commons-text:1.10.0")
     implementation ('commons-codec:commons-codec:1.15')
     implementation ('commons-io:commons-io:2.11.0')
-    implementation ('org.json:json:20230227')
+    implementation ('org.json:json:20231013')
     implementation('org.yaml:snakeyaml:2.1')
     implementation ('com.fasterxml.jackson.core:jackson-databind:2.15.2')
     implementation ('org.springframework.boot:spring-boot-starter-web-services'){
@@ -141,11 +139,11 @@ dependencies {
     implementation ("org.apache.ivy:ivy:2.5.2")
     implementation ("org.apache.commons:commons-lang3:3.12.0")
     implementation('org.apache.commons:commons-collections4:4.4')
-    implementation ('org.eclipse.jgit:org.eclipse.jgit:6.5.0.202303070854-r'){
+    implementation ('org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'){
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
     }
     implementation group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
-    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.70'
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.74'
     implementation('com.auth0:java-jwt:4.3.0')
     // implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     implementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
@@ -170,7 +168,7 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.24")
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
-    implementation('ch.qos.logback:logback-classic:1.4.7'){
+    implementation('ch.qos.logback:logback-classic:1.4.12'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -180,7 +178,7 @@ dependencies {
     implementation("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    implementation('ch.qos.logback:logback-core:1.4.7')
+    implementation('ch.qos.logback:logback-core:1.4.12')
     implementation('net.logstash.logback:logstash-logback-encoder:7.3')
     implementation("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     implementation("org.jasypt:jasypt:1.9.3")
