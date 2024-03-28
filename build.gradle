@@ -5,7 +5,7 @@ buildscript {
         CxSBSDK = "0.6.3"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
-        springBootVersion = '3.2.3'
+        springBootVersion = '3.2.4'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -62,7 +62,7 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.16'
+ext['tomcat.version'] = '10.1.19'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.2.10'
 ext['spring-core.version'] = '6.1.5'
@@ -191,7 +191,9 @@ dependencies {
     implementation group:'org.apache.tomcat', name:'tomcat-juli', version:property('tomcat.version')
     implementation group:'org.springframework', name:'spring-core', version:property('spring-core.version')
 
-    implementation group: 'com.sendgrid', name: 'sendgrid-java', version: '4.9.0'
+    implementation (group: 'com.sendgrid', name: 'sendgrid-java', version: '4.9.0'){
+        exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
+    }
 
 
     compile("software.amazon.awssdk:dynamodb:2.21.40")
