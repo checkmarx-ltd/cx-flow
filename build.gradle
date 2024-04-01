@@ -168,7 +168,7 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.24")
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
-    implementation('ch.qos.logback:logback-classic:1.4.12'){
+    implementation('ch.qos.logback:logback-classic:1.4.14'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -178,7 +178,7 @@ dependencies {
     implementation("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    implementation('ch.qos.logback:logback-core:1.4.12')
+    implementation('ch.qos.logback:logback-core:1.4.14')
     implementation('net.logstash.logback:logstash-logback-encoder:7.3')
     implementation("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     implementation("org.jasypt:jasypt:1.9.3")
