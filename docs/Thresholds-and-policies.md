@@ -31,6 +31,13 @@ github:
   error-merge: true
 ```
 
+For example, if you use GitLab SCM, add these properties under gitlab section:
+```yaml
+gitlab:
+  block-merge: true
+  error-merge: true
+```
+
 #### <a name="scmconfigurations">SCM configurations</a>
 
 In order to use CxFlow status checks to control vulnerable code and block developers actions, you need to configure it in the SCM branches settings:
