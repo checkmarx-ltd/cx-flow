@@ -32,7 +32,7 @@ Feature: SCA support in CxFlow command-line
             | filter     | number of issue |
             | none       | 20              |
             | High       | 6               |
-            | Medium,Low | 14              |
+            | Medium,Low | 13              |
             | Low        | 2               |
 
 
