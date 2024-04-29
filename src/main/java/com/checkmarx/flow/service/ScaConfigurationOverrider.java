@@ -137,6 +137,14 @@ public class ScaConfigurationOverrider {
             scaConfig.setManifestsIncludePattern(manifestsIncludePattern);
             overrideReport.put("ManifestsIncludePattern",manifestsIncludePattern);
         });
+        sca.map(Sca :: getProjectTags).ifPresent(projectTags->{
+            scaConfig.setProjectTags(projectTags);
+            overrideReport.put("projectTags", String.valueOf(projectTags));
+        });
+        sca.map(Sca :: getScanTags).ifPresent(scanTags->{
+            scaConfig.setScanTags(scanTags);
+            overrideReport.put("scanTags", String.valueOf(scanTags));
+        });
 
         overrideSeverityFilters(request, sca, overrideReport);
 
