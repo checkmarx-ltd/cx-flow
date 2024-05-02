@@ -19,6 +19,11 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScanRequest {
+
+    @Getter @Setter
+    @Builder.Default
+    private Boolean scanSubmittedComment = true;
+
     private String id;
     private String namespace;
     private String application;
