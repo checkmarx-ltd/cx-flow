@@ -147,29 +147,43 @@ public class ResultsService {
                     log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request.toString(), results.toString(), scanDetails.toString());
                     break;
                 case GITHUBPULL:
-                    gitService.processPull(request, results);
-                    gitService.endBlockMerge(request, results, scanDetails);
+                    if (gitService.isScanSubmittedComment()) {
+                        gitService.processPull(request, results);
+                        gitService.endBlockMerge(request, results, scanDetails);
+                    }
                     break;
                 case GITLABCOMMIT:
-                    gitLabService.processCommit(request, results);
+                    if (gitLabService.isScanSubmittedComment()) {
+                        gitLabService.processCommit(request, results);
+                    }
                     break;
                 case GITLABMERGE:
-                    gitLabService.processMerge(request, results);
-                    gitLabService.endBlockMerge(request);
+                    if (gitLabService.isScanSubmittedComment()) {
+                        gitLabService.processMerge(request, results);
+                        gitLabService.endBlockMerge(request);
+                    }
                     break;
                 case BITBUCKETCOMMIT:
-                    bbService.processCommit(request, results);
+                    if (bbService.isScanSubmittedComment()) {
+                        bbService.processCommit(request, results);
+                    }
                     break;
                 case BITBUCKETPULL:
-                    bbService.processMerge(request, results);
+                    if (bbService.isScanSubmittedComment()) {
+                        bbService.processMerge(request, results);
+                    }
                     break;
                 case BITBUCKETSERVERPULL:
-                    bbService.processServerMerge(request, results, scanDetails);
-                    bbService.setBuildEndStatus(request, results, scanDetails);
+                    if (bbService.isScanSubmittedComment()) {
+                        bbService.processServerMerge(request, results, scanDetails);
+                        bbService.setBuildEndStatus(request, results, scanDetails);
+                    }
                     break;
                 case ADOPULL:
-                    adoService.processPull(request, results);
-                    adoService.endBlockMerge(request, results, scanDetails);
+                    if (adoService.isScanSubmittedComment()) {
+                        adoService.processPull(request, results);
+                        adoService.endBlockMerge(request, results, scanDetails);
+                    }
                     break;
                 case EMAIL:
                     emailService.handleEmailBugTracker(request, results);

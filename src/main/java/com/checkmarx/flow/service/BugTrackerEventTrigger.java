@@ -145,9 +145,9 @@ public class BugTrackerEventTrigger {
             case ADOPULL:
                 if (adoService.isScanSubmittedComment()) {
                     adoService.sendMergeComment(scanRequest, SCAN_FAILED_MESSAGE);
+                    adoService.startBlockMerge(scanRequest);
+                    adoService.endBlockMergeFailed(scanRequest);
                 }
-                adoService.startBlockMerge(scanRequest);
-                adoService.endBlockMergeFailed(scanRequest);
                 break;
 
             case JIRA:
