@@ -160,7 +160,7 @@ jobs:
           command: |
             aws eks update-kubeconfig --name eks-cxflow-ci
   deploy-cxflow:
-    executor: aws-eks/python3
+    executor: aws-eks/python3.10
     parameters:
       cluster-name:
         description: |
@@ -471,7 +471,7 @@ jobs:
           path: ~/test-results/junit
 
   cleanup:
-    executor: aws-eks/python3
+    executor: aws-eks/python3.10
     parameters:
       cluster-name:
         type: string
