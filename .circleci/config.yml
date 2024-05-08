@@ -160,7 +160,8 @@ jobs:
           command: |
             aws eks update-kubeconfig --name eks-cxflow-ci
   deploy-cxflow:
-    executor: aws-eks/python:3.10
+    docker:
+      - image: cimg/python:3.10
     parameters:
       cluster-name:
         description: |
@@ -471,7 +472,8 @@ jobs:
           path: ~/test-results/junit
 
   cleanup:
-    executor: aws-eks/python:3.10
+    docker:
+      - image: cimg/python:3.10
     parameters:
       cluster-name:
         type: string
@@ -537,7 +539,8 @@ jobs:
           ghr-option: "-prerelease "
 
   clean-eks:
-    executor: aws-eks/python:3.10
+    docker:
+      - image: cimg/python:3.10
     steps:
       - kubernetes/install:
           kubectl-version: v1.23.6
