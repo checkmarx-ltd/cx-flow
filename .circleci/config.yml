@@ -537,7 +537,7 @@ jobs:
           ghr-option: "-prerelease "
 
   clean-eks:
-    executor: aws-eks/python3
+    executor: aws-eks/python3.10
     steps:
       - kubernetes/install:
           kubectl-version: v1.23.6
