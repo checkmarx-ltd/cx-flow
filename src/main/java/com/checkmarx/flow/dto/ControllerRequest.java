@@ -35,6 +35,7 @@ public class ControllerRequest {
     private List<String> excludeFolders;
     private String override;
     private String scmInstance;
+    private Integer thresholdCritical;
     private Integer thresholdHigh;
     private Integer thresholdMedium;
     private Integer thresholdLow;

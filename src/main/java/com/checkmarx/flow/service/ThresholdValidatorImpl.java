@@ -156,6 +156,9 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
         thresholds.entrySet().forEach(entry -> {
             switch(entry.getKey()) {
+                case CRITICAL:
+                    thresholdsSca.put(Severity.CRITICAL, entry.getValue());
+                    break;
                 case HIGH:
                     thresholdsSca.put(Severity.HIGH, entry.getValue());
                     break;
@@ -277,17 +280,20 @@ public class ThresholdValidatorImpl implements ThresholdValidator {
 
         if(isDirectDependency && !isDevDependency){
             log.debug("Calculating Direct Dependency Values.");
+            countsSeverityMap.put(Severity.CRITICAL, scanResults.getScaResults().getPackages().stream().filter(Package::isIsDirectDependency).mapToInt(Package::getCriticalVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.HIGH, scanResults.getScaResults().getPackages().stream().filter(Package::isIsDirectDependency).mapToInt(Package::getHighVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.MEDIUM, scanResults.getScaResults().getPackages().stream().filter(Package::isIsDirectDependency).mapToInt(Package::getMediumVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.LOW, scanResults.getScaResults().getPackages().stream().filter(Package::isIsDirectDependency).mapToInt(Package::getLowVulnerabilityCount).sum());
 
         }else if(!isDirectDependency && isDevDependency){
             log.debug("Calculating Non Development Dependency Values.");
+            countsSeverityMap.put(Severity.CRITICAL, scanResults.getScaResults().getPackages().stream().filter(o -> !o.isIsDevelopmentDependency()).mapToInt(Package::getCriticalVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.HIGH, scanResults.getScaResults().getPackages().stream().filter(o -> !o.isIsDevelopmentDependency()).mapToInt(Package::getHighVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.MEDIUM, scanResults.getScaResults().getPackages().stream().filter(o -> !o.isIsDevelopmentDependency()).mapToInt(Package::getMediumVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.LOW, scanResults.getScaResults().getPackages().stream().filter(o -> !o.isIsDevelopmentDependency()).mapToInt(Package::getLowVulnerabilityCount).sum());
         }else {
             log.debug("Calculating Direct and development Dependency Values.");
+            countsSeverityMap.put(Severity.CRITICAL, scanResults.getScaResults().getPackages().stream().filter(o -> o.isIsDirectDependency() && !o.isIsDevelopmentDependency()).mapToInt(Package::getCriticalVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.HIGH, scanResults.getScaResults().getPackages().stream().filter(o -> o.isIsDirectDependency() && !o.isIsDevelopmentDependency()).mapToInt(Package::getHighVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.MEDIUM, scanResults.getScaResults().getPackages().stream().filter(o -> o.isIsDirectDependency() && !o.isIsDevelopmentDependency()).mapToInt(Package::getMediumVulnerabilityCount).sum());
             countsSeverityMap.put(Severity.LOW, scanResults.getScaResults().getPackages().stream().filter(o -> o.isIsDirectDependency() && !o.isIsDevelopmentDependency()).mapToInt(Package::getLowVulnerabilityCount).sum());
