@@ -109,6 +109,7 @@ jira:
    sast-issue-summary-branch-format: "[VULNERABILITY] in [PROJECT] with severity [SEVERITY] @ [FILENAME][[BRANCH]]"
    sca-issue-summary-branch-format: "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO].[BRANCH][POSTFIX]"
    sca-issue-summary-format: "[PREFIX] : [VULNERABILITY] in [PACKAGE] and [VERSION] @ [REPO][POSTFIX]"
+   max-description-length : <should be greater than 4 and less than 20000>
    suppress-code-snippets:
       - Hardcoded_Password_in_Connection_String
       - Password_In_Comment

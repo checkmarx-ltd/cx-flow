@@ -1492,7 +1492,8 @@ public class JiraService {
         if (useBranch) {
             if (Optional.ofNullable(issue.getScaDetails()).isPresent()) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
-                    body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                    int maxLength = (jiraProperties.getMaxDescriptionLength() < 4 || jiraProperties.getMaxDescriptionLength() > 20000) ? 20000 : jiraProperties.getMaxDescriptionLength();
+                    body.append(StringUtils.abbreviate(any.getFinding().getDescription(), maxLength)).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                     body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                 });
             } else {
@@ -1502,7 +1503,8 @@ public class JiraService {
         } else {
             if (Optional.ofNullable(issue.getScaDetails()).isPresent()) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
-                    body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                    int maxLength = (jiraProperties.getMaxDescriptionLength() < 4 || jiraProperties.getMaxDescriptionLength() > 20000) ? 20000 : jiraProperties.getMaxDescriptionLength();
+                    body.append(StringUtils.abbreviate(any.getFinding().getDescription(), maxLength)).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                     body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY_WITHOUT_BRANCH, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                 });
             } else {
@@ -1511,8 +1513,10 @@ public class JiraService {
 
         }
         Optional.ofNullable(issue.getDescription())
-                .ifPresent(d -> body.append(d.trim()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF));
-
+                .ifPresent(d -> {
+                    int maxLength = (jiraProperties.getMaxDescriptionLength() < 4 || jiraProperties.getMaxDescriptionLength() > 20000) ? 20000 : jiraProperties.getMaxDescriptionLength();
+                    body.append(StringUtils.abbreviate(d.trim(), maxLength)).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                });
         String repoUrl = request.getRepoUrl();
 
         if ( !ScanUtils.empty(repoUrl) && repoUrl.contains("gitlab-ci-token") && repoUrl.contains("@")) {
