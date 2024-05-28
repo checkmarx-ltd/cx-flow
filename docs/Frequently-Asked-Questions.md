@@ -107,4 +107,10 @@ Overrides can be used to assign the same name to multiple projects.  Alternative
 Yes, this can be performed with overrides & [Config As Code](https://github.com/checkmarx-ltd/cx-flow/wiki/Config-As-Code)
 
 ## <a name="applicationxml">Q: Why cxflow spring boot fails to start application if application.xml is present in source code in GitLab pipeline ?</a>
-Plesae pass command line parameter --spring.config.name=myproject in .gitlab-ci.yml file
+Please pass command line parameter --spring.config.name=myproject in .gitlab-ci.yml file
+
+## <a name="windowsos">Q: How to make scan compatible with Windows os if project have windows reserved keyword or folder with windows invalid characters ?</a>
+Please exclude files which contains windows reserved keyword or folder with windows invalid characters using excludeFiles parameter.
+
+## <a name="ado">Q: How to check all Work Items in ADO ?</a>
+All work items in search bar or run a query in ADO to find all work items.

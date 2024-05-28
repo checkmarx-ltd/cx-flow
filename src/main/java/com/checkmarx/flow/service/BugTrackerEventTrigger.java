@@ -36,43 +36,43 @@ public class BugTrackerEventTrigger {
 
         switch (bugTrackerType) {
             case GITLABMERGE:
-                if (gitLabService.isScanSubmittedComment()) {
+                if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                     gitLabService.sendMergeComment(request, SCAN_MESSAGE,gitLabService.isCommentUpdate());
                 }
                 gitLabService.startBlockMerge(request);
                 break;
 
             case GITLABCOMMIT:
-                if (gitLabService.isScanSubmittedComment()) {
+                if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                     gitLabService.sendCommitComment(request, SCAN_MESSAGE);
                 }
                 break;
 
             case GITHUBPULL:
-                if (gitService.isScanSubmittedComment()) {
+                if (gitService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                     gitService.sendMergeComment(request, SCAN_MESSAGE,gitService.isCommentUpdate());
                 }
                 gitService.startBlockMerge(request, cxProperties.getUrl());
                 break;
 
             case BITBUCKETPULL:
-                if (bbService.isScanSubmittedComment()) {
+                if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                     bbService.sendMergeComment(request, SCAN_MESSAGE);
                 }
                 break;
 
             case BITBUCKETSERVERPULL:
-                if (bbService.isScanSubmittedComment()) {
+                if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                     bbService.sendServerMergeComment(request, SCAN_MESSAGE);
                 }
                 bbService.setBuildStartStatus(request);
                 break;
 
             case ADOPULL:
-                if (adoService.isScanSubmittedComment()) {
+                if (adoService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                     adoService.sendMergeComment(request, SCAN_MESSAGE);
+                    adoService.startBlockMerge(request);
                 }
-                adoService.startBlockMerge(request);
                 break;
 
             case JIRA:

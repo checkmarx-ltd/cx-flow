@@ -66,6 +66,8 @@ public class JiraProperties {
     private String DeployType;
     @Getter @Setter
     private TokenType TokenType;
+    @Getter @Setter
+    private int maxDescriptionLength =20000;
 
     public String getUrl() {
         return this.url;

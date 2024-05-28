@@ -161,6 +161,7 @@ public class ScaThresholdsSteps {
         List<Map<String, String>> findings= new ArrayList<>();
         Map<String, String> map = new HashMap<>();
         map.put("name", DEFAULT_FINDINGS_CONFIG);
+        map.put("critical",DEFAULT_THRESHOLDS_LIMIT);
         map.put("high", DEFAULT_THRESHOLDS_LIMIT);
         map.put("medium", DEFAULT_THRESHOLDS_LIMIT);
         map.put("low", DEFAULT_THRESHOLDS_LIMIT);
@@ -284,7 +285,7 @@ public class ScaThresholdsSteps {
         Map<String, String> specMap = findingsDefs.stream()
                 .filter(findingsDef -> findingsDef.get("name").equals(findingsName)).findAny().get();
 
-        EnumSet.allOf(Severity.class).forEach(severity -> {
+        EnumSet.range(Severity.LOW,Severity.HIGH).forEach(severity -> {
             String spec = specMap.get(severity.name().toLowerCase());
             log.info("{}-spec: {}", severity, spec);
 
