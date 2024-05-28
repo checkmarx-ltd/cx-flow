@@ -501,6 +501,9 @@ public class ConfigurationOverrider {
 
     private static Map<FindingSeverity, Integer> getThresholdsMap(FlowOverride.Thresholds thresholds) {
         Map<FindingSeverity, Integer> map = new EnumMap<>(FindingSeverity.class);
+        if (thresholds.getCritical() != null) {
+            map.put(FindingSeverity.CRITICAL, thresholds.getCritical());
+        }
         if (thresholds.getHigh() != null) {
             map.put(FindingSeverity.HIGH, thresholds.getHigh());
         }

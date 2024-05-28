@@ -630,9 +630,9 @@ workflows:
       - CxGo-integration-tests:
           requires:
             - deploy-cxflow
-     # - CodeBashing-integration-tests:
+      # - CodeBashing-integration-tests:
       #    requires:
-       #     - deploy-cxflow
+      #     - deploy-cxflow
       - publish-github-pre-release:
           filters:
             branches:
@@ -670,7 +670,7 @@ workflows:
             - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
-           # - CodeBashing-integration-tests
+            # - CodeBashing-integration-tests
       - cleanup:
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}

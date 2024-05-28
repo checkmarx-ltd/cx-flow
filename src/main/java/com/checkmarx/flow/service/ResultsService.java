@@ -196,11 +196,24 @@ public class ResultsService {
             }
         }
         if (results != null && results.getScanSummary() != null) {
-            log.info("####Checkmarx Scan Results Summary####");
-            log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
-            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary()));
+            log.info("######## Checkmarx Scan Results Summary ########");
+            log.info("Team: {}", request.getTeam());
+            log.info("Project: {}",request.getProject());
+            log.info("Scan-Id: {}",results.getAdditionalDetails().get("scanId"));
+            if(cxScannerService.getProperties().getVersion()>=9.7){
+                log.info("Critical vulnerabilities: {}",results.getScanSummary().getCriticalSeverity());
+                log.info("High vulnerabilities: {}", results.getScanSummary().getHighSeverity());
+                log.info("Medium vulnerabilities: {}", results.getScanSummary().getMediumSeverity());
+                log.info("Low vulnerabilities: {}", results.getScanSummary().getLowSeverity());
+                log.info("Info vulnerabilities: {}", results.getScanSummary().getInfoSeverity());
+            }else{
+                log.info("High vulnerabilities: {}", results.getScanSummary().getHighSeverity());
+                log.info("Medium vulnerabilities: {}", results.getScanSummary().getMediumSeverity());
+                log.info("Low vulnerabilities: {}", results.getScanSummary().getLowSeverity());
+                log.info("Info vulnerabilities: {}", results.getScanSummary().getInfoSeverity());
+            }
             log.info("To view results use following link: {}", results.getLink());
-            log.info("######################################");
+            log.info("################################################");
         }
         if(request.isSbom())
         {

@@ -22,6 +22,7 @@ checkmarx:
    base-url: http://cx.local
    multi-tenant: true
    configuration: Default Configuration
+   enabled-zip-scan: false
    cx-branch: true
    scan-preset: Checkmarx Default
    team: /CxServer/Checkmarx/CxFlow
@@ -86,6 +87,7 @@ checkmarx:
   configuration: Default Configuration
   cx-branch: true
   #scan-preset: Checkmarx Defaul
+  enabled-zip-scan: false
   preserve-xml: true
   team: /CxServer/Checkmarx/CxFlow
   url: ${checkmarx.base-url}/cxrestapi
