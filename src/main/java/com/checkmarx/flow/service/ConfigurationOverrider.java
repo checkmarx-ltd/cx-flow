@@ -276,11 +276,13 @@ public class ConfigurationOverrider {
                 overrideReport.put("scan configuration", scanConfiguration);
             });
         });
-        override.map(CxConfig::getCustomFields).ifPresent(s -> request.setCxFields(s));
-        override.map(CxConfig::getScanCustomFields).ifPresent(s -> request.setScanFields(s));
-        override.map(CxConfig::getEmailNotifications).ifPresent(s -> request.setEmailNotifications(s));
+        override.map(CxConfig::getCustomFields).ifPresent(request::setCxFields);
+        override.map(CxConfig::getScanSubmittedComment).ifPresent(request::setScanSubmittedComment);
 
-        override.map(CxConfig::getPostActionPostbackId).ifPresent(t -> request.setPostBackActionId(t));
+        override.map(CxConfig::getScanCustomFields).ifPresent(request::setScanFields);
+        override.map(CxConfig::getEmailNotifications).ifPresent(request::setEmailNotifications);
+
+        override.map(CxConfig::getPostActionPostbackId).ifPresent(request::setPostBackActionId);
 
         overrideUsingConfigProvider(override, overrideReport, request);
     }
