@@ -98,7 +98,8 @@ public class HelperService {
             result = true;
             log.info("Scanning default branch - {}", request.getDefaultBranch());
         } else {
-            result = protectedBranchPatterns.stream().anyMatch(aBranch -> strMatches(aBranch, branchToCheck));
+            result= protectedBranchPatterns.stream().anyMatch(aBranch -> Pattern.matches(aBranch, branchToCheck));
+
         }
         return result;
     }

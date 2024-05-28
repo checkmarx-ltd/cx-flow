@@ -13,10 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -136,6 +133,14 @@ public class ScaConfigurationOverrider {
         sca.map(Sca :: getManifestsIncludePattern).ifPresent(manifestsIncludePattern->{
             scaConfig.setManifestsIncludePattern(manifestsIncludePattern);
             overrideReport.put("ManifestsIncludePattern",manifestsIncludePattern);
+        });
+        sca.map(Sca :: getProjectTags).ifPresent(projectTags->{
+            scaConfig.setProjectTags(Arrays.asList(projectTags.split(",")));
+            overrideReport.put("projectTags", projectTags);
+        });
+        sca.map(Sca :: getScanTags).ifPresent(scanTags->{
+            scaConfig.setScanTags(Arrays.asList(scanTags.split(",")));
+            overrideReport.put("scanTags", scanTags);
         });
 
         overrideSeverityFilters(request, sca, overrideReport);

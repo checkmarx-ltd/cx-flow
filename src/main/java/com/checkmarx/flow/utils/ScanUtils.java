@@ -164,7 +164,7 @@ public class ScanUtils {
         List<ScanResults.XIssue> issueList = new ArrayList<>();
 
         List<Finding> findings = scaResults.getFindings();
-        EnumSet.range(Filter.Severity.HIGH, Filter.Severity.LOW)
+        EnumSet.range(Filter.Severity.CRITICAL, Filter.Severity.LOW)
                 .forEach(s -> {
                     List<Finding> findingsListBySeverity = getFindingsListBySeverity(findings, s);
                     Map<String, List<Finding>> packageMap = findingsListBySeverity.stream()

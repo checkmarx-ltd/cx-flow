@@ -139,6 +139,8 @@ public class FlowOverride {
     @Getter
     @Setter
     public class Thresholds {
+        @JsonProperty("CRITICAL")
+        public Integer critical = null;
         @JsonProperty("HIGH")
         public Integer high = null;
         @JsonProperty("MEDIUM")

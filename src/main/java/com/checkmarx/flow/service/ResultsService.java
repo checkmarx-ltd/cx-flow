@@ -147,43 +147,43 @@ public class ResultsService {
                     log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request.toString(), results.toString(), scanDetails.toString());
                     break;
                 case GITHUBPULL:
-                    if (gitService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if (gitService.isScanSubmittedComment()) {
                         gitService.processPull(request, results);
+                        gitService.endBlockMerge(request, results, scanDetails);
                     }
-                    gitService.endBlockMerge(request, results, scanDetails);
                     break;
                 case GITLABCOMMIT:
-                    if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if (gitLabService.isScanSubmittedComment()) {
                         gitLabService.processCommit(request, results);
                     }
                     break;
                 case GITLABMERGE:
-                    if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if (gitLabService.isScanSubmittedComment()) {
                         gitLabService.processMerge(request, results);
+                        gitLabService.endBlockMerge(request);
                     }
-                    gitLabService.endBlockMerge(request);
                     break;
                 case BITBUCKETCOMMIT:
-                    if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if (bbService.isScanSubmittedComment()) {
                         bbService.processCommit(request, results);
                     }
                     break;
                 case BITBUCKETPULL:
-                    if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if (bbService.isScanSubmittedComment()) {
                         bbService.processMerge(request, results);
                     }
                     break;
                 case BITBUCKETSERVERPULL:
-                    if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if (bbService.isScanSubmittedComment()) {
                         bbService.processServerMerge(request, results, scanDetails);
+                        bbService.setBuildEndStatus(request, results, scanDetails);
                     }
-                    bbService.setBuildEndStatus(request, results, scanDetails);
                     break;
                 case ADOPULL:
-                    if (adoService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if (adoService.isScanSubmittedComment()) {
                         adoService.processPull(request, results);
+                        adoService.endBlockMerge(request, results, scanDetails);
                     }
-                    adoService.endBlockMerge(request, results, scanDetails);
                     break;
                 case EMAIL:
                     emailService.handleEmailBugTracker(request, results);
@@ -196,11 +196,24 @@ public class ResultsService {
             }
         }
         if (results != null && results.getScanSummary() != null) {
-            log.info("####Checkmarx Scan Results Summary####");
-            log.info("Team: {}, Project: {}, Scan-Id: {}", request.getTeam(), request.getProject(), results.getAdditionalDetails().get("scanId"));
-            log.info(String.format("The vulnerabilities found for the scan are: %s", results.getScanSummary()));
+            log.info("######## Checkmarx Scan Results Summary ########");
+            log.info("Team: {}", request.getTeam());
+            log.info("Project: {}",request.getProject());
+            log.info("Scan-Id: {}",results.getAdditionalDetails().get("scanId"));
+            if(cxScannerService.getProperties().getVersion()>=9.7){
+                log.info("Critical vulnerabilities: {}",results.getScanSummary().getCriticalSeverity());
+                log.info("High vulnerabilities: {}", results.getScanSummary().getHighSeverity());
+                log.info("Medium vulnerabilities: {}", results.getScanSummary().getMediumSeverity());
+                log.info("Low vulnerabilities: {}", results.getScanSummary().getLowSeverity());
+                log.info("Info vulnerabilities: {}", results.getScanSummary().getInfoSeverity());
+            }else{
+                log.info("High vulnerabilities: {}", results.getScanSummary().getHighSeverity());
+                log.info("Medium vulnerabilities: {}", results.getScanSummary().getMediumSeverity());
+                log.info("Low vulnerabilities: {}", results.getScanSummary().getLowSeverity());
+                log.info("Info vulnerabilities: {}", results.getScanSummary().getInfoSeverity());
+            }
             log.info("To view results use following link: {}", results.getLink());
-            log.info("######################################");
+            log.info("################################################");
         }
         if(request.isSbom())
         {

@@ -40,6 +40,8 @@ sca:
   manifests-include-pattern: "!**/*.xml, **/*.yml"
   fingerprints-include-pattern: "**/*.yml"
   preserve-xml: true
+  project-tags: "k1:k2,dev"
+  scan-tags: "s1:s2,p1:p2,prod"
   filter-severity:
     - High
   filter-policy-violation: true
@@ -70,6 +72,8 @@ sca:
   manifests-include-pattern: "!**/*.xml, **/*.yml"
   fingerprints-include-pattern: "**/*.yml"
   preserve-xml: true
+  project-tags: "k1:k2,dev"
+  scan-tags: "s1:s2,p1:p2,prod"
   filter-severity:
     - High
   filter-policy-violation: true
@@ -269,7 +273,9 @@ CxFlow supports configuration as code for CxSAST and CxSCA scans.
                 "fingerprintsIncludePattern": "**/*.yml",
 		"team": "/CxServer/MyTeam/SubTeam",
 		"projectName" : "SampleProjectName",
-		"expPathSastProjectName": "SampleProjectName"
+		"expPathSastProjectName": "SampleProjectName",
+		"projectTags": "k1:k2,dev"
+		"scanTags": "s1:s2,prod,p1:p2"
 	}
 }
 ```

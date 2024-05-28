@@ -1492,7 +1492,9 @@ public class JiraService {
         if (useBranch) {
             if (Optional.ofNullable(issue.getScaDetails()).isPresent()) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
-                    body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                    //minimum length can be 4 because description will have a...
+                    int maxLength = (jiraProperties.getMaxDescriptionLength() < 4 || jiraProperties.getMaxDescriptionLength() > JiraConstants.JIRA_MAX_ISSUE_DESCRIPTION) ? JiraConstants.JIRA_MAX_ISSUE_DESCRIPTION : jiraProperties.getMaxDescriptionLength();
+                    body.append(StringUtils.abbreviate(any.getFinding().getDescription(), maxLength)).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                     body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName(), request.getBranch())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                 });
             } else {
@@ -1502,7 +1504,9 @@ public class JiraService {
         } else {
             if (Optional.ofNullable(issue.getScaDetails()).isPresent()) {
                 issue.getScaDetails().stream().findAny().ifPresent(any -> {
-                    body.append(any.getFinding().getDescription()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                    //minimum length can be 4 because description will have a...
+                    int maxLength = (jiraProperties.getMaxDescriptionLength() < 4 || jiraProperties.getMaxDescriptionLength() > JiraConstants.JIRA_MAX_ISSUE_DESCRIPTION) ? JiraConstants.JIRA_MAX_ISSUE_DESCRIPTION : jiraProperties.getMaxDescriptionLength();
+                    body.append(StringUtils.abbreviate(any.getFinding().getDescription(), maxLength)).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                     body.append(String.format(SCATicketingConstants.SCA_JIRA_ISSUE_BODY_WITHOUT_BRANCH, any.getFinding().getSeverity(), any.getVulnerabilityPackage().getName())).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
                 });
             } else {
@@ -1511,8 +1515,11 @@ public class JiraService {
 
         }
         Optional.ofNullable(issue.getDescription())
-                .ifPresent(d -> body.append(d.trim()).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF));
-
+                .ifPresent(d -> {
+                    //minimum length can be 4 because description will have a...
+                    int maxLength = (jiraProperties.getMaxDescriptionLength() < 4 || jiraProperties.getMaxDescriptionLength() > JiraConstants.JIRA_MAX_ISSUE_DESCRIPTION) ? JiraConstants.JIRA_MAX_ISSUE_DESCRIPTION : jiraProperties.getMaxDescriptionLength();
+                    body.append(StringUtils.abbreviate(d.trim(), maxLength)).append(HTMLHelper.CRLF).append(HTMLHelper.CRLF);
+                });
         String repoUrl = request.getRepoUrl();
 
         if ( !ScanUtils.empty(repoUrl) && repoUrl.contains("gitlab-ci-token") && repoUrl.contains("@")) {
