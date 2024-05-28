@@ -30,9 +30,9 @@ Feature: SCA support in CxFlow command-line
 
         Examples:
             | filter     | number of issue |
-            | none       | 21              |
+            | none       | 19              |
             | High       | 6               |
-            | Medium,Low | 15              |
+            | Medium,Low | 13              |
             | Low        | 2               |
 
 
