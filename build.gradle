@@ -5,7 +5,7 @@ buildscript {
         CxSBSDK = "0.6.8"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
-        springBootVersion = '3.2.4'
+        springBootVersion = '3.2.5'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -65,7 +65,7 @@ configurations {
 ext['tomcat.version'] = '10.1.19'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.2.10'
-ext['spring-core.version'] = '6.1.5'
+ext['spring-core.version'] = '6.1.6'
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -143,7 +143,7 @@ dependencies {
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
     }
     implementation group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
-    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.74'
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.78'
     implementation('com.auth0:java-jwt:4.3.0')
     // implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     implementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
@@ -155,8 +155,10 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test'){
         exclude group:'net.minidev', module:'json-smart'
         exclude group: 'ch.qos.logback', module: 'logback-core'
+        exclude group: 'org.xmlunit', module: 'xmlunit-core'
     }
     testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
+    testImplementation group: 'org.xmlunit', name: 'xmlunit-core', version: '2.10.0'
     testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-spring:${cucumberVersion}")
     testImplementation("com.github.java-json-tools:json-patch:1.11")
@@ -196,10 +198,10 @@ dependencies {
     }
 
 
-    compile("software.amazon.awssdk:dynamodb:2.21.40")
-    compile("software.amazon.awssdk:regions:2.21.40")
-    compile("software.amazon.awssdk:auth:2.21.40")
-    compile("software.amazon.awssdk:sts:2.21.40")
+    compile("software.amazon.awssdk:dynamodb:2.21.46")
+    compile("software.amazon.awssdk:regions:2.21.46")
+    compile("software.amazon.awssdk:auth:2.21.46")
+    compile("software.amazon.awssdk:sts:2.21.46")
 
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
