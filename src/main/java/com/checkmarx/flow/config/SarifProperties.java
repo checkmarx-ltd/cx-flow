@@ -29,7 +29,7 @@ public class SarifProperties {
         severityMap.put("High", "error");
         severityMap.put("Medium", "error");
         severityMap.put("Low", "warning");
-        severityMap.put("Information", "warning");
+        severityMap.put("Information", "note");
     }
 
     @PostConstruct

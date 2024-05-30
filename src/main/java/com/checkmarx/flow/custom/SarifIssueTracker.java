@@ -102,6 +102,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
             tags.replaceAll(s -> "CVSS-" + s);
             tags.add("security");
             Rule rule = Rule.builder().id(key)
+                    .name(key+"_CX")
                     .shortDescription(ShortDescription.builder().text(key).build())
                     .fullDescription(FullDescription.builder().text(key).build())
                     .help(Help.builder().markdown(String.valueOf(markDownValue).replace("\n", " ").replace("[", "").replace("]", "")).text(String.valueOf(markDownValue).replace("\n", " ")).build())
@@ -122,6 +123,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                     .physicalLocation(PhysicalLocation.builder()
                             .artifactLocation(ArtifactLocation.builder()
                                     .uri(locationString.stream().map(String::valueOf).collect(Collectors.joining(",")))
+                                    .uriBaseId(map.get(key).getName())
                                     .build())
                             .build())
                     .build());
@@ -147,6 +149,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .driver(Driver.builder()
                                 .name(properties.getScaScannerName())
                                 .organization(properties.getScaOrganization())
+                                .informationUri("https://checkmarx.com/")
                                 .semanticVersion(properties.getSemanticVersion())
                                 .rules(scaScanrules)
                                 .build())
@@ -161,23 +164,21 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         List<ScanResults.XIssue> filteredXIssues =
                 results.getXIssues()
                         .stream()
-                        .filter(x -> x.getVulnerability()!=null)
-                        .filter(x -> !x.isAllFalsePositive())
-                        .collect(Collectors.toList());
+                        .filter(x -> x.getVulnerability() != null)
+                        .filter(x -> !x.isAllFalsePositive()).toList();
         //Distinct list of Vulns (Rules)
         List<ScanResults.XIssue> filteredByVulns =
                 results.getXIssues()
                         .stream()
-                        .filter(x -> x.getVulnerability()!=null)
+                        .filter(x -> x.getVulnerability() != null)
+                        .filter(x -> !x.isAllFalsePositive())
                         .collect(Collectors.toCollection(() ->
                                 new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getVulnerability))))
-                        .stream()
-                        .filter(x -> !x.isAllFalsePositive())
-                        .collect(Collectors.toList());
+                        .stream().toList();
         // Build the collection of the rules objects (Vulnerabilities)
         sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
                 .id(i.getVulnerability())
-                .name(i.getVulnerability())
+                .name(i.getVulnerability()+"_CX")
                 .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
                 .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
                 .help(Help.builder()
@@ -222,7 +223,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                                 .artifactLocation(ArtifactLocation.builder()
                                                         .uri(node.get("file"))
                                                         .uriBaseId("%SRCROOT%")
-                                                        .index(pathNodeId-1)
+                                                        //.index(pathNodeId-1)
                                                         .build())
                                                 .region(Region.builder()
                                                         .startLine(line)
@@ -268,11 +269,14 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
 
                 }
         );
+
+
         run.add(SarifVulnerability
                 .builder()
                 .tool(Tool.builder()
                         .driver(Driver.builder()
                                 .name(properties.getSastScannerName())
+                                .informationUri("https://checkmarx.com/")
                                 .organization(properties.getSastOrganization())
                                 .semanticVersion(properties.getSemanticVersion())
                                 .rules(sastScanrules)
@@ -321,6 +325,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         public String semanticVersion;
         @JsonProperty("rules")
         public List<Rule> rules;
+        @JsonProperty("informationUri")
+        public String informationUri;
     }
 
     @Data
