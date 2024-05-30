@@ -147,40 +147,40 @@ public class ResultsService {
                     log.info("Results Service case JIRA : request =:  {}  results = {}  scanDetails= {}", request.toString(), results.toString(), scanDetails.toString());
                     break;
                 case GITHUBPULL:
-                    if (gitService.isScanSubmittedComment()) {
+                    if (gitService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         gitService.processPull(request, results);
                         gitService.endBlockMerge(request, results, scanDetails);
                     }
                     break;
                 case GITLABCOMMIT:
-                    if (gitLabService.isScanSubmittedComment()) {
+                    if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment() ) {
                         gitLabService.processCommit(request, results);
                     }
                     break;
                 case GITLABMERGE:
-                    if (gitLabService.isScanSubmittedComment()) {
+                    if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         gitLabService.processMerge(request, results);
                         gitLabService.endBlockMerge(request);
                     }
                     break;
                 case BITBUCKETCOMMIT:
-                    if (bbService.isScanSubmittedComment()) {
+                    if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         bbService.processCommit(request, results);
                     }
                     break;
                 case BITBUCKETPULL:
-                    if (bbService.isScanSubmittedComment()) {
+                    if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         bbService.processMerge(request, results);
                     }
                     break;
                 case BITBUCKETSERVERPULL:
-                    if (bbService.isScanSubmittedComment()) {
+                    if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         bbService.processServerMerge(request, results, scanDetails);
                         bbService.setBuildEndStatus(request, results, scanDetails);
                     }
                     break;
                 case ADOPULL:
-                    if (adoService.isScanSubmittedComment()) {
+                    if (adoService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         adoService.processPull(request, results);
                         adoService.endBlockMerge(request, results, scanDetails);
                     }
