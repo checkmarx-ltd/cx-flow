@@ -178,7 +178,7 @@ public class HTMLHelper {
         appendAll(body, MarkDownHelper.getBoldText("Total Packages Identified"), ": ", MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getTotalPackages())), CRLF);
         appendAll(body, MarkDownHelper.getBoldText("Scan Risk Score"), ": ", MarkDownHelper.getBoldText(String.format("%.2f", r.getSummary().getRiskScore())), CRLF, CRLF);
 
-        Arrays.asList("High", "Medium", "Low").forEach(v ->
+        Arrays.asList("Critical","High", "Medium", "Low").forEach(v ->
                 appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(v, request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getFindingCounts().get(Severity.valueOf(v.toUpperCase())))),
                         " ", MarkDownHelper.getBoldText(v), " " ,MarkDownHelper.getBoldText("severity vulnerabilities"), CRLF));
 
@@ -721,25 +721,44 @@ public class HTMLHelper {
                 appendAll(body, MarkDownHelper.getMdHeaderType(4, properties.getCxSummaryHeader()), CRLF);
             }
             MarkDownHelper.appendMDtableHeaders(body, SEVERITY, "Count");
-            MarkDownHelper.appendMDtableRow(body, "High", summary.getHighSeverity().toString());
-            MarkDownHelper.appendMDtableRow(body, "Medium", summary.getMediumSeverity().toString());
-            MarkDownHelper.appendMDtableRow(body, "Low", summary.getLowSeverity().toString());
-            MarkDownHelper.appendMDtableRow(body, "Informational", summary.getInfoSeverity().toString());
+            if(request.getSastVersion()>=9.7){
+                MarkDownHelper.appendMDtableRow(body, "Critical", summary.getCriticalSeverity().toString());
+                MarkDownHelper.appendMDtableRow(body, "High", summary.getHighSeverity().toString());
+                MarkDownHelper.appendMDtableRow(body, "Medium", summary.getMediumSeverity().toString());
+                MarkDownHelper.appendMDtableRow(body, "Low", summary.getLowSeverity().toString());
+                MarkDownHelper.appendMDtableRow(body, "Informational", summary.getInfoSeverity().toString());
+            }else{
+                MarkDownHelper.appendMDtableRow(body, "High", summary.getHighSeverity().toString());
+                MarkDownHelper.appendMDtableRow(body, "Medium", summary.getMediumSeverity().toString());
+                MarkDownHelper.appendMDtableRow(body, "Low", summary.getLowSeverity().toString());
+                MarkDownHelper.appendMDtableRow(body, "Informational", summary.getInfoSeverity().toString());
+            }
+
             body.append(CRLF);
         }
     }
 
     private static void setScannerTotalVulnerabilities(StringBuilder body, CxScanSummary summary, ScanRequest request) {
         appendAll(body, "Total of " + countSastTotalVulnerabilities(summary) + " vulnerabilities", MarkDownHelper.getLineBreak(request));
-        appendAll(body, MarkDownHelper.getHighIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.getLineBreak(request));
-        appendAll(body, MarkDownHelper.getMediumIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.getLineBreak(request));
-        appendAll(body, MarkDownHelper.getLowIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.getLineBreak(request));
-        appendAll(body, MarkDownHelper.getInfoIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.getLineBreak(request), CRLF);
+        if(request.getSastVersion()>=9.7){
+            appendAll(body, MarkDownHelper.getCriticalIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getCriticalSeverity() + " Critical"), MarkDownHelper.getLineBreak(request));
+            appendAll(body, MarkDownHelper.getHighIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.getLineBreak(request));
+            appendAll(body, MarkDownHelper.getMediumIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.getLineBreak(request));
+            appendAll(body, MarkDownHelper.getLowIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.getLineBreak(request));
+            appendAll(body, MarkDownHelper.getInfoIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.getLineBreak(request), CRLF);
+        }else {
+            appendAll(body, MarkDownHelper.getHighIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.getLineBreak(request));
+            appendAll(body, MarkDownHelper.getMediumIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.getLineBreak(request));
+            appendAll(body, MarkDownHelper.getLowIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.getLineBreak(request));
+            appendAll(body, MarkDownHelper.getInfoIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.getLineBreak(request), CRLF);
+        }
+
     }
 
     private static String countSastTotalVulnerabilities(CxScanSummary summary) {
         int totalVulnerabilities = 0;
 
+        totalVulnerabilities += Optional.ofNullable(summary.getCriticalSeverity()).orElse(0);
         totalVulnerabilities += Optional.ofNullable(summary.getHighSeverity()).orElse(0);
         totalVulnerabilities += Optional.ofNullable(summary.getMediumSeverity()).orElse(0);
         totalVulnerabilities += Optional.ofNullable(summary.getLowSeverity()).orElse(0);

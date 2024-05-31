@@ -134,6 +134,9 @@ public class ResultsService {
         if (Boolean.FALSE.equals(cxScannerService.getProperties().getOffline())) {
             getCxFields(request, results);
         }
+        if(cxScannerService.getProperties().getVersion()!=null){
+            request.setSastVersion(cxScannerService.getProperties().getVersion());
+        }
 
         if(results.getScaResults() != null || results.getXIssues() != null || results.getAstResults() != null) {
             switch (request.getBugTracker().getType()) {

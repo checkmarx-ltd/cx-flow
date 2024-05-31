@@ -32,6 +32,7 @@ public class MarkDownHelper {
 
     private static final String GITHUB_USER_PREFIX = "https://user-images.githubusercontent.com/23239410/";
     private static final String CHECKMARX_LOGO_URL = GITHUB_USER_PREFIX + "92153465-ff743900-ee2c-11ea-9c8d-8141e38feb41.png";
+    private static final String CRITICAL_ICON = "https://i.imgur.com/DGKOtBX.png";
     private static final String HIGH_ICON = GITHUB_USER_PREFIX + "92157087-97285600-ee32-11ea-988f-0aca12c4c126.png";
     private static final String MEDIUM_ICON = GITHUB_USER_PREFIX + "92157093-98598300-ee32-11ea-83d7-af52251a011b.png";
     private static final String LOW_ICON = GITHUB_USER_PREFIX + "92157091-98598300-ee32-11ea-8498-19bd7d62019b.png";
@@ -42,6 +43,7 @@ public class MarkDownHelper {
     public static final String SAST_HEADER = CHECKMARX_PREFIX + SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
     public static final String SCA_HEADER = CHECKMARX_PREFIX + SCA_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
     private static final String AST_SAST_HEADER = CHECKMARX_PREFIX + AST_SAST_SCANNER + " - " + SCAN_SUMMARY_DETAILS;
+    private static final String CRITICAL = "CRITICAL";
     private static final String HIGH = "HIGH";
     private static final String MEDIUM = "MEDIUM";
     private static final String LOW = "LOW";
@@ -113,6 +115,10 @@ public class MarkDownHelper {
         return getImageFromLink("High", HIGH_ICON, request);
     }
 
+    static String getCriticalIconFromLink(ScanRequest request) {
+        return getImageFromLink("Critical", CRITICAL_ICON, request);
+    }
+
     static String getMediumIconFromLink(ScanRequest request) {
         return getImageFromLink("Medium", MEDIUM_ICON, request);
     }
@@ -154,6 +160,8 @@ public class MarkDownHelper {
         severity = severity.toUpperCase();
 
         switch (severity) {
+            case CRITICAL:
+                return getCriticalIconFromLink(request);
             case HIGH:
                 return getHighIconFromLink(request);
             case MEDIUM:

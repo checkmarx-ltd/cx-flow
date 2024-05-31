@@ -166,6 +166,9 @@ public class ScanRequest {
     @Getter @Setter
     private String latestCommitterEmail;
 
+    @Getter @Setter
+    private Double sastVersion;
+
 //    @Getter @Setter @Builder.Default
 //    private Boolean overrideProjectSetting = false;
 
