@@ -10,9 +10,9 @@ RUN apk add libstdc++
 RUN apk add glib
 RUN apk add krb5 pcre
 RUN apk add bash
-RUN apk add curl
-#RUN wget --user-agent="Mozilla/5.0" "https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-musl64.tar.gz" -O 'ScaResolver.tar.gz' && tar -xvzf ScaResolver.tar.gz && mv ScaResolver Configuration.yml /app && rm ScaResolver.tar.gz
-RUN curl -L -o 'ScaResolver.tar.gz' 'https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-musl64.tar.gz' && tar -xvzf ScaResolver.tar.gz && mv ScaResolver Configuration.yml /app && rm ScaResolver.tar.gz
+#RUN apk add curl
+RUN wget --referer="https://sca-downloads.s3.amazonaws.com" "https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-musl64.tar.gz" -O 'ScaResolver.tar.gz' && tar -xvzf ScaResolver.tar.gz && mv ScaResolver Configuration.yml /app && rm ScaResolver.tar.gz
+#RUN curl -L -o 'ScaResolver.tar.gz' 'https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-musl64.tar.gz' && tar -xvzf ScaResolver.tar.gz && mv ScaResolver Configuration.yml /app && rm ScaResolver.tar.gz
 COPY build/libs/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
