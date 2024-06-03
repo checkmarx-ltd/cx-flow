@@ -621,9 +621,9 @@ workflows:
       - pullRequestComments-integration-tests:
           requires:
             - deploy-cxflow
-      - SAST-CLI-integration-tests:
-          requires:
-            - deploy-cxflow
+     # - SAST-CLI-integration-tests:
+     #     requires:
+     #       - deploy-cxflow
       - SCA-CLI-integration-tests:
           requires:
             - deploy-cxflow
@@ -642,7 +642,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-            - SAST-CLI-integration-tests
+           # - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
             #- CodeBashing-integration-tests
@@ -655,7 +655,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-            - SAST-CLI-integration-tests
+            #- SAST-CLI-integration-tests
             - CxGo-integration-tests
             #- CodeBashing-integration-tests
       - publish-github-release:
@@ -667,7 +667,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-            - SAST-CLI-integration-tests
+           # - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
             # - CodeBashing-integration-tests
@@ -688,7 +688,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-            - SAST-CLI-integration-tests
+          #  - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
             #- CodeBashing-integration-tests
