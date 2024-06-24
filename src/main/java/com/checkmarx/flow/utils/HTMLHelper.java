@@ -440,10 +440,10 @@ public class HTMLHelper {
         }
 
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON))
-        {
-            appendAll(body, "[Training](", additionalDetails.get(FlowConstants.CODE_BASHING_LESSON), ")", HTMLHelper.CRLF);
-        }
+//        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON))
+//        {
+//            appendAll(body, "[Training](", additionalDetails.get(FlowConstants.CODE_BASHING_LESSON), ")", HTMLHelper.CRLF);
+//        }
 
         if (MapUtils.isNotEmpty(additionalDetails) && additionalDetails.containsKey(RECOMMENDED_FIX)) {
             body.append("[Recommended Fix](").append(additionalDetails.get(ScanUtils.RECOMMENDED_FIX)).append(")")

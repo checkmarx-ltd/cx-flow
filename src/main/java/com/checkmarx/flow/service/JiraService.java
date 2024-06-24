@@ -77,7 +77,7 @@ public class JiraService {
     private final FlowProperties flowProperties;
     private final String parentUrl;
     private final String grandParentUrl;
-    private final CodeBashingService codeBashingService;
+    //private final CodeBashingService codeBashingService;
     private final HelperService helperService;
     //Map used to store/retrieve custom field values
     private final ConcurrentHashMap<String, Map<String, String>> customFields = new ConcurrentHashMap<>();
@@ -98,13 +98,11 @@ public class JiraService {
     }
 
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties,
-                       CodeBashingService codeBashingService,
                        HelperService helperService,@Qualifier("SSLRestTemplate") RestTemplate restTemplate) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
         parentUrl = jiraProperties.getParentUrl();
         grandParentUrl = jiraProperties.getGrandParentUrl();
-        this.codeBashingService = codeBashingService;
         this.helperService = helperService;
         this.restTemplate = restTemplate;
     }
@@ -721,9 +719,9 @@ public class JiraService {
                                 if (!ScanUtils.anyEmpty(flowProperties.getMitreUrl(), issue.getCwe())) {
                                     recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(HTMLHelper.CRLF);
                                 }
-                                if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
-                                    recommendation.append("Training: ").append(issue.getAdditionalDetails().get(FlowConstants.CODE_BASHING_LESSON)).append(HTMLHelper.CRLF);
-                                }
+//                                if (!ScanUtils.empty(flowProperties.getCodebashUrl())) {
+//                                    recommendation.append("Training: ").append(issue.getAdditionalDetails().get(FlowConstants.CODE_BASHING_LESSON)).append(HTMLHelper.CRLF);
+//                                }
                                 if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
                                     recommendation.append("Guidance: ").append(flowProperties.getWikiUrl()).append(HTMLHelper.CRLF);
                                 }
@@ -1564,9 +1562,9 @@ public class JiraService {
 
         Map<String, Object> additionalDetails = issue.getAdditionalDetails();
 
-        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON)) {
-            body.append("[Training|").append(additionalDetails.get(FlowConstants.CODE_BASHING_LESSON)).append("]").append(HTMLHelper.CRLF);
-        }
+//        if (!MapUtils.isEmpty(additionalDetails) && additionalDetails.containsKey(FlowConstants.CODE_BASHING_LESSON)) {
+//            body.append("[Training|").append(additionalDetails.get(FlowConstants.CODE_BASHING_LESSON)).append("]").append(HTMLHelper.CRLF);
+//        }
         if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
             body.append("[Guidance|").append(flowProperties.getWikiUrl()).append("]").append(HTMLHelper.CRLF);
         }
@@ -1725,7 +1723,7 @@ public class JiraService {
             }
         }
 
-        codeBashingService.createLessonsMap();
+        //codeBashingService.createLessonsMap();
         getAndModifyRequestApplication(request);
 
         String jiraProjectKey = determineJiraProjectKey(request);
@@ -1768,7 +1766,7 @@ public class JiraService {
             String issueCurrentKey = xIssue.getKey();
             try {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
-                codeBashingService.addCodebashingUrlToIssue(currentIssue);
+                //codeBashingService.addCodebashingUrlToIssue(currentIssue);
 
                 /*Issue already exists -> update and comment*/
                 if (jiraMap.containsKey(issueCurrentKey)) {
