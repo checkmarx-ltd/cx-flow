@@ -70,6 +70,8 @@ public class FlowService {
         resultsService.publishCombinedResults(scanRequest, combinedResults);
     }
 
+
+
     private List<VulnerabilityScanner> getEnabledScanners(ScanRequest scanRequest) {
         List<VulnerabilityScanner> enabledScanners = new ArrayList<>();
 

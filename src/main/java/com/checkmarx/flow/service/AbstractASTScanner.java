@@ -57,7 +57,9 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
             logRequest(scanRequest, internalResults, OperationResult.successful());
             result = toScanResults(internalResults);
         } catch (Exception e) {
+            bugTrackerEventTrigger.triggerOffScanStartedEvent(scanRequest);
             treatError(scanRequest, internalResults, e);
+
         }
         
         return result;

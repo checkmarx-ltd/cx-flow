@@ -274,6 +274,7 @@ public class GitHubService extends RepoService {
                     log.error(URL_INVALID, e);
                 }
             }
+
             HttpEntity<?> httpEntity = new HttpEntity<>(
                     getJSONStatus(PULL_REQUEST_STATUS, url, "Checkmarx Scan Initiated").toString(),
                     createAuthHeaders(request)
