@@ -404,7 +404,7 @@ public class GitLabIssueTracker implements IssueTracker {
         try {
             Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
             for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
-                if (resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString())) {
+                if (resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString()) || resultIssue.getSeverity().toLowerCase(Locale.ROOT).contains(entry.getKey().toString().toLowerCase(Locale.ROOT))) {
                     label = entry.getValue();
                     break;
                 }
