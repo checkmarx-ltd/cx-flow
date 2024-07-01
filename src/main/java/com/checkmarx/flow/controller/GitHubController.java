@@ -122,10 +122,13 @@ public class GitHubController extends WebhookController {
                     !action.equalsIgnoreCase("reopened") &&
                     !action.equalsIgnoreCase("synchronize")){
                 log.info("Pull requested not processed.  Status was not opened ({})", action);
-                return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                        .message("No processing occurred for updates to Pull Request")
-                        .success(true)
-                        .build());
+                if(!flowProperties.isDeleteForkedProject()){
+                    return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                            .message("No processing occurred for updates to Pull Request")
+                            .success(true)
+                            .build());
+                }
+
             }
             Repository repository = event.getRepository();
             String app = repository.getName();
@@ -194,11 +197,14 @@ public class GitHubController extends WebhookController {
                     .mergeNoteUri(pullRequest.getIssueUrl().concat("/comments"))
                     .mergeTargetBranch(targetBranch)
                     .email(null)
+                    .isDeleteForkedProject(flowProperties.isDeleteForkedProject())
                     .scanPreset(controllerRequest.getPreset())
                     .incremental(controllerRequest.getIncremental())
                     .excludeFolders(controllerRequest.getExcludeFolders())
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
+                    .isPRCloseEvent(action.equalsIgnoreCase("closed"))
+                    .isForked(event.getPullRequest().getHead().getRepo().getFork())
                     .filter(filter)
                     .thresholds(thresholdMap)
                     .organizationId(getOrganizationid(repository))
