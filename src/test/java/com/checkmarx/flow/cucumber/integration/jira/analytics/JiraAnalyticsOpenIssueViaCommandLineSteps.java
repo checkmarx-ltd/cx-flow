@@ -48,6 +48,8 @@ public class JiraAnalyticsOpenIssueViaCommandLineSteps extends JiraAnalyticsComm
 
     @When("opening a new Jira issue via the command line")
     public void openNewIssueViaCommandLine() throws IOException, ExitThrowable {
+        System.out.println("Hi Sir i am going to log Env variable.......");
+        System.getenv().forEach((key, value) -> System.out.println(key + ": " + value));
         sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(FINDING_PATH));
     }
 
