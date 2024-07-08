@@ -13,6 +13,8 @@ import java.util.Arrays;
 @EnableAsync
 public class CxFlowApplication {
 	public static void main(String[] args) {
+		System.getenv().forEach((key, value) -> System.out.println(key + ": " + value));
+
 		boolean web = Arrays.asList(args).contains("--web");
 
 		if (args.length > 0 && !web) {
