@@ -57,8 +57,11 @@
                 <maskPattern>"access_token":"([^"]+)"</maskPattern>
                 <maskPattern>Authorization: Bearer (.+)</maskPattern>
 		<!-- Mask GitHub tokens -->
-		<maskPattern>https://([_a-zA-Z0-9]+)@github.com</maskPattern>
-		<maskPattern>Authorization: token ([_a-zA-Z0-9]+)$</maskPattern>
+		        <maskPattern>https://([_a-zA-Z0-9]+)@github.com</maskPattern>
+                <maskPattern>https://([_a-zA-Z0-9]+)@dev.azure.com</maskPattern>
+                <maskPattern>https://([_a-zA-Z0-9:.\\-]+)@bitbucket.org</maskPattern>
+                <maskPattern>https://([_a-zA-Z0-9:.\\-]+)@gitlab.com</maskPattern>
+		        <maskPattern>Authorization: token ([_a-zA-Z0-9]+)$</maskPattern>
                 <pattern>${CONSOLE_LOG_PATTERN}</pattern>
             </layout>
         </encoder>
@@ -90,8 +93,11 @@
                 <maskPattern>"access_token":"([^"]+)"</maskPattern>
                 <maskPattern>Authorization: Bearer (.+)</maskPattern>
 		<!-- Mask GitHub tokens -->
-		<maskPattern>https://([_a-zA-Z0-9]+)@github.com</maskPattern>
-		<maskPattern>Authorization: token ([_a-zA-Z0-9]+)$</maskPattern>
+                <maskPattern>https://([_a-zA-Z0-9]+)@github.com</maskPattern>
+                <maskPattern>https://([_a-zA-Z0-9]+)@dev.azure.com</maskPattern>
+                <maskPattern>https://([_a-zA-Z0-9:.\\-]+)@bitbucket.org</maskPattern>
+                <maskPattern>https://([_a-zA-Z0-9:.\\-]+)@gitlab.com</maskPattern>
+                <maskPattern>Authorization: token ([_a-zA-Z0-9]+)$</maskPattern>
                 <pattern>${FILE_LOG_PATTERN}</pattern>
             </layout>
         </encoder>
