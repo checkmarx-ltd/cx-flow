@@ -23,7 +23,7 @@ RUN apt-get update && \
 ENV JAVA_HOME /usr/lib/jvm/java-17-openjdk-amd64
 ENV PATH $JAVA_HOME/bin:$PATH
 RUN apt update
-RUN apt install ca-certificates libgssapi-krb5-2
+RUN apt install -y ca-certificates libgssapi-krb5-2
 RUN apt install -y wget
 RUN wget https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-linux64.tar.gz -O "ScaResolver.tar.gz" && tar -xvzf ScaResolver.tar.gz && rm ScaResolver.tar.gz
 COPY build/libs/*.jar cx-flow.jar
