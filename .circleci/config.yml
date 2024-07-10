@@ -540,11 +540,11 @@ jobs:
             docker load -i /tmp/workspace/image-17-debian.tar
             docker load -i /tmp/workspace/image-debian.tar
             docker load -i /tmp/workspace/latest-debian.tar
-       - run:
-           name: Publish Docker debian images to Docker Hub
-           command: |
-             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
-             docker push ${DOCKER_REPO}
+      - run:
+          name: Publish Docker debian images to Docker Hub
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
+            docker push ${DOCKER_REPO_DEBIAN}
   publish-github-release:
     docker:
       - image: circleci/golang:1.16.12
