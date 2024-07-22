@@ -133,21 +133,34 @@ jobs:
               -t ${DOCKER_REPO}:${VERSION} \
               -t ${DOCKER_REPO} \
               .
-              docker push ${DOCKER_REPO}:${SHA1_SHORT}
+            docker push ${DOCKER_REPO}:${SHA1_SHORT}
+            docker build --target java17-debian \
+              -t ${DOCKER_REPO_DEBIAN}:${SHA1_SHORT} \
+              -t ${DOCKER_REPO_DEBIAN}:${VERSION}-17 \
+              -t ${DOCKER_REPO_DEBIAN}:${VERSION} \
+              -t ${DOCKER_REPO_DEBIAN} \
+              .
+            docker push ${DOCKER_REPO_DEBIAN}:${SHA1_SHORT}
       - run:
           name: Archive Docker images
           command: |
             VERSION=$(cat ./build/libs/version.txt)
             docker save -o image-17.tar ${DOCKER_REPO}:${VERSION}-17
             docker save -o image.tar ${DOCKER_REPO}:${VERSION}
-            docker save -o latest.tar ${DOCKER_REPO}:latest
+            docker save -o latest.tar ${DOCKER_REPO}:latest            
+            docker save -o image-17-debian.tar ${DOCKER_REPO_DEBIAN}:${VERSION}-17
+            docker save -o image-debian.tar ${DOCKER_REPO_DEBIAN}:${VERSION}
+            docker save -o latest-debian.tar ${DOCKER_REPO_DEBIAN}:latest
       - persist_to_workspace:
           root: .
           paths:
             # - ./image-11.tar
             - ./image-17.tar
+            - ./image-17-debian.tar
             - ./image.tar
+            - ./image-debian.tar
             - ./latest.tar
+            - ./latest-debian.tar
 
   aws-cli-setup:
     executor: aws-cli/default
@@ -521,6 +534,17 @@ jobs:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
             docker push ${DOCKER_REPO}
+      - run:
+          name: Load archived Docker debian images
+          command: |
+            docker load -i /tmp/workspace/image-17-debian.tar
+            docker load -i /tmp/workspace/image-debian.tar
+            docker load -i /tmp/workspace/latest-debian.tar
+      - run:
+          name: Publish Docker debian images to Docker Hub
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
+            docker push ${DOCKER_REPO_DEBIAN}
   publish-github-release:
     docker:
       - image: circleci/golang:1.16.12
@@ -621,9 +645,9 @@ workflows:
       - pullRequestComments-integration-tests:
           requires:
             - deploy-cxflow
-     # - SAST-CLI-integration-tests:
-     #     requires:
-     #       - deploy-cxflow
+      - SAST-CLI-integration-tests:
+          requires:
+            - deploy-cxflow
       - SCA-CLI-integration-tests:
           requires:
             - deploy-cxflow
@@ -642,7 +666,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-           # - SAST-CLI-integration-tests
+            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
             #- CodeBashing-integration-tests
@@ -655,7 +679,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-            #- SAST-CLI-integration-tests
+            - SAST-CLI-integration-tests
             - CxGo-integration-tests
             #- CodeBashing-integration-tests
       - publish-github-release:
@@ -667,7 +691,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-           # - SAST-CLI-integration-tests
+            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
             # - CodeBashing-integration-tests
@@ -688,7 +712,7 @@ workflows:
             - sca-integration-tests
             - jira-integration-tests
             - pullRequestComments-integration-tests
-          #  - SAST-CLI-integration-tests
+            - SAST-CLI-integration-tests
             - SCA-CLI-integration-tests
             - CxGo-integration-tests
             #- CodeBashing-integration-tests

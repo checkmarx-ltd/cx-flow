@@ -13,6 +13,7 @@ import java.util.Arrays;
 @EnableAsync
 public class CxFlowApplication {
 	public static void main(String[] args) {
+
 		boolean web = Arrays.asList(args).contains("--web");
 
 		if (args.length > 0 && !web) {
