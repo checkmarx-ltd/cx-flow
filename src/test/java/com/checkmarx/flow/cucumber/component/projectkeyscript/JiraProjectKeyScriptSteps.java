@@ -48,8 +48,7 @@ public class JiraProjectKeyScriptSteps {
 
     @Given("given 'jira-project-key' script name is {string}")
     public void setJiraProjectKeyScriptName(String scriptName) {
-        log.info("Hi Sir i am going to log Env variable.......");
-        System.getenv().forEach((key, value) -> System.out.println(key + ": " + value));
+       
 
         if (scriptName.equals(EMPTY_SCRIPT)) {
             jiraProperties.setProjectKeyScript(EMPTY_STRING);
