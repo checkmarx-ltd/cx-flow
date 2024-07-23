@@ -28,4 +28,9 @@ public class BitBucketProperties extends RepoProperties {
     public void setIpAddresses(List<String> ipAddresses) {
         this.ipAddresses = ipAddresses;
     }
+
+    public String getGitUri(String namespace, String repoName) {
+        String format = "%s/%s/%s.git";
+        return String.format(format, getUrl(), namespace, repoName);
+    }
 }
