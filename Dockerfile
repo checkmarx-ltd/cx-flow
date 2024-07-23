@@ -4,7 +4,7 @@ WORKDIR app
 RUN apk update && \
     apk upgrade && \
     apk upgrade
-RUN apk add openjdk17=17.0.11_p9-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk17=17.0.12_p7-r0 --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 RUN apk add libstdc++
 RUN apk add glib

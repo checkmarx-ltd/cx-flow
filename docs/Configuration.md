@@ -181,7 +181,8 @@ gitlab:
 bitbucket:
   webhook-token: XXXXX
   token: XXXXX
-  url: https://api.bitbucket.org
+  url: https://bitbucket.org
+  api-url: https://api.bitbucket.org
   api-path: /2.0
   false-positive-label: false-positive
 
@@ -903,9 +904,10 @@ azure:
 ### <a name="bitbucket">Bitbucket (Cloud and Server)</a>
 ```yaml
 bitbucket:
-  webhook-token
+  webhook-token: xxx
   token: <user>:xxx
-  url: http://api.bitbucket.org
+  url: http://bitbucket.org
+  api-url: http://api.bitbucket.org
   api-path: /2.0
 ```
 
@@ -913,7 +915,8 @@ bitbucket:
 |--------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `webhook-token`          |         | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.  The Bitbucket cloud does not allow for a shared secret, therefore a URL parameter called token, must be provided in this case.                                                                                                |
 | `token`                  |         | This is the API token with access to the repository with at least Read only access to code and the ability to add comments to pull requests.  BitBucket requires the **<user>:<token>** format in the configuration. <br />`userid:app password`(Format while using BitBucket Cloud) <br />`userid:password`(Format while using BitBucket Server) |
-| `url`                    |         | - [https://api.bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://api.companyxyzbitbucket](https://api.companyxyzbitbucket) (URL for the BitBucket server is just the server hostname with `api.` prefixed)                                                                                                  |
+| `api-url`                |         | - [https://api.bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://api.companyxyzbitbucket](https://api.companyxyzbitbucket) (URL for the BitBucket server is just the server hostname with `api.` prefixed)                                                                                                  |
+| `url`                    |         | - [https://bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://companyxyzbitbucket](https://api.companyxyzbitbucket)(URL for the BitBucket server is just the server hostname)                                                                                                                                |
 | `api-path`               |         | The API URL path (appended to the URL) for BitBucket                                                                                                                                                                                                                                                                                              |
 | 'scan-submitted-comment` | true    | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                                                                                                                                               | 
 
