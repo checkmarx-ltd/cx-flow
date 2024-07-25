@@ -99,4 +99,24 @@ Insert the following into the application.yml file
     - TLSv1.3
     - TLSv1.2
 ```
+# Using Custom KeyStore
 
+To allow CXFlow to accept custom enterprise certificates without altering the default cacert, you can configure it to trust additional certificates by adding them to a custom trust store.<br>See documentation on importing certificates here:
+
+## Step 1 : Create Custom KeyStore
+```
+keytool -importcert -file <path-to-your-certificate> -keystore custom-truststore.jks -alias <your-alias>
+
+```
+
+## Step 2 : Define Key store file path,Key Store password and enable custom keystore
+
+```
+checkmarx:
+  version: 9.4
+  username: admin@cx
+  truststorepath: C:\\Users\\abc\\OneDrive - Checkmarx\\Desktop\\certificate\\custom-truststore1.jks
+  truststorepassword: satyam
+  customkeystore: true
+
+```
