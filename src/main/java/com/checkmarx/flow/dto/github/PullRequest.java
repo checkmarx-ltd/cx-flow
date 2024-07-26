@@ -2,6 +2,8 @@
 package com.checkmarx.flow.dto.github;
 
 import com.fasterxml.jackson.annotation.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -70,6 +72,12 @@ public class PullRequest {
     private String title;
     @JsonProperty("user")
     private User user;
+
+    @JsonProperty("repo")
+    @Getter
+    @Setter
+    private Repository Repository;
+
     @JsonProperty("body")
     private String body;
     @JsonProperty("created_at")

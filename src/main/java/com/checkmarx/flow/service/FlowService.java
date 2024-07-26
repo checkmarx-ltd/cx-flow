@@ -68,6 +68,10 @@ public class FlowService {
             }
         });
         resultsService.publishCombinedResults(scanRequest, combinedResults);
+        if(scanRequest.isForked() && scanRequest.isDeleteForkedProject() && scanRequest.isPRCloseEvent()){
+            deleteProject(scanRequest);
+        }
+
     }
 
 
