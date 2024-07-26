@@ -333,6 +333,9 @@ public class GitLabIssueTracker implements IssueTracker {
             return null;
         }
         String repoUrl = request.getRepoUrl().replace(".git", "/");
+        if ( !ScanUtils.empty(repoUrl) && repoUrl.contains("gitlab-ci-token") && repoUrl.contains("@")) {
+            repoUrl = repoUrl.substring(0, 8) + repoUrl.substring(repoUrl.indexOf('@') + 1);
+        }
         return (Optional.ofNullable(filename).isPresent())
                 ? String.format(String.format("%s/blob/%%s/%%s", repoUrl), request.getBranch(), filename)
                 : null;
@@ -404,7 +407,7 @@ public class GitLabIssueTracker implements IssueTracker {
         try {
             Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
             for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
-                if (resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString())) {
+                if (resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString()) || resultIssue.getSeverity().toLowerCase(Locale.ROOT).contains(entry.getKey().toString().toLowerCase(Locale.ROOT))) {
                     label = entry.getValue();
                     break;
                 }

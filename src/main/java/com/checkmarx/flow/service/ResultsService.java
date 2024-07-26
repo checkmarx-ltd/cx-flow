@@ -106,6 +106,9 @@ public class ResultsService {
                     sendEmailNotification(scanRequest, scanResults);
                     processResults(scanRequest, scanResults, new ScanDetails(projectId, scanResults.getSastScanId(), null));
                     logScanDetails(scanRequest, projectId, scanResults);
+                    if(scanRequest.isForked()){
+
+                    }
                 } else {
                     processResults(scanRequest, scanResults, new ScanDetails(null, scanResults.getSastScanId(), null));
                 }

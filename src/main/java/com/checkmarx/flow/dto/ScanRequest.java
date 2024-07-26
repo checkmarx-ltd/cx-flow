@@ -45,6 +45,22 @@ public class ScanRequest {
     @Builder.Default
     private boolean branchProtectionEnabled= false;
 
+    @Getter
+    @Setter
+    @Builder.Default
+    private boolean isForked= false;
+
+    @Getter
+    @Setter
+    @Builder.Default
+    private boolean isPRCloseEvent= false;
+
+    @Getter
+    @Setter
+    @Builder.Default
+    private boolean isDeleteForkedProject= false;
+
+
     /**
      * git commit ID, also known as 'SHA' or 'commit hash'.
      * <br>- For push event: ID of the last commit in the push event.

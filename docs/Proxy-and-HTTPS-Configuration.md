@@ -51,10 +51,10 @@ To use CxFlow over HTTPS, an SSL certificate is required to be imported into a k
 
 # Self-Signed Certificates
 
-To allow CxFlow to trust self-signed certificates, the parameter '--trust-cert' needs to be provided via command line when starting the cxflow.
+To allow CxFlow to trust self-signed certificates, the parameter '--checkmarx.trustcerts = true' needs to be provided via command line when starting the cxflow.
 
 ```
-java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -jar cxflow.jar --trust-cert <Additional-CxFlow-parameters>
+java -Dhttp.proxyHost=myproxyserver.com -Dhttp.proxyPort=9595 -jar cxflow.jar --checkmarx.trustcerts = true' <Additional-CxFlow-parameters>
 ```
 
 ## Configuration

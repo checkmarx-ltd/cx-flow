@@ -29,7 +29,7 @@ public class IssueService implements ApplicationContextAware {
     private ApplicationContext context;
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(IssueService.class);
     private final FlowProperties properties;
-    private final CodeBashingService codeBashingService;
+    //private final CodeBashingService codeBashingService;
 
     public ApplicationContext getContext() {
         return context;
@@ -42,7 +42,7 @@ public class IssueService implements ApplicationContextAware {
 
     public IssueService(FlowProperties properties, CodeBashingService codeBashingService) {
         this.properties = properties;
-        this.codeBashingService = codeBashingService;
+        //this.codeBashingService = codeBashingService;
     }
 
     /**
@@ -102,7 +102,7 @@ public class IssueService implements ApplicationContextAware {
             tracker.init(request, results);
             String fpLabel = tracker.getFalsePositiveLabel();
 
-            codeBashingService.createLessonsMap();
+            //codeBashingService.createLessonsMap();
 
             log.info("Processing Issues with custom bean {}", customBean);
 
@@ -119,7 +119,7 @@ public class IssueService implements ApplicationContextAware {
                     String fileUrl;
                     ScanResults.XIssue currentIssue = xIssue.getValue();
 
-                    codeBashingService.addCodebashingUrlToIssue(currentIssue);
+                    //codeBashingService.addCodebashingUrlToIssue(currentIssue);
 
                     /*Issue already exists -> update and comment*/
                     if (iMap.containsKey(xIssue.getKey())) {

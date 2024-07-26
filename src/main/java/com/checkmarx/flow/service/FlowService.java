@@ -68,7 +68,13 @@ public class FlowService {
             }
         });
         resultsService.publishCombinedResults(scanRequest, combinedResults);
+        if(scanRequest.isForked() && scanRequest.isDeleteForkedProject() && scanRequest.isPRCloseEvent()){
+            deleteProject(scanRequest);
+        }
+
     }
+
+
 
     private List<VulnerabilityScanner> getEnabledScanners(ScanRequest scanRequest) {
         List<VulnerabilityScanner> enabledScanners = new ArrayList<>();
