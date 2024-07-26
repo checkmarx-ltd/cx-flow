@@ -26,10 +26,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service("GitHub")
 public class GitHubIssueTracker implements IssueTracker {
@@ -337,7 +334,7 @@ public class GitHubIssueTracker implements IssueTracker {
         try {
             Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
             for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
-                if(resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString())){
+                if(resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString()) || resultIssue.getSeverity().toLowerCase(Locale.ROOT).contains(entry.getKey().toString().toLowerCase(Locale.ROOT))){
 //converting using String.split() method with whitespace as a delimiter
                     strArray = entry.getValue().split(",");
                     break;

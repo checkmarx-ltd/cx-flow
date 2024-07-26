@@ -51,8 +51,8 @@ public class BugTrackerEventTrigger {
             case GITHUBPULL:
                 if (gitService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                     gitService.sendMergeComment(request, SCAN_MESSAGE,gitService.isCommentUpdate());
+                    gitService.startBlockMerge(request, cxProperties.getUrl());
                 }
-                gitService.startBlockMerge(request, cxProperties.getUrl());
                 break;
 
             case BITBUCKETPULL:

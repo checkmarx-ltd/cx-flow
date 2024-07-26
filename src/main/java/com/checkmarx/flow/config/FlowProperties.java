@@ -33,6 +33,10 @@ public class FlowProperties {
     private List<String> enabledVulnerabilityScanners=new ArrayList<>();
     private boolean autoProfile = false;
     private boolean alwaysProfile = false;
+
+    @Getter
+    @Setter
+    private boolean deleteForkedProject = false;
     private Integer profilingDepth = 1;
     private String profileConfig = "CxProfile.json";
     private boolean trackApplicationOnly = false;

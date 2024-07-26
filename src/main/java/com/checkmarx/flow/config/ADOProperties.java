@@ -155,4 +155,10 @@ public class ADOProperties extends RepoProperties{
         return String.format(format, getUrl(), namespace, repo, mergeId);
         //http://localhost:8080/tfs/DefaultCollection/Checkmarx/_apis/git/repositories/Checkmarx/pullRequests/2/threads
     }
+
+    public String getGitUri(String namespace,String projectName ,String repo){
+        String format = "%s/%s/%s/_git/%s";
+        return String.format(format, getUrl(), namespace, projectName,repo);
+        //sample: https://dev.azure.com/namespace/repo/_git/repo
+    }
 }

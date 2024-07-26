@@ -48,6 +48,8 @@ public class JiraProjectKeyScriptSteps {
 
     @Given("given 'jira-project-key' script name is {string}")
     public void setJiraProjectKeyScriptName(String scriptName) {
+       
+
         if (scriptName.equals(EMPTY_SCRIPT)) {
             jiraProperties.setProjectKeyScript(EMPTY_STRING);
         } else {

@@ -87,6 +87,7 @@ cx-flow:
     - Confirmed
     - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  deleteForkedProject: true
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   track-application-only: false
   web-hook-queue: 20
@@ -402,6 +403,7 @@ cx-flow:
     - Confirmed
     - Urgent
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  deleteForkedProject: true
   wiki-url: https://checkmarx.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   track-application-only: false
   web-hook-queue: 20
@@ -467,6 +469,7 @@ cx-flow:
 | `comment`                      |                | No                                                                   | No      | Yes          | User can store comments field in metadata about the scan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `overrideProjectSetting`       |                | No                                                                   | No      | Yes          | The utilization of this boolean variable empowers the user to restrict the override of project settings. By setting this variable, users can prevent any unauthorized alterations to the project's settings, ensuring stability and adherence to predefined configurations. This functionality serves as a safeguard against inadvertent or malicious changes that could potentially disrupt the project's operations. Thus, the boolean variable offers a valuable mechanism for maintaining the integrity and consistency of project settings, enhancing overall control and security within the system. Its implementation empowers users with the ability to govern and protect vital project parameters from unwarranted modifications. |
 | `enabledVulnerabilityScanners` | false          | No                                                                   | Yes     | Yes          | User can define which checkmarx tool they want to use like SAST, SCA or both.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `deleteForkedProject` | false          | No                                                                   | Yes     | No           | User can delete forked projects created on SAST portal.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 No* = Default is applied
 
@@ -609,6 +612,7 @@ For more details on break build, please refer to [Thresholds and policies](https
 | `cxflow.enabledVulnerabilityScanners`  | false                 | No                                  | Yes     | Yes               | User can define which checkmarx tool they want to use like SAST, SCA or both.                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `checkmarx.considerScanningStatus`     | false                 | No                                  | Yes     | Yes               | By default, Checkmarx only includes completed scans (finished status) in incremental scans. This means it ignores scans that are currently running (scanning) or waiting to be processed (new queue). Enabling a feature this variable "cxflow" expands what incremental scans consider. With cxflow, scans in progress and those queued up are also taken into account, providing a more comprehensive view of your code's security posture.                                           |
 | `enabled-zip-scan`                     | false                 | No                                  | Yes     | Yes               | When `enabled-zip-scan` is set to `true` then cx-flow will first clone the repository locally, and then it will zip the repository and send it for scanning.                                                                                                                                                                                                                                                                                                                            |
+| `trustcerts`                     | false                 | No                                  | Yes     | Yes               | If this option is true Cx-flow will bypass SSL. Default value is false so it will not bypass SSL.                                                                                                                                                                                                                                                                                                                                                                                       |
 No* = Default is applied
 
 ### Custom Checkmarx Fields
@@ -639,6 +643,7 @@ checkmarx:
   url: ${checkmarx.base-url}/cxrestapi
   preserve-xml: true
   incremental: true
+  trustcerts: true
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   exclude-files: "*.tst,*.json"
   exclude-folders: ".git,test"
