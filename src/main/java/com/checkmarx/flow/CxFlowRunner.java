@@ -492,8 +492,17 @@ public class CxFlowRunner implements ApplicationRunner {
                 } else if (args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)) {
                     log.warn("Bitbucket git clone scan not implemented");
                 } else if (args.containsOption("ado") && containsRepoArgs(namespace, repoName, branch)) {
-                    if (!args.containsOption(IAST_OPTION)) {    //Azure implement for IAST integration
-                        log.warn("Azure DevOps git clone scan not implemented");
+                    if (!args.containsOption(IAST_OPTION)) {
+                        if(adoProperties.getProjectName().isEmpty()){
+                           log.error("ADO project name should be provided.");
+                        }
+                        else{
+                            repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, adoProperties.getGitUri(namespace,adoProperties.getProjectName() ,repoName));
+                            String token = adoProperties.getToken();
+                            gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+                            gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+                            scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.ADO, args);
+                        }
                     }
                 } else if (file != null) {
                     scanLocalPath(request, file);
