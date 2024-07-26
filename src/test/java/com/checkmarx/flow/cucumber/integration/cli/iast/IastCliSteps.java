@@ -105,6 +105,7 @@ public class IastCliSteps {
     private final List<VulnerabilityScanner> scanners;
     private final ThresholdValidator thresholdValidator;
     private final PDFProperties pdfProperties;
+    private final BitBucketProperties bitBucketProperties;
 
     private String urlRequest;
     private HttpHeaders headers;
@@ -120,6 +121,7 @@ public class IastCliSteps {
                         flowProperties,
                         cxScannerService,
                         jiraProperties,
+                        bitBucketProperties,
                         gitHubProperties,
                         gitLabProperties,
                         iastService,

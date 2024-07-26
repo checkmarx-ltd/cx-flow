@@ -51,7 +51,7 @@ public class BatchComponentSteps {
     private final ThresholdValidator thresholdValidator;
     private final BuildProperties buildProperties;
     private final PDFProperties pdfProperties;
-
+    private final BitBucketProperties bitBucketProperties;
     private CxFlowRunner cxFlowRunner;
     private String projectName;
     private String teamName;
@@ -71,6 +71,7 @@ public class BatchComponentSteps {
         cxFlowRunner = new CxFlowRunner(flowProperties,
                         cxScannerService,
                         jiraProperties,
+                        bitBucketProperties,
                         gitHubProperties,
                         gitLabProperties,
                         iastService,

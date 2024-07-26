@@ -62,6 +62,7 @@ public class CxFlowRunner implements ApplicationRunner {
     private final FlowProperties flowProperties;
     private final CxScannerService cxScannerService;
     private final JiraProperties jiraProperties;
+    private final BitBucketProperties bitBucketProperties;
     private final GitHubProperties gitHubProperties;
     private final GitLabProperties gitLabProperties;
     private final IastService iastService;
@@ -490,7 +491,20 @@ public class CxFlowRunner implements ApplicationRunner {
                     gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP_OAUTH2.concat(token).concat("@"));
                     scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.GITLAB, args);
                 } else if (args.containsOption("bitbucket") && containsRepoArgs(namespace, repoName, branch)) {
-                    log.warn("Bitbucket git clone scan not implemented");
+
+                    repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, bitBucketProperties.getGitUri(namespace, repoName));
+                    String token = bitBucketProperties.getToken();
+                    gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+                    gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+
+                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.BITBUCKET, args);
+                } else if (args.containsOption("bitbucket-server") && containsRepoArgs(namespace, repoName, branch)) {
+                    repoUrl = getNonEmptyRepoUrl(namespace, repoName, repoUrl, bitBucketProperties.getGitUri(namespace, repoName));
+                    String token = bitBucketProperties.getToken();
+                    gitAuthUrl = repoUrl.replace(Constants.HTTPS, Constants.HTTPS.concat(token).concat("@"));
+                    gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
+
+                    scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.BITBUCKETSERVER, args);
                 } else if (args.containsOption("ado") && containsRepoArgs(namespace, repoName, branch)) {
                     if (!args.containsOption(IAST_OPTION)) {
                         if(adoProperties.getProjectName().isEmpty()){
@@ -503,6 +517,7 @@ public class CxFlowRunner implements ApplicationRunner {
                             gitAuthUrl = gitAuthUrl.replace(Constants.HTTP, Constants.HTTP.concat(token).concat("@"));
                             scanRemoteRepo(request, repoUrl, gitAuthUrl, branch, ScanRequest.Repository.ADO, args);
                         }
+
                     }
                 } else if (file != null) {
                     scanLocalPath(request, file);
