@@ -608,6 +608,7 @@ For more details on break build, please refer to [Thresholds and policies](https
 | `cxflow.enabledVulnerabilityScanners`  | false                 | No                                  | Yes     | Yes               | User can define which checkmarx tool they want to use like SAST, SCA or both.                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `checkmarx.considerScanningStatus`     | false                 | No                                  | Yes     | Yes               | By default, Checkmarx only includes completed scans (finished status) in incremental scans. This means it ignores scans that are currently running (scanning) or waiting to be processed (new queue). Enabling a feature this variable "cxflow" expands what incremental scans consider. With cxflow, scans in progress and those queued up are also taken into account, providing a more comprehensive view of your code's security posture.                                           |
 | `enabled-zip-scan`                     | false                 | No                                  | Yes     | Yes               | When `enabled-zip-scan` is set to `true` then cx-flow will first clone the repository locally, and then it will zip the repository and send it for scanning.                                                                                                                                                                                                                                                                                                                            |
+| `trustcerts`                     | false                 | No                                  | Yes     | Yes               | If this option is true Cx-flow will bypass SSL. Default value is false so it will not bypass SSL.                                                                                                                                                                                                                                                                                                                                                                                       |
 No* = Default is applied
 
 ### Custom Checkmarx Fields
@@ -638,6 +639,7 @@ checkmarx:
   url: ${checkmarx.base-url}/cxrestapi
   preserve-xml: true
   incremental: true
+  trustcerts: true
   portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
   exclude-files: "*.tst,*.json"
   exclude-folders: ".git,test"
