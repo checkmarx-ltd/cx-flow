@@ -120,8 +120,7 @@
               "object" : "StringElement"
             }
           }
-        ],
-        "CodeBashingLesson" : "https://cxa.codebashing.com/courses/"
+        ]
       },
       "allFalsePositive": false
     }
