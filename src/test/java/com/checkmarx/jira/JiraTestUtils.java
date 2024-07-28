@@ -201,8 +201,6 @@ Line #222:
     @Override
     public String getIssueRecommendedFixLink(String projectKey) {
         Issue issue = getFirstIssue(projectKey);
-        log.info("Hi Its me Satyam chaurasia.");
-        log.info(issue.getDescription());
         return  Objects.requireNonNull(issue.getDescription()).split(System.lineSeparator())[20];
     }
 
