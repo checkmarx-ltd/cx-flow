@@ -204,7 +204,7 @@ public class GitHubController extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .isPRCloseEvent(action.equalsIgnoreCase("closed"))
-                    .isForked(event.getPullRequest().getHead().getRepo().getFork())
+                    .isForked(event.getPullRequest().getHead().getRepo().getFork()!=null?event.getPullRequest().getHead().getRepo().getFork():false)
                     .filter(filter)
                     .thresholds(thresholdMap)
                     .organizationId(getOrganizationid(repository))
