@@ -221,9 +221,11 @@ public class BugTrackerEventTrigger {
                 break;
 
             case ADOPULL:
-                adoService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
-                adoService.startBlockMerge(scanRequest);
-                adoService.endBlockMerge(scanRequest, scanResults, new ScanDetails());
+                if (adoService.isScanSubmittedComment()) {
+                    adoService.sendMergeComment(scanRequest, SCAN_NOT_SUBMITTED_MESSAGE);
+                    adoService.startBlockMerge(scanRequest);
+                    adoService.endBlockMerge(scanRequest, scanResults, new ScanDetails());
+                }
                 break;
 
             case JIRA:
