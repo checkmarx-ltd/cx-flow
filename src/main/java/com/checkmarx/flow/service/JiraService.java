@@ -1798,6 +1798,27 @@ public class JiraService {
             log.debug("Issue: {} successfully updated. Removing it from dynamic scan results map", xIssue.getValue());
             nonPublishedScanResultsMap.remove(issueCurrentKey);
         }
+        /* check if false positive exist  in unFilteredMap as in filtered map we won't get data for filters like filter-state/filter-category/filter-status/filter-cwe */
+        for (Map.Entry<String, ScanResults.XIssue> xIssue : unFilteredMap.entrySet()) {
+            String issueCurrentKey = xIssue.getKey();
+            try{
+                ScanResults.XIssue currentIssue = xIssue.getValue();
+                if (jiraMap.containsKey(issueCurrentKey)) {
+                    Issue issue = jiraMap.get(issueCurrentKey);
+                    if (xIssue.getValue().isAllFalsePositive()) {
+                        //All issues are false positive, so issue should be closed
+                        log.debug("{} issue are false positives",issueCurrentKey);
+                        Issue fpIssue;
+                        fpIssue = checkForFalsePositiveIssuesInList(request, xIssue, currentIssue, issue);
+                        closeIssueInCaseOfIssueIsInOpenState(request, closedIssues, fpIssue);
+                    }
+                }
+
+            }catch (RestClientException e){
+                log.error("Error occurred while processing issue with key {}", issueCurrentKey, e);
+                throw new JiraClientException();
+            }
+        }
 
         /*Check if an issue exists in Jira but not within results and close if not*/
         closeIssueInCaseNotWithinResults(request, unFilteredMap, jiraMap, closedIssues);
