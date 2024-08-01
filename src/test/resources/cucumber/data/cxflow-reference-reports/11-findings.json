@@ -18,7 +18,7 @@
     {
       "vulnerability": "Reflected_XSS_All_Clients",
       "vulnerabilityStatus": "TO VERIFY",
-      "similarityId": "14660819",
+      "similarityId": "14660819, 902213235",
       "cwe": "79",
       "description": "",
       "language": "Java",
@@ -200,7 +200,7 @@
     {
       "vulnerability": "SQL_Injection",
       "vulnerabilityStatus": "TO VERIFY",
-      "similarityId": "-1987639889",
+      "similarityId": "-1987639889, 390199311",
       "cwe": "89",
       "description": "",
       "language": "Java",
@@ -382,7 +382,7 @@
   "unFilteredIssues": [ {
     "vulnerability" : "Reflected_XSS_All_Clients",
     "vulnerabilityStatus" : "TO VERIFY",
-    "similarityId" : "14660819",
+    "similarityId" : "14660819, 902213235",
     "cwe" : "79",
     "description" : "",
     "language" : "Java",
@@ -558,7 +558,7 @@
   }, {
     "vulnerability" : "SQL_Injection",
     "vulnerabilityStatus" : "TO VERIFY",
-    "similarityId" : "-1987639889",
+    "similarityId" : "-1987639889, 390199311",
     "cwe" : "89",
     "description" : "",
     "language" : "Java",
