@@ -419,7 +419,9 @@ public class HTMLHelper {
                 body.append("*").append(issue.getDescription()).append("*").append(CRLF).append(CRLF);
             }
         }
-
+        if(!ScanUtils.empty(issue.getSimilarityId())){
+            body.append("Similarity Id").append(": ").append(issue.getSimilarityId()).append(CRLF).append(CRLF);
+        }
         if (!ScanUtils.empty(issue.getSeverity())) {
             body.append(SEVERITY).append(": ").append(issue.getSeverity()).append(CRLF).append(CRLF);
         }
