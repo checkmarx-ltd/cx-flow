@@ -1,7 +1,3 @@
-> **Notice :** This is to inform you that the cxFlow will not be compatible to the old Java versions (version 8 and 11) beginning April 1 2024.
-The customers need to upgrade the Java version in the CxFlow server to a version greater than or equal to Java 17 (less than 20)
-After the upgrade, the customers need to use the CxFlow Java11.jar file 
-
 # CxFlow
 [[/Images/cxLogo.PNG]]
 <br>[What is it?](#whatisit)
