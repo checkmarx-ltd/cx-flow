@@ -18,7 +18,7 @@
     {
       "vulnerability": "SQL_Injection",
       "vulnerabilityStatus": "TO VERIFY",
-      "similarityId": "-1987639889",
+      "similarityId": "-1987639889, 390199311",
       "cwe": "89",
       "description": "",
       "language": "Java",
@@ -200,7 +200,7 @@
   "unFilteredIssues": [ {
     "vulnerability" : "SQL_Injection",
     "vulnerabilityStatus" : "TO VERIFY",
-    "similarityId" : "-1987639889",
+    "similarityId" : "-1987639889, 390199311",
     "cwe" : "89",
     "description" : "",
     "language" : "Java",
