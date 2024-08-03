@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.MDC;
@@ -34,11 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileSystems;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -150,6 +147,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean branchProtectionEnabled;
         boolean disableBreakbuild;
         boolean sbom;
+        boolean deleteBranchedProject;
         FlowOverride flowOverride = null;
         ObjectMapper mapper = new ObjectMapper();
         String uid = helperService.getShortUid();
@@ -217,6 +215,7 @@ public class CxFlowRunner implements ApplicationRunner {
         boolean usingBitBucketServer = args.containsOption("bbs");
         boolean disableCertificateValidation = args.containsOption("trust-cert");
         boolean disablePolicyViolation = args.containsOption("sca-policy-disable");
+        deleteBranchedProject=args.containsOption("delete-branched-project");
         disableBreakbuild=args.containsOption("disable-break-build");
         branchProtectionEnabled = args.containsOption("branch-protection-enabled");
         sbom = args.containsOption("sbom");
@@ -382,6 +381,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 .altProject(altProject)
                 .altFields(altFields)
                 .forceScan(force)
+                .deleteBranchedProject(deleteBranchedProject)
                 .disableCertificateValidation(disableCertificateValidation)
                 .cxFields(projectCustomFields)
                 .scanFields(scanCustomFields)
@@ -689,7 +689,13 @@ public class CxFlowRunner implements ApplicationRunner {
             runOnActiveScanners(scanner -> scanner.DownloadPDF(finalScanResults,pdfProperties));
         }else{
             processResults(request, scanResults);
+
         }
+
+        if(request.getDeleteBranchedProject()){
+            deleteProject(request);
+        }
+
 
     }
 
@@ -828,4 +834,37 @@ public class CxFlowRunner implements ApplicationRunner {
         }
         return config;
     }
+
+    private List<VulnerabilityScanner> getEnabledScanners(ScanRequest scanRequest) {
+        List<VulnerabilityScanner> enabledScanners = new ArrayList<>();
+
+        List<VulnerabilityScanner> scanRequestVulnerabilityScanners = scanRequest.getVulnerabilityScanners();
+        if (CollectionUtils.isNotEmpty(scanRequestVulnerabilityScanners)) {
+            enabledScanners.addAll(scanRequestVulnerabilityScanners);
+        } else {
+            scanners.forEach(scanner -> {
+                if (scanner.isEnabled()) {
+                    enabledScanners.add(scanner);
+                }
+            });
+        }
+
+        return enabledScanners;
+    }
+
+    public void deleteProject(ScanRequest request) {
+
+        Optional<SastScanner> sastScanner = getEnabledScanners(request)
+                .stream().filter(scanner -> scanner instanceof SastScanner)
+                .map(scanner -> ((SastScanner) scanner))
+                .findFirst();
+
+        if(!sastScanner.isPresent()){
+            log.warn("Delete branch for non-SAST scanner is not supported");
+            return;
+        }
+
+        sastScanner.ifPresent(scanner -> scanner.deleteProject(request));
+    }
+
 }

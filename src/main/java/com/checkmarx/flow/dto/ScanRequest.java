@@ -24,6 +24,10 @@ public class ScanRequest {
     @Builder.Default
     private Boolean scanSubmittedComment = true;
 
+    @Getter @Setter
+    @Builder.Default
+    private Boolean deleteBranchedProject = false;
+
     private String id;
     private String namespace;
     private String application;
