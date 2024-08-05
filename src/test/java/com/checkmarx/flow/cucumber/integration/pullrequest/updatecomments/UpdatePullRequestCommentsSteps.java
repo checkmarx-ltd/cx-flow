@@ -291,7 +291,7 @@ public class UpdatePullRequestCommentsSteps {
     @Then("Wait for comments")
     public void waitForNewComments() {
         log.info("waiting for new comments. scanner type {}", scannerType);
-        int minutesToWait = scannerType == ScannerType.BOTH ? 3 : 2;
+        int minutesToWait = scannerType == ScannerType.BOTH ? 10 : 8;
         Awaitility.await()
                 .atMost(Duration.ofMinutes(minutesToWait))
                 .pollInterval(Duration.ofSeconds(COMMENTS_POLL_INTERVAL))
@@ -556,44 +556,44 @@ public class UpdatePullRequestCommentsSteps {
         MergeEvent mergeEvent = new MergeEvent();
         mergeEvent.setObjectKind("merge_request");
         mergeEvent.setUser(com.checkmarx.flow.dto.gitlab.User.builder()
-                                   .name("cxflowtestuser")
-                                   .username("cxflowtestuser")
-                                   .avatarUrl("https://secure.gravatar.com/avatar/5b0716952104a8b0b496af18a335f1d2?s=80&d=identicon")
-                                   .build());
+                .name("cxflowtestuser")
+                .username("cxflowtestuser")
+                .avatarUrl("https://secure.gravatar.com/avatar/5b0716952104a8b0b496af18a335f1d2?s=80&d=identicon")
+                .build());
         mergeEvent.setProject(com.checkmarx.flow.dto.gitlab.Project.builder()
-                                      .id(23910442).name("CxFlow Integration GitLab Tests")
-                                      .webUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests")
-                                      .gitSshUrl("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
-                                      .gitHttpUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests.git")
-                                      .namespace("cxflowtestuser")
-                                      .visibilityLevel(0)
-                                      .pathWithNamespace("cxflowtestuser/cxflow-integration-gitlab-tests")
-                                      .defaultBranch("master")
-                                      .homepage("homepage")
-                                      .url("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
-                                      .sshUrl("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
-                                      .httpUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests.git")
-                                      .build());
+                .id(23910442).name("CxFlow Integration GitLab Tests")
+                .webUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests")
+                .gitSshUrl("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                .gitHttpUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                .namespace("cxflowtestuser")
+                .visibilityLevel(0)
+                .pathWithNamespace("cxflowtestuser/cxflow-integration-gitlab-tests")
+                .defaultBranch("master")
+                .homepage("homepage")
+                .url("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                .sshUrl("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                .httpUrl("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                .build());
         mergeEvent.setRepository(com.checkmarx.flow.dto.gitlab.Repository.builder()
-                                         .name("CxFlow Integration GitLab Tests")
-                                         .url("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
-                                         .description("")
-                                         .homepage("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests")
-                                         .build());
+                .name("CxFlow Integration GitLab Tests")
+                .url("git@gitlab.com:cxflowtestuser/cxflow-integration-gitlab-tests.git")
+                .description("")
+                .homepage("https://gitlab.com/cxflowtestuser/cxflow-integration-gitlab-tests")
+                .build());
         com.checkmarx.flow.dto.gitlab.Target target = new com.checkmarx.flow.dto.gitlab.Target();
         target.setDefaultBranch("master");
         mergeEvent.setObjectAttributes(com.checkmarx.flow.dto.gitlab.ObjectAttributes.builder()
-                                               .id(86014571).targetBranch("master").sourceBranch("cxflow-test").sourceProjectId(23910442)
-                                               .authorId(7362071).title("Update README.md").createdAt("2021-01-25 14:32:47 UTC")
-                                               .updatedAt("2021-01-25 14:32:47 UTC").state("opened").mergeStatus("unchecked")
-                                               .targetProjectId(Integer.parseInt(GITLAB_PROJECT_ID))
-                                               .iid(Integer.parseInt(GITLAB_MERGE_REQUEST_ID))
-                                               .description("")
-                                               .workInProgress(false)
-                                               .target(target)
-                                               .lastCommit(new LastCommit().withId("fa907029c049b781f961e452a375d606402102a6"))
-                                               .action("open")
-                                               .build());
+                .id(86014571).targetBranch("master").sourceBranch("cxflow-test").sourceProjectId(23910442)
+                .authorId(7362071).title("Update README.md").createdAt("2021-01-25 14:32:47 UTC")
+                .updatedAt("2021-01-25 14:32:47 UTC").state("opened").mergeStatus("unchecked")
+                .targetProjectId(Integer.parseInt(GITLAB_PROJECT_ID))
+                .iid(Integer.parseInt(GITLAB_MERGE_REQUEST_ID))
+                .description("")
+                .workInProgress(false)
+                .target(target)
+                .lastCommit(new LastCommit().withId("fa907029c049b781f961e452a375d606402102a6"))
+                .action("open")
+                .build());
         ControllerRequest controllerRequest = new ControllerRequest();
         controllerRequest.setProject("cxflow-integration-gitlab-tests-Cxflow-test");
         controllerRequest.setTeam("\\CxServer\\SP");
