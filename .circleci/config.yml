@@ -126,31 +126,31 @@ jobs:
           command: |
             VERSION=$(cat ./build/libs/version.txt)
             SHA1_SHORT=${CIRCLE_SHA1::7}
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
+            docker login -u ${DCR_USR} -p ${DCR_PW} docker.io
             docker build --target java17 \
-              -t ${DOCKER_REPO}:${SHA1_SHORT} \
-              -t ${DOCKER_REPO}:${VERSION}-17 \
-              -t ${DOCKER_REPO}:${VERSION} \
-              -t ${DOCKER_REPO} \
+              -t ${DCR_REPO}:${SHA1_SHORT} \
+              -t ${DCR_REPO}:${VERSION}-17 \
+              -t ${DCR_REPO}:${VERSION} \
+              -t ${DCR_REPO} \
               .
-            docker push ${DOCKER_REPO}:${SHA1_SHORT}
+            docker push ${DCR_REPO}:${SHA1_SHORT}
             docker build --target java17-debian \
-              -t ${DOCKER_REPO_DEBIAN}:${SHA1_SHORT} \
-              -t ${DOCKER_REPO_DEBIAN}:${VERSION}-17 \
-              -t ${DOCKER_REPO_DEBIAN}:${VERSION} \
-              -t ${DOCKER_REPO_DEBIAN} \
+              -t ${DCR_REPO_DEBIAN}:${SHA1_SHORT} \
+              -t ${DCR_REPO_DEBIAN}:${VERSION}-17 \
+              -t ${DCR_REPO_DEBIAN}:${VERSION} \
+              -t ${DCR_REPO_DEBIAN} \
               .
-            docker push ${DOCKER_REPO_DEBIAN}:${SHA1_SHORT}
+            docker push ${DCR_REPO_DEBIAN}:${SHA1_SHORT}
       - run:
           name: Archive Docker images
           command: |
             VERSION=$(cat ./build/libs/version.txt)
-            docker save -o image-17.tar ${DOCKER_REPO}:${VERSION}-17
-            docker save -o image.tar ${DOCKER_REPO}:${VERSION}
-            docker save -o latest.tar ${DOCKER_REPO}:latest            
-            docker save -o image-17-debian.tar ${DOCKER_REPO_DEBIAN}:${VERSION}-17
-            docker save -o image-debian.tar ${DOCKER_REPO_DEBIAN}:${VERSION}
-            docker save -o latest-debian.tar ${DOCKER_REPO_DEBIAN}:latest
+            docker save -o image-17.tar ${DCR_REPO}:${VERSION}-17
+            docker save -o image.tar ${DCR_REPO}:${VERSION}
+            docker save -o latest.tar ${DCR_REPO}:latest            
+            docker save -o image-17-debian.tar ${DCR_REPO_DEBIAN}:${VERSION}-17
+            docker save -o image-debian.tar ${DCR_REPO_DEBIAN}:${VERSION}
+            docker save -o latest-debian.tar ${DCR_REPO_DEBIAN}:latest
       - persist_to_workspace:
           root: .
           paths:
@@ -532,8 +532,8 @@ jobs:
       - run:
           name: Publish Docker images to Docker Hub
           command: |
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
-            docker push ${DOCKER_REPO}
+            docker login -u ${DCR_USR} -p ${DCR_PW} docker.io
+            docker push ${DCR_REPO}
       - run:
           name: Load archived Docker debian images
           command: |
@@ -543,8 +543,8 @@ jobs:
       - run:
           name: Publish Docker debian images to Docker Hub
           command: |
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker.io
-            docker push ${DOCKER_REPO_DEBIAN}
+            docker login -u ${DCR_USR} -p ${DCR_PW} docker.io
+            docker push ${DCR_REPO_DEBIAN}
   publish-github-release:
     docker:
       - image: circleci/golang:1.16.12
@@ -674,6 +674,9 @@ workflows:
           filters:
             branches:
               only: master
+                - develop
+                - /pr-.*/
+                - /pr .*/
           requires:
             - integration-tests
             - sca-integration-tests
