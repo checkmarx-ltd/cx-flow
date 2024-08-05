@@ -671,13 +671,6 @@ workflows:
             - CxGo-integration-tests
             #- CodeBashing-integration-tests
       - docker-push-stable:
-          filters:
-            branches:
-              only:
-                -master
-                - develop
-                - /pr-.*/
-                - /pr .*/
           requires:
             - integration-tests
             - sca-integration-tests
