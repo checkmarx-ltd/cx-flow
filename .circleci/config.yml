@@ -673,7 +673,8 @@ workflows:
       - docker-push-stable:
           filters:
             branches:
-              only: master
+              only:
+                -master
                 - develop
                 - /pr-.*/
                 - /pr .*/
