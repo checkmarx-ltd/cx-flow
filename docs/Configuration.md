@@ -837,6 +837,11 @@ github:
   max-description-length : <should be greater than 4 and less than 50000>
   max-delay : <minimum value should be 3>
   comment-update: false
+  fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
 ```
 
 | Configuration            | Default        | Description                                                                                                                                                                                                       |
@@ -851,7 +856,9 @@ github:
 | `max-description-length` | 50000          | Manages number of characters to view in issue description.(value should be greater than 4 and less than 50000)                                                                                                    |
 | `max-delay`              |                | When Secondary rate limit is hit, it will delay each API call for issue creation(Mininum value should be 3)                                                                                                       |
 | `comment-update`         | true           | if false, will create a new comment for every scan                                                                                                                                                                |
+| `fields`                 |                | Refer page: [Bug-Trackers-and-Feedback-Channels Chapter Github Fields](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#githubfields)                                             |
 **Note**: A service account is required with access to the repositories that will be scanned, pull requests that will be commented on, and GitHub issues that will be created/updated.
+
 
 ### <a name="gitlab">GitLab</a>
 ```yaml
@@ -863,6 +870,11 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
   comment-update: false
+  fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
 ```
 
 | Configuration            | Default        | Description                                                                                                                                                                         |
@@ -875,7 +887,7 @@ gitlab:
 | `block-merge`            | false          | When triggering scans based on Merge Request, the Merge request is marked as WIP in GitLab, which blocks the merge ability until the scan is complete in Checkmarx.                 |
 | `scan-submitted-comment` | true           | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                 |
 | `comment-update`         | true           | if false, will create a new comment for every scan                                                                                                                                  |
-
+| `fields`                 |                | Refer page: [Bug-Trackers-and-Feedback-Channels Chapter Gitlab Fields](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#gitlabfields)               |
 **Note**: A service account is required with access to the repositories that are going to be scanned, pull requests that are commented on, and GitLab issues that are created/updated.
 
 ### <a name="azure">Azure DevOps</a>
