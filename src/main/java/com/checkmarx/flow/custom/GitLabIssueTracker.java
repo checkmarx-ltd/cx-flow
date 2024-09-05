@@ -696,6 +696,7 @@ public class GitLabIssueTracker implements IssueTracker {
                 }
             }
 
+            
             if(properties.getIssueslabel()==null && !value.isEmpty())
             {
                 label = String.join(",", value);
