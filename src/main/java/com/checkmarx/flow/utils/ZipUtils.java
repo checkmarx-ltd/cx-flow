@@ -70,6 +70,7 @@ public class ZipUtils {
         log.info("Successfully created {} ", zipFile);
     }
 
+    
     private static void addToZip(String path, String srcFile, String zipFile, ZipOutputStream zipOut, List<String> excludePatterns,List<String> includePatterns,String rootDir)
             throws IOException {
         File file = new File(srcFile);
