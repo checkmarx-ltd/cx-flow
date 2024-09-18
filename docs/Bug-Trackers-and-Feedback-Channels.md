@@ -642,6 +642,15 @@ Sarif as a bug tracker is used to generate a sarif report and uploading it to th
 
 [[/Images/sarif-report-3.png]]
 
+* CxFlow can effectively group similar issues across various bug trackers, including those using the SARIF format. This consolidation helps streamline the review process and reduces redundant efforts. However, if users prefer to analyze each issue individually, they can easily disable the clubbing feature by using the command-line argument `--checkmarx.disable-clubbing=true`. This setting allows for a more granular examination of each reported vulnerability, ensuring that no important details are overlooked.
+
+* Example of sample before disable clubbing.
+  [[/Images/2.png]]
+
+* Example of sample after disable clubbing.
+  [[/Images/1.png]]
+
+
 ## <a name="service">Service Now</a>
 Integration with Incident records is available by adding the following configuration block:
 ```
@@ -663,6 +672,7 @@ cx-flow:
     - GitLab
       ...
 ```
+
 
 ## <a name="cxxml">CxXML</a>
 The XML bug-tracker (defined as CxXml) is useful, if you want to retrieve the latest scan results per project (batch mode) from Checkmarx per project, Team, or the entire instance. This is the original XML report provided by Checkmarx. When using CxXML with both CxSAST and CxSCA scanners enabled, two seprate reports will be generated, one for CxSAST report and one for CxSCA report.
