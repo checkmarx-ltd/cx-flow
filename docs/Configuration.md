@@ -7,6 +7,7 @@
   * [Cx-Flow Section](#cxflow)
     * [E-Mail notifications](#email)
     * [Filtering](#filtering)
+    * [Excluding Vulnerability](#excludeFilter)
     * [Excluding Files from Zip Archive](#excludezip)
     * [Break build](#break)
   * [Checkmarx Section](#checkmarx)
@@ -505,6 +506,20 @@ cx-flow:
 * **State** → Urgent | Confirmed
 
 All values are case-sensitive as per the output from Checkmarx (i.e. High severity, Stored_XSS, Confirmed).
+#### <a name="excludeFilter">Excluding Vulnerability</a>
+We can exclude vulnerabilities according to category, cwe and state.  
+
+```yaml
+cx-flow:
+ exclude-category: Stored_XSS
+ exclude-cwe: 79
+ exclude-state: Confirmed
+```
+* **Category** → Vulnerability name within Checkmarx
+* **CWE** → CWE value from Checkmarx
+* **State** → Urgent | Confirmed
+
+All values are case-sensitive as per the output from Checkmarx (Stored_XSS, Confirmed).
 
 #### <a name="excludezip">Excluding and Including Files from Zip Archive</a>
 
