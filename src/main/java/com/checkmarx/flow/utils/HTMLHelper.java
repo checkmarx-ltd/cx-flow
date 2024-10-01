@@ -7,7 +7,7 @@ import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.custom.IssueTracker;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.sdk.config.Constants;
-import  com.checkmarx.sdk.dto.sast.Filter.Severity;
+import com.checkmarx.sdk.dto.sast.Filter.Severity;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.SCAResults;
 import com.checkmarx.sdk.dto.cx.CxScanSummary;
@@ -64,12 +64,50 @@ public class HTMLHelper {
                 ScanUtils.setASTXIssuesInScanResults(results);
             }
 
-            addScanSummarySection(request, results, properties, body);
-            addFlowSummarySection(results, properties, body, request);
-            addDetailsSection(request, results, properties, body);
+            if (properties.isZeroVulnerabilitySummary()) {
+                //SAST vulnerability check
+                if (results.getScanSummary().getHighSeverity() == 0 &&
+                        results.getScanSummary().getMediumSeverity() == 0 &&
+                        results.getScanSummary().getLowSeverity() == 0 &&
+                        results.getScanSummary().getInfoSeverity() == 0) {
+                    //SAST version check
+                    if (request.getSastVersion() >= 9.7) {
+                        //if 9.7 and above critical vulnerability check
+                        if (results.getScanSummary().getCriticalSeverity() == 0) {
+                            appendAll(body,MarkDownHelper.getBoldText("No SAST Vulnerability Found!!"));
+                        }
+                    } else {
+                        appendAll(body,MarkDownHelper.getBoldText("No SAST Vulnerability Found!!"));
+                    }
+                } else {
+                    //Add Vulnerability details if vulnerabilities found
+                    addScanSummarySection(request, results, properties, body);
+                    addFlowSummarySection(results, properties, body, request);
+                    addDetailsSection(request, results, properties, body);
+                }
+            } else {
+                addScanSummarySection(request, results, properties, body);
+                addFlowSummarySection(results, properties, body, request);
+                addDetailsSection(request, results, properties, body);
+            }
         }
 
-        addScaBody(results, body, request);
+        //SCA vulnerability check
+        if (properties.isZeroVulnerabilitySummary()) {
+            Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
+                if (r.getSummary().getFindingCounts().get(Severity.valueOf("CRITICAL")) == 0 &&
+                        r.getSummary().getFindingCounts().get(Severity.valueOf("HIGH")) == 0 &&
+                        r.getSummary().getFindingCounts().get(Severity.valueOf("MEDIUM")) == 0 &&
+                        r.getSummary().getFindingCounts().get(Severity.valueOf("LOW")) == 0) {
+                    appendAll(body,MarkDownHelper.getBoldText("No SCA Vulnerability Found!!"));
+                } else {
+                    addScaBody(results, body, request);
+                }
+            });
+        }else{
+            addScaBody(results, body, request);
+        }
+
         return body.toString();
     }
 
@@ -103,22 +141,22 @@ public class HTMLHelper {
         return xIssueKeyValue;
     }
 
-    public static String getScanRequestIssueKeyWithDefaultProductValue(ScanRequest scanRequest, String titleToConcat,String labelPrefix) {
+    public static String getScanRequestIssueKeyWithDefaultProductValue(ScanRequest scanRequest, String titleToConcat, String labelPrefix) {
         String productPrefix;
-        if(labelPrefix != null){
+        if (labelPrefix != null) {
             productPrefix = labelPrefix;
-        } else{
+        } else {
             productPrefix = scanRequest.getProduct().getProduct();
         }
 
-        if(!titleToConcat.startsWith(productPrefix)) {
+        if (!titleToConcat.startsWith(productPrefix)) {
             titleToConcat = productPrefix + " " + titleToConcat;
         }
         return titleToConcat;
     }
 
     private static void addFlowSummarySection(ScanResults results, RepoProperties properties, StringBuilder body, ScanRequest request) {
-        if (properties.isFlowSummary() ) {
+        if (properties.isFlowSummary()) {
             if (!ScanUtils.empty(properties.getFlowSummaryHeader())) {
                 appendAll(body, MarkDownHelper.getMdHeaderType(3, properties.getFlowSummaryHeader()), CRLF);
             }
@@ -139,6 +177,7 @@ public class HTMLHelper {
             }
         }
     }
+
     private static void addScaBody(ScanResults results, StringBuilder body, ScanRequest request) {
         Optional.ofNullable(results.getScaResults()).ifPresent(r -> {
             log.debug("Building merge comment MD for SCA scanner");
@@ -159,7 +198,7 @@ public class HTMLHelper {
     }
 
     public static String getMDBody(ScanResults.XIssue issue, String branch, String fileUrl,
-            FlowProperties flowProperties, int max_desc_length) {
+                                   FlowProperties flowProperties, int max_desc_length) {
         StringBuilder body = new StringBuilder();
 
         List<ScanResults.ScaDetails> scaDetails = issue.getScaDetails();
@@ -167,7 +206,7 @@ public class HTMLHelper {
             setSCAMDBody(branch, body, scaDetails);
 
         } else {
-            setSASTMDBody(issue, branch, fileUrl, flowProperties, body,max_desc_length);
+            setSASTMDBody(issue, branch, fileUrl, flowProperties, body, max_desc_length);
         }
 
         return body.toString();
@@ -178,9 +217,9 @@ public class HTMLHelper {
         appendAll(body, MarkDownHelper.getBoldText("Total Packages Identified"), ": ", MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getTotalPackages())), CRLF);
         appendAll(body, MarkDownHelper.getBoldText("Scan Risk Score"), ": ", MarkDownHelper.getBoldText(String.format("%.2f", r.getSummary().getRiskScore())), CRLF, CRLF);
 
-        Arrays.asList("Critical","High", "Medium", "Low").forEach(v ->
+        Arrays.asList("Critical", "High", "Medium", "Low").forEach(v ->
                 appendAll(body, MarkDownHelper.getSeverityIconFromLinkByText(v, request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(String.valueOf(r.getSummary().getFindingCounts().get(Severity.valueOf(v.toUpperCase())))),
-                        " ", MarkDownHelper.getBoldText(v), " " ,MarkDownHelper.getBoldText("severity vulnerabilities"), CRLF));
+                        " ", MarkDownHelper.getBoldText(v), " ", MarkDownHelper.getBoldText("severity vulnerabilities"), CRLF));
 
         appendAll(body, MarkDownHelper.getTextLink(MarkDownHelper.MORE_DETAILS_LINK_HEADER, r.getWebReportLink()), CRLF);
     }
@@ -194,20 +233,20 @@ public class HTMLHelper {
 
         r.getFindings().stream().sorted(Comparator.comparingDouble(o -> -o.getScore()))
                 .sorted(Comparator.comparingInt(o -> -o.getSeverity().ordinal())).forEach(
-                f -> MarkDownHelper.appendMDtableRow(body, '`' + f.getId() + '`', extractPackageNameFromFindings(r, f),
-                        f.getSeverity().name(),
-                        // "N\\A",
-                        String.valueOf(f.getScore()), f.getPublishDate(),
-                        extractPackageVersionFromFindings(r, f),
-                        Optional.ofNullable(f.getFixResolutionText())
-                                .filter(text -> !text.isEmpty())
-                                .orElse("No Recommendations"),
-                        " [Vulnerability Link]("
-                                + ScanUtils.constructVulnerabilityUrl(r.getWebReportLink(), f) + ")",
-                        (StringUtils.isEmpty(f.getCveName())) ? "N\\A"
-                                : appendAll(new StringBuilder(), '[', f.getCveName(),
-                                "](https://nvd.nist.gov/vuln/detail/", f.getCveName(), ")")
-                                .toString()));
+                        f -> MarkDownHelper.appendMDtableRow(body, '`' + f.getId() + '`', extractPackageNameFromFindings(r, f),
+                                f.getSeverity().name(),
+                                // "N\\A",
+                                String.valueOf(f.getScore()), f.getPublishDate(),
+                                extractPackageVersionFromFindings(r, f),
+                                Optional.ofNullable(f.getFixResolutionText())
+                                        .filter(text -> !text.isEmpty())
+                                        .orElse("No Recommendations"),
+                                " [Vulnerability Link]("
+                                        + ScanUtils.constructVulnerabilityUrl(r.getWebReportLink(), f) + ")",
+                                (StringUtils.isEmpty(f.getCveName())) ? "N\\A"
+                                        : appendAll(new StringBuilder(), '[', f.getCveName(),
+                                        "](https://nvd.nist.gov/vuln/detail/", f.getCveName(), ")")
+                                        .toString()));
         appendAll(body, "</details>", CRLF);
 
     }
@@ -221,8 +260,7 @@ public class HTMLHelper {
         try {
             return r.getPackages().stream().filter(p -> p.getId().equals(f.getPackageId())).map(Package::getVersion)
                     .findFirst().orElse("");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.warn("failed to extract package version from SCA finding - {}", f.toString());
             return "EMPTY";
         }
@@ -260,7 +298,7 @@ public class HTMLHelper {
     }
 
     private static void setSASTHtmlBody(ScanResults.XIssue issue, FlowProperties flowProperties, String branch,
-            StringBuilder body) {
+                                        StringBuilder body) {
         appendAll(body, String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch), CRLF);
 
         if (!ScanUtils.empty(issue.getDescription())) {
@@ -294,7 +332,7 @@ public class HTMLHelper {
     }
 
     private static void appendsSastAstDetails(ScanResults.XIssue issue, FlowProperties flowProperties,
-            StringBuilder body) {
+                                              StringBuilder body) {
         if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -349,7 +387,7 @@ public class HTMLHelper {
     }
 
     private static void appendNotExploitableHTML(FlowProperties flowProperties, StringBuilder body,
-            Map<Integer, ScanResults.IssueDetails> fpIssues) {
+                                                 Map<Integer, ScanResults.IssueDetails> fpIssues) {
         if (flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {// List the false positives / not exploitable
             body.append("<div><b>Lines Marked Not Exploitable: </b>");
             for (Map.Entry<Integer, ScanResults.IssueDetails> entry : fpIssues.entrySet()) {
@@ -365,7 +403,7 @@ public class HTMLHelper {
             body.append(ITALIC_OPENING_DIV).append(any.getFinding().getDescription()).append(ITALIC_CLOSING_DIV)
                     .append(MarkDownHelper.getLineBreak(request));
             body.append(String.format(SCATicketingConstants.SCA_HTML_ISSUE_BODY, any.getFinding().getSeverity(),
-                    any.getVulnerabilityPackage().getName(), request.getBranch())).append(DIV_CLOSING_TAG)
+                            any.getVulnerabilityPackage().getName(), request.getBranch())).append(DIV_CLOSING_TAG)
                     .append(MarkDownHelper.getLineBreak(request));
         });
 
@@ -395,31 +433,24 @@ public class HTMLHelper {
     }
 
     private static void setSASTMDBody(ScanResults.XIssue issue, String branch, String fileUrl,
-            FlowProperties flowProperties, StringBuilder body, int max_desc_length) {
+                                      FlowProperties flowProperties, StringBuilder body, int max_desc_length) {
 
         log.debug("Building MD body for SAST scanner");
         body.append(String.format(ISSUE_BODY, issue.getVulnerability(), issue.getFilename(), branch)).append(CRLF)
                 .append(CRLF);
-        if (!ScanUtils.empty(issue.getDescription()))
-        {
-            if(flowProperties.getBugTracker().equalsIgnoreCase("GitHub"))
-            {
-                if(max_desc_length<4 || max_desc_length>50000)
-                {
+        if (!ScanUtils.empty(issue.getDescription())) {
+            if (flowProperties.getBugTracker().equalsIgnoreCase("GitHub")) {
+                if (max_desc_length < 4 || max_desc_length > 50000) {
                     log.info("max description length should be greater than 4 and less than 50000");
-                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(),50000 )).append("*").append(CRLF).append(CRLF);
+                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(), 50000)).append("*").append(CRLF).append(CRLF);
+                } else {
+                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(), max_desc_length)).append("*").append(CRLF).append(CRLF);
                 }
-                else
-                {
-                    body.append("*").append(StringUtils.abbreviate(issue.getDescription(),max_desc_length )).append("*").append(CRLF).append(CRLF);
-                }
-            }
-            else
-            {
+            } else {
                 body.append("*").append(issue.getDescription()).append("*").append(CRLF).append(CRLF);
             }
         }
-        if(!ScanUtils.empty(issue.getSimilarityId())){
+        if (!ScanUtils.empty(issue.getSimilarityId())) {
             body.append("Similarity Id").append(": ").append(issue.getSimilarityId()).append(CRLF).append(CRLF);
         }
         if (!ScanUtils.empty(issue.getSeverity())) {
@@ -457,7 +488,7 @@ public class HTMLHelper {
     }
 
     private static void appendSastAstDetails(ScanResults.XIssue issue, String fileUrl, FlowProperties flowProperties,
-            StringBuilder body) {
+                                             StringBuilder body) {
         if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -474,14 +505,14 @@ public class HTMLHelper {
     }
 
     private static void appendLines(String fileUrl, StringBuilder body,
-            Map<Integer, ScanResults.IssueDetails> trueIssues) {
+                                    Map<Integer, ScanResults.IssueDetails> trueIssues) {
         if (!trueIssues.isEmpty()) {
             body.append("Lines: ");
             for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
                 if (fileUrl != null) { // [<line>](<url>)
                     appendAll(body, "[", entry.getKey(), "](", fileUrl, "#L", entry.getKey(), ") ");
                 } else { // if the fileUrl is not provided, simply putting the line number (no link) -
-                         // ADO for example
+                    // ADO for example
                     appendAll(body, entry.getKey(), " ");
                 }
             }
@@ -490,7 +521,7 @@ public class HTMLHelper {
     }
 
     private static void appendCodeSnippet(String fileUrl, StringBuilder body,
-            Map<Integer, ScanResults.IssueDetails> trueIssues) {
+                                          Map<Integer, ScanResults.IssueDetails> trueIssues) {
         for (Map.Entry<Integer, ScanResults.IssueDetails> entry : trueIssues.entrySet()) {
             if (entry.getValue() != null && entry.getValue().getCodeSnippet() != null) {
                 appendAll(body, "---", CRLF);
@@ -503,7 +534,7 @@ public class HTMLHelper {
     }
 
     private static void appendNotExploitable(String fileUrl, FlowProperties flowProperties, StringBuilder body,
-            Map<Integer, ScanResults.IssueDetails> fpIssues) {
+                                             Map<Integer, ScanResults.IssueDetails> fpIssues) {
         if (flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {// List the false positives / not exploitable
             body.append(CRLF);
             body.append("Lines Marked Not Exploitable: ");
@@ -511,7 +542,7 @@ public class HTMLHelper {
                 if (fileUrl != null) { // [<line>](<url>)
                     appendAll(body, "[", entry.getKey(), "](", fileUrl, "#L", entry.getKey(), ") ");
                 } else { // if the fileUrl is not provided, simply putting the line number (no link) -
-                         // ADO for example
+                    // ADO for example
                     appendAll(body, entry.getKey(), " ");
                 }
             }
@@ -549,7 +580,7 @@ public class HTMLHelper {
         }
         body.append(CRLF);
         if (!ScanUtils.empty(issue.getSeverity())) {
-            appendAll(body, SEVERITY,  ": ", issue.getSeverity(), CRLF);
+            appendAll(body, SEVERITY, ": ", issue.getSeverity(), CRLF);
         }
         appendCWE(issue, flowProperties, body);
 
@@ -590,7 +621,7 @@ public class HTMLHelper {
     }
 
     private static void appendSastAstDetials(ScanResults.XIssue issue, FlowProperties flowProperties,
-            StringBuilder body) {
+                                             StringBuilder body) {
         if (issue.getDetails() != null && !issue.getDetails().isEmpty()) {
             Map<Integer, ScanResults.IssueDetails> trueIssues = issue.getDetails().entrySet().stream()
                     .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -603,7 +634,7 @@ public class HTMLHelper {
                 trueIssues.keySet().forEach(key -> body.append(key).append(" "));
             }
             if (flowProperties.isListFalsePositives() && !fpIssues.isEmpty()) {// List the false positives / not
-                                                                               // exploitable
+                // exploitable
                 body.append("Lines Marked Not Exploitable: ");
                 fpIssues.keySet().forEach(key -> body.append(key).append(" "));
             }
@@ -631,7 +662,7 @@ public class HTMLHelper {
         addIfPresent.accept(URL, o.getUrl());
 
     }
-    
+
     private static void addSastAstDetailsBody(ScanRequest request, StringBuilder body, Map<String, ScanResults.XIssue> xMap, Comparator<ScanResults.XIssue> issueComparator) {
         xMap.entrySet().stream()
                 .filter(x -> x.getValue() != null && x.getValue().getDetails() != null)
@@ -640,12 +671,11 @@ public class HTMLHelper {
                     ScanResults.XIssue currentIssue = xIssue.getValue();
                     String newFileName;
                     String fileUrl;
-                    if(currentIssue.getFilename().contains(" ")) {
+                    if (currentIssue.getFilename().contains(" ")) {
                         newFileName = currentIssue.getFilename().replace(" ", "%20");
                         fileUrl = ScanUtils.getFileUrl(request, newFileName);
-                    }
-                    else {
-                        fileUrl = ScanUtils.getFileUrl(request,currentIssue.getFilename() );
+                    } else {
+                        fileUrl = ScanUtils.getFileUrl(request, currentIssue.getFilename());
                     }
                     currentIssue.getDetails().entrySet().stream()
                             .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
@@ -713,8 +743,7 @@ public class HTMLHelper {
     private static void addScanSummarySection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
         setScannerLogoHeader(request, results, body);
         CxScanSummary summary = results.getScanSummary();
-        if(properties.isCxSummary())
-        {
+        if (properties.isCxSummary()) {
             setScannerSummaryHeader(results, body);
             setScannerTotalVulnerabilities(body, summary, request);
         }
@@ -723,13 +752,13 @@ public class HTMLHelper {
                 appendAll(body, MarkDownHelper.getMdHeaderType(4, properties.getCxSummaryHeader()), CRLF);
             }
             MarkDownHelper.appendMDtableHeaders(body, SEVERITY, "Count");
-            if(request.getSastVersion()>=9.7){
+            if (request.getSastVersion() >= 9.7) {
                 MarkDownHelper.appendMDtableRow(body, "Critical", summary.getCriticalSeverity().toString());
                 MarkDownHelper.appendMDtableRow(body, "High", summary.getHighSeverity().toString());
                 MarkDownHelper.appendMDtableRow(body, "Medium", summary.getMediumSeverity().toString());
                 MarkDownHelper.appendMDtableRow(body, "Low", summary.getLowSeverity().toString());
                 MarkDownHelper.appendMDtableRow(body, "Informational", summary.getInfoSeverity().toString());
-            }else{
+            } else {
                 MarkDownHelper.appendMDtableRow(body, "High", summary.getHighSeverity().toString());
                 MarkDownHelper.appendMDtableRow(body, "Medium", summary.getMediumSeverity().toString());
                 MarkDownHelper.appendMDtableRow(body, "Low", summary.getLowSeverity().toString());
@@ -742,13 +771,13 @@ public class HTMLHelper {
 
     private static void setScannerTotalVulnerabilities(StringBuilder body, CxScanSummary summary, ScanRequest request) {
         appendAll(body, "Total of " + countSastTotalVulnerabilities(summary) + " vulnerabilities", MarkDownHelper.getLineBreak(request));
-        if(request.getSastVersion()>=9.7){
+        if (request.getSastVersion() >= 9.7) {
             appendAll(body, MarkDownHelper.getCriticalIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getCriticalSeverity() + " Critical"), MarkDownHelper.getLineBreak(request));
             appendAll(body, MarkDownHelper.getHighIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.getLineBreak(request));
             appendAll(body, MarkDownHelper.getMediumIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.getLineBreak(request));
             appendAll(body, MarkDownHelper.getLowIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.getLineBreak(request));
             appendAll(body, MarkDownHelper.getInfoIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getInfoSeverity() + " Info"), MarkDownHelper.getLineBreak(request), CRLF);
-        }else {
+        } else {
             appendAll(body, MarkDownHelper.getHighIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getHighSeverity() + " High"), MarkDownHelper.getLineBreak(request));
             appendAll(body, MarkDownHelper.getMediumIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getMediumSeverity() + " Medium"), MarkDownHelper.getLineBreak(request));
             appendAll(body, MarkDownHelper.getLowIconFromLink(request), MarkDownHelper.getNonBreakingSpace(request), MarkDownHelper.getBoldText(summary.getLowSeverity() + " Low"), MarkDownHelper.getLineBreak(request));
@@ -777,7 +806,7 @@ public class HTMLHelper {
             if (xMap.size() > 0) {
                 setScannerDetailsHeader(results, body);
                 appendAll(body, "<details><summary>Click to see details</summary>", CRLF, CRLF);
-                MarkDownHelper.appendMDtableHeaders(body,"Lines",SEVERITY,"Category","File","Link");
+                MarkDownHelper.appendMDtableHeaders(body, "Lines", SEVERITY, "Category", "File", "Link");
                 log.info("Creating Merge/Pull Request Markdown comment");
 
                 Comparator<ScanResults.XIssue> issueComparator = Comparator

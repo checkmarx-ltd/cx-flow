@@ -148,7 +148,7 @@ public class ADOService {
             restTemplate.exchange(getFullAdoApiUrl(repoComment.getCommentUrl()), HttpMethod.PATCH, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while updating comment. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -202,7 +202,7 @@ public class ADOService {
                         HttpMethod.PATCH, httpEntity, Void.class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred in endBlockMerge. http error {} ", e.getStatusCode());
-                log.error(ExceptionUtils.getStackTrace(e));
+                log.debug(ExceptionUtils.getStackTrace(e));
             }
             /*
                 if the SAST server fails to scan a project it generates a result with ProjectId = -1
@@ -271,7 +271,7 @@ public class ADOService {
                         HttpMethod.PATCH, httpEntity, Void.class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred in endBlockMerge. http error {} ", e.getStatusCode());
-                log.error(ExceptionUtils.getStackTrace(e));
+                log.debug(ExceptionUtils.getStackTrace(e));
             }
             /*
                 if the SAST server fails to scan a project it generates a result with ProjectId = -1
@@ -310,7 +310,7 @@ public class ADOService {
             log.error("Error retrieving status id", e);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating status. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return -1;
     }
@@ -338,7 +338,7 @@ public class ADOService {
             log.error("Error updating the thread status", e);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while Creating Thread Status. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -423,10 +423,10 @@ public class ADOService {
             }
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting Comments. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JsonProcessingException e) {
             log.error("Error processing JSON response");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return result;
 
@@ -461,7 +461,7 @@ public class ADOService {
             restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while deleting comment. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -511,11 +511,11 @@ public class ADOService {
                 }
             }
         } catch (HttpClientErrorException e) {
-            log.error("Error occurred while loading cxconfig from ADO. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred while loading cxconfig from ADO. Http Error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JSONException e) {
-            log.error("Error processing JSON response");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error processing JSON response, Please check cx.config file format");
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return cxConfig;
     }
