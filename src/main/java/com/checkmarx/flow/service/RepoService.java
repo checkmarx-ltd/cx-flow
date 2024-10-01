@@ -30,9 +30,9 @@ public abstract class RepoService {
     public void sendMergeComment(ScanRequest request, String comment,boolean commentUpdate){
 
         try {
+            RepoComment commentToUpdate =
+                    PullRequestCommentsHelper.getCommentToUpdate(getComments(request), comment);
             if(commentUpdate){
-                RepoComment commentToUpdate =
-                        PullRequestCommentsHelper.getCommentToUpdate(getComments(request), comment);
                 if (commentToUpdate !=  null) {
                     log.debug("Got candidate comment to update. comment: {}", commentToUpdate.getComment());
                     if (!PullRequestCommentsHelper.shouldUpdateComment(comment, commentToUpdate.getComment())) {
