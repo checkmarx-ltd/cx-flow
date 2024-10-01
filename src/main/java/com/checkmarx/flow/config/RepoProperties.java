@@ -26,6 +26,7 @@ public class RepoProperties {
     private String flowSummaryHeader = PullRequestCommentsHelper.COMMENT_TYPE_SAST_FINDINGS_2;
     private boolean cxSummary = true;
     private boolean cxTableSummary = false;
+    private boolean zeroVulnerabilitySummary = false;
     private String cxSummaryHeader = "Checkmarx Scan Summary";
     private Map<String, OptionalScmInstanceProperties> optionalInstances;
     private boolean scanSubmittedComment = true;
@@ -186,6 +187,14 @@ public class RepoProperties {
 
     public String getCxSummaryHeader() {
         return cxSummaryHeader;
+    }
+
+    public boolean isZeroVulnerabilitySummary() {
+        return zeroVulnerabilitySummary;
+    }
+
+    public void setZeroVulnerabilitySummary(boolean zeroVulnerabilitySummary) {
+        this.zeroVulnerabilitySummary = zeroVulnerabilitySummary;
     }
 
     public void setCxSummaryHeader(String cxSummaryHeader) {
