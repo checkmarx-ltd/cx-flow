@@ -26,6 +26,7 @@
   * [GitHub](#github)
   * [GitLab](#gitlab)
   * [Azure DevOps](#azure)
+  * [Sarif](#sarif)
   * [Bitbucket (Cloud and Server)](#bitbucket)
 * [JSON Config Override](#json)
 * [BugTrackers](#bugtrackers)
@@ -943,6 +944,23 @@ azure:
 | `block-merge`                | false          | When triggering scans is based on pull request, this marks the Pull in blocked state until the scan is complete at Checkmarx.                                                           |
 | `zero-vulnerability-summary` | false          | if true, will not comment in PR decoration any details for scans as vulnerabilities are zero.                                                                                           |
 **Note**: A service account is required with access to the repositories that are scanned, pull requests that are commented on, and Azure WorkItems that are created/updated.
+
+
+### <a name="sarif">Sarif</a>
+```yaml
+sarif:
+ hassnippet: true
+```
+
+| Configuration          | Default       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `hassnippet`        |false          | In Checkmarx CX-Flow, when the hasSnippet flag is set to true, the tool displays relevant code snippets under the "Region" section of the UI. These snippets provide a portion of the code where potential vulnerabilities are detected, giving developers context to better understand the issue. This feature helps in identifying the exact location of security concerns, streamlining the remediation process by offering precise, actionable insights directly within the code. |
+
+**Note**: Command line parameter for snippet is `--sarif.hassnippet=true`
+
+
+
+
 
 ### <a name="bitbucket">Bitbucket (Cloud and Server)</a>
 ```yaml

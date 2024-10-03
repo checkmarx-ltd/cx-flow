@@ -1,5 +1,8 @@
 package com.checkmarx.flow.config;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.checkerframework.checker.index.qual.SearchIndexBottom;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +24,10 @@ public class SarifProperties {
     private String sarifSchema="https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json";
     private String sarifVersion = "2.1.0";
     private String semanticVersion = "1.0.0";
+
+    @Getter
+    @Setter
+    private boolean hasSnippet = false;
     private Map<String, String> severityMap = new HashMap<>();
     private Map<String, String> securitySeverityMap = new HashMap<>();
 
