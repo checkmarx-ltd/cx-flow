@@ -838,6 +838,11 @@ github:
   max-delay : <minimum value should be 3>
   comment-update: false
   zero-vulnerability-summary: true
+  fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
 ```
 
 | Configuration                | Default        | Description                                                                                                                                                                                                       |
@@ -853,7 +858,9 @@ github:
 | `max-delay`                  |                | When Secondary rate limit is hit, it will delay each API call for issue creation(Mininum value should be 3)                                                                                                       |
 | `comment-update`             | true           | if false, will create a new comment for every scan                                                                                                                                                                |
 | `zero-vulnerability-summary` | false          | if true, will not comment in PR decoration any details for scans as vulnerabilities are zero.                                                                                                                     |
+| `fields`                     |                | Refer page: [Bug-Trackers-and-Feedback-Channels Chapter Github Fields](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#githubfields)                                             |
 **Note**: A service account is required with access to the repositories that will be scanned, pull requests that will be commented on, and GitHub issues that will be created/updated.
+
 
 ### <a name="gitlab">GitLab</a>
 ```yaml
@@ -866,6 +873,11 @@ gitlab:
   block-merge: true
   comment-update: false
   zero-vulnerability-summary: true
+  fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
 ```
 
 | Configuration                | Default        | Description                                                                                                                                                                         |
@@ -879,6 +891,7 @@ gitlab:
 | `scan-submitted-comment`     | true           | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                 |
 | `comment-update`             | true           | if false, will create a new comment for every scan                                                                                                                                  |
 | `zero-vulnerability-summary` | false          | if true, will not comment in PR decoration any details for scans as vulnerabilities are zero.                                                                                       |
+| `fields`                     |                | Refer page: [Bug-Trackers-and-Feedback-Channels Chapter Gitlab Fields](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#gitlabfields)               |
 
 **Note**: A service account is required with access to the repositories that are going to be scanned, pull requests that are commented on, and GitLab issues that are created/updated.
 

@@ -1,11 +1,14 @@
 package com.checkmarx.flow.config;
 
+import com.checkmarx.flow.dto.Field;
+import com.checkmarx.flow.dto.LabelField;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -39,6 +42,13 @@ public class GitHubProperties extends RepoProperties {
     @Getter
     @Setter
     private Map<FindingSeverity,String> issueslabel;
+
+    @Getter
+    @Setter
+    private boolean commentUpdate =true;
+    @Getter
+    @Setter
+    private List<LabelField> fields;
 
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
