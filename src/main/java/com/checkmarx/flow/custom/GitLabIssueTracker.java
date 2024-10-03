@@ -5,12 +5,14 @@ import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.ScmConfigOverrider;
 import com.checkmarx.flow.dto.Issue;
+import com.checkmarx.flow.dto.LabelField;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.gitlab.Note;
 import com.checkmarx.flow.exception.MachinaException;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,7 +27,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service("GitLab")
 public class GitLabIssueTracker implements IssueTracker {
@@ -363,7 +368,7 @@ public class GitLabIssueTracker implements IssueTracker {
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties, max_desc_length);
         String title = getXIssueKey(resultIssue, request);
-        String label = getString(resultIssue);
+        String label = getString(request,resultIssue);
 
         try {
             requestBody.put("title", title);
@@ -388,7 +393,7 @@ public class GitLabIssueTracker implements IssueTracker {
         String fileUrl = getFileUrl(request, resultIssue.getFilename());
         String body = HTMLHelper.getMDBody(resultIssue, request.getBranch(), fileUrl, flowProperties, max_desc_length);
         String title = HTMLHelper.getScanRequestIssueKeyWithDefaultProductValue(request, this, resultIssue);
-        String label = getString(resultIssue);
+        String label = getString(request,resultIssue);
 
         try {
             requestBody.put("title", title);
@@ -402,15 +407,301 @@ public class GitLabIssueTracker implements IssueTracker {
         return requestBody;
     }
 
-    private String getString(ScanResults.XIssue resultIssue) {
+    private String getString(ScanRequest request,ScanResults.XIssue issue) {
         String label = "NA";
+        List<String> value = new ArrayList<>();
         try {
-            Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
-            for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
-                if (resultIssue.getSeverity().equalsIgnoreCase(entry.getKey().toString()) || resultIssue.getSeverity().toLowerCase(Locale.ROOT).contains(entry.getKey().toString().toLowerCase(Locale.ROOT))) {
-                    label = entry.getValue();
-                    break;
+            if(properties.getIssueslabel()!=null)
+            {
+                Map<FindingSeverity, String> findingsPerSeverity = properties.getIssueslabel();
+                for (Map.Entry<FindingSeverity, String> entry : findingsPerSeverity.entrySet()) {
+                    if (issue.getSeverity().equalsIgnoreCase(entry.getKey().toString()) || issue.getSeverity().toLowerCase(Locale.ROOT).contains(entry.getKey().toString().toLowerCase(Locale.ROOT))) {
+                        label = entry.getValue();
+                        break;
+                    }
                 }
+            }
+
+            for (LabelField f : properties.getFields()) {
+                String fieldType = f.getType();
+                String fieldName;
+                if (ScanUtils.empty(fieldType)) {
+                    log.warn("Field type not supplied. Using 'result' by default.");
+                    // use default = result
+                    fieldType = "result";
+                }
+                Map<String, Object> addDetails = null;
+                Map<String, String> scanCustomFields = null;
+                String scanScaTags = null;
+                String scanCustomFieldsValue = null;
+                if (Objects.nonNull(issue.getAdditionalDetails()) && Objects.nonNull((Map<String, String>) issue.getAdditionalDetails().get("scanCustomFields"))) {
+                    addDetails = issue.getAdditionalDetails();
+                    scanCustomFields = (Map<String, String>) addDetails.get("scanCustomFields");
+                    scanCustomFieldsValue = scanCustomFields.get(f.getName());
+                }
+                if (Objects.nonNull(issue.getScaDetails()) && Objects.nonNull(issue.getScaDetails().get(0).getScanTags())) {
+                    scanScaTags = (String) issue.getScaDetails().get(0).getScanTags().get(f.getName());
+                }
+
+                switch (fieldType) {
+                    case "cx-scan"://cx-scan, cx-sca, sca-results, static, result
+                        log.debug("Checkmarx scan custom field {}", f.getName());
+                        if (scanCustomFieldsValue != null) {
+                            log.debug("Checkmarx scan custom field");
+                            value.add(f.getName() + ":" + scanCustomFieldsValue);
+                            log.debug("Cx Scan Field value: {}", value);
+                            if (ScanUtils.empty(value) && !ScanUtils.empty(f.getDefaultValue())) {
+                                value.add(f.getName() + ":" + f.getDefaultValue());
+                                log.debug("default Value is {}", value);
+                            }
+                        } else {
+                            log.debug("No value found for {}", f.getName());
+                            value.add("");
+                        }
+                        break;
+                    case "cx-sca":
+                        log.debug("SCA scan Tags Key name {}", f.getName());
+                        if (scanScaTags != null) {
+                            value.add(f.getName() + ":" + scanScaTags);
+                            log.debug("SCA scan Field value: {}", value);
+                            if (ScanUtils.empty(value) && !ScanUtils.empty(f.getDefaultValue())) {
+                                value.add(f.getName() + ":" + f.getDefaultValue());
+                                log.debug(" default Value is {}", value);
+                            }
+                        } else {
+                            log.debug("No value found for {}", f.getName());
+                            value.add("");
+                        }
+                        break;
+                    case "sca-results":
+                        if (issue.getScaDetails() == null) {
+                            log.debug("Sca details not available");
+                            break;
+                        }
+                        fieldName = f.getName();
+                        switch (fieldName) {
+                            case "package-name":
+                                log.debug("package-name: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getId());
+                                value.add(f.getName() + ":" + issue.getScaDetails().get(0).getVulnerabilityPackage().getId());
+                                break;
+                            case "current-version":
+                                log.debug("current-version: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion());
+                                value.add(f.getName() + ":" + issue.getScaDetails().get(0).getVulnerabilityPackage().getVersion());
+                                break;
+                            case "fixed-version":
+                                log.debug("fixed-version: {}", issue.getScaDetails().get(0).getFinding().getFixResolutionText());
+                                value.add(f.getName() + ":" + issue.getScaDetails().get(0).getFinding().getFixResolutionText());
+                                break;
+                            case "newest-version":
+                                log.debug(issue.getScaDetails().get(0).getVulnerabilityPackage().getNewestVersion());
+                                value.add(f.getName() + ":" + issue.getScaDetails().get(0).getVulnerabilityPackage().getNewestVersion());
+                                break;
+                            case "locations":
+                                List<String> locations = issue.getScaDetails().get(0).getVulnerabilityPackage().getLocations();
+                                String location = null;
+                                for (String l : locations
+                                ) {
+                                    location = l + ",";
+                                }
+                                log.debug("locations: {}", location);
+                                assert location != null;
+                                value.add(f.getName() + ":" + location.substring(0, location.length() - 1));
+                                break;
+                            case "dev-dependency":
+                                log.debug("dev-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopmentDependency());
+                                value.add(f.getName() + ":" + String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDevelopmentDependency()).toUpperCase());
+                                break;
+                            case "direct-dependency":
+                                log.debug("direct-dependency: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDirectDependency());
+                                value.add(f.getName() + ":" + String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isIsDirectDependency()).toUpperCase());
+                                break;
+                            case "risk-score":
+                                log.debug("risk score: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().getRiskScore());
+                                value.add(f.getName() + ":" + String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().getRiskScore()));
+                                break;
+                            case "outdated":
+                                log.debug("outdated: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated());
+                                value.add(f.getName() + ":" + String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated()).toUpperCase());
+                                break;
+                            case "violates-policy":
+                                log.debug("Violates-Policy: {}", issue.getScaDetails().get(0).getFinding().isViolatingPolicy());
+                                value.add(f.getName() + ":" + String.valueOf(issue.getScaDetails().get(0).getFinding().isViolatingPolicy()).toUpperCase());
+
+                        }
+                        break;
+                    case "static":
+                        log.debug("Static value {} - {}", f.getName(), f.getDefaultValue());
+                        value.add(f.getDefaultValue());
+                        break;
+                    default: //result
+                        fieldName = f.getName();
+                        if (fieldName == null) {
+                            log.warn("Field name not supplied. Skipping.");
+                            /* there is no default, move on to the next field */
+                            continue;
+                        }
+                        /*known values we can use*/
+                        switch (fieldName) {
+                            case "application":
+                                log.debug("application: {}", request.getApplication());
+                                if(request.getApplication()!=null){
+                                    value.add(f.getName() + ":" + request.getApplication());
+                                }else{
+                                    value.add(f.getName() + ":" +" ");
+                                }
+                                break;
+                            case "project":
+                                log.debug("project: {}", request.getProject());
+                                value.add(f.getName() + ":" + request.getProject());
+                                break;
+                            case "namespace":
+                                log.debug("namespace: {}", request.getNamespace());
+                                value.add(f.getName() + ":" + request.getNamespace());
+                                break;
+                            case "repo-name":
+                                log.debug("repo-name: {}", request.getRepoName());
+                                value.add(f.getName() + ":" + request.getRepoName());
+                                break;
+                            case "repo-url":
+                                log.debug("repo-url: {}", request.getRepoUrl());
+                                value.add(f.getName() + ":" + request.getRepoUrl());
+                                break;
+                            case "branch":
+                                log.debug("branch: {}", request.getBranch());
+                                value.add(f.getName() + ":" + request.getBranch());
+                                break;
+                            case "severity":
+                                if (issue.getScaDetails() != null) {
+                                    log.debug("severity: {}", issue.getScaDetails().get(0).getFinding().getSeverity());
+                                    value.add(f.getName() + ":" + ScanUtils.toProperCase(String.valueOf(issue.getScaDetails().get(0).getFinding().getSeverity())));
+                                } else {
+                                    log.debug("severity: {}", issue.getSeverity());
+                                    value.add(f.getName() + ":" + ScanUtils.toProperCase(issue.getSeverity()));
+                                }
+                                break;
+                            case "category":
+                                log.debug("category: {}", issue.getVulnerability());
+                                value.add(f.getName() + ":" + issue.getVulnerability());
+                                break;
+                            case "cwe":
+                                log.debug("cwe: {}", issue.getCwe());
+                                value.add(f.getName() + ":" + issue.getCwe());
+                                break;
+                            case "cve":
+                                if (issue.getScaDetails() != null) {
+                                    log.debug("cve: {}", issue.getScaDetails().get(0).getFinding().getId());
+                                    value.add(f.getName() + ":" + issue.getScaDetails().get(0).getFinding().getId());
+                                } else {
+                                    log.debug("cve: {}", issue.getCve());
+                                    value.add(f.getName() + ":" + issue.getCve());
+                                }
+                                break;
+                            case "system-date":
+                                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                LocalDateTime now = LocalDateTime.now();
+                                value.add(f.getName() + ":" + dtf.format(now));
+                                log.debug("system date: {}", value);
+                                break;
+                            case "recommendation":
+                                StringBuilder recommendation = new StringBuilder();
+                                if (issue.getLink() != null && !issue.getLink().isEmpty()) {
+                                    recommendation.append("Checkmarx Link: ").append(issue.getLink()).append(HTMLHelper.CRLF);
+                                }
+                                if (!ScanUtils.anyEmpty(flowProperties.getMitreUrl(), issue.getCwe())) {
+                                    recommendation.append("Mitre Details: ").append(String.format(flowProperties.getMitreUrl(), issue.getCwe())).append(HTMLHelper.CRLF);
+                                }
+                                if (!ScanUtils.empty(flowProperties.getWikiUrl())) {
+                                    recommendation.append("Guidance: ").append(flowProperties.getWikiUrl()).append(HTMLHelper.CRLF);
+                                }
+                                value.add(f.getName() + ":" + recommendation.toString());
+                                break;
+                            case "loc":
+                                if (issue.getDetails() != null) {
+                                    List<Integer> lines = issue.getDetails().entrySet()
+                                            .stream()
+                                            .filter(x -> x.getKey() != null && x.getValue() != null && !x.getValue().isFalsePositive())
+                                            .map(Map.Entry::getKey)
+                                            .collect(Collectors.toList());
+                                    if (!lines.isEmpty()) {
+                                        Collections.sort(lines);
+                                        value.add(f.getName() + ":" + StringUtils.join(lines, ","));
+                                        log.debug("loc: {}", value);
+                                    }
+                                }
+                                break;
+                            case "not-exploitable":
+                                List<Integer> fpLines;
+                                if (issue.getDetails() != null) {
+                                    fpLines = issue.getDetails().entrySet()
+                                            .stream()
+                                            .filter(x -> x.getKey() != null && x.getValue() != null && x.getValue().isFalsePositive())
+                                            .map(Map.Entry::getKey)
+                                            .collect(Collectors.toList());
+                                    if (!fpLines.isEmpty()) {
+                                        Collections.sort(fpLines);
+                                        value.add(f.getName() + ":" + StringUtils.join(fpLines, ","));
+                                        log.debug("loc: {}", value);
+                                    }
+                                }
+                                break;
+                            case "site":
+                                log.debug("site: {}", request.getSite());
+                                value.add(f.getName() + ":" + request.getSite());
+                                break;
+                            case "issue-link":
+                                if (issue.getScaDetails() != null) {
+                                    log.debug("issue-link: {}", issue.getScaDetails().get(0).getVulnerabilityLink());
+                                    value.add(f.getName() + ":" + issue.getScaDetails().get(0).getVulnerabilityLink());
+                                } else {
+                                    log.debug("issue-link: {}", issue.getLink());
+                                    value.add(f.getName() + ":" + issue.getLink());
+                                }
+                                break;
+                            case "filename":
+                                log.debug("filename: {}", issue.getFilename());
+                                value.add(f.getName() + ":" + issue.getFilename());
+                                break;
+                            case "language":
+                                log.debug("language: {}", issue.getLanguage());
+                                value.add(f.getName() + ":" + issue.getLanguage());
+                                break;
+                            case "similarity-id":
+                                log.debug("similarity-id: {}", issue.getSimilarityId());
+                                value.add(f.getName() + ":" + issue.getSimilarityId());
+                                break;
+                            case "comment":
+                                StringBuilder comments = new StringBuilder();
+                                String commentFmt = "[Line %s]: [%s]".concat(HTMLHelper.CRLF);
+                                if (issue.getDetails() != null) {
+                                    issue.getDetails().entrySet()
+                                            .stream()
+                                            .filter(x -> x.getKey() != null && x.getValue() != null && x.getValue().getComment() != null && !x.getValue().getComment().isEmpty())
+                                            .forEach(c -> comments.append(String.format(commentFmt, c.getKey(), c.getValue().getComment())));
+                                    value.add(f.getName() + ":" + comments.toString());
+                                }
+                                break;
+                            default:
+                                log.warn("field value for {} not found", f.getName());
+                                value.add("");
+                        }
+                        /*If the value is missing, check if a default value was specified*/
+                        if (ScanUtils.empty(value)) {
+                            log.debug("Value is empty, defaulting to configured default (if applicable)");
+                            if (!ScanUtils.empty(f.getDefaultValue())) {
+                                value.add(f.getName() + ":" + f.getDefaultValue());
+                                log.debug("Default value is {}", value);
+                            }
+                        }
+                        break;
+                }
+            }
+
+            
+            if(properties.getIssueslabel()==null && !value.isEmpty())
+            {
+                label = String.join(",", value);
+            }else{
+                label = label + "," + String.join(",", value);
             }
         } catch (Exception e) {
             return label;

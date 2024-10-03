@@ -497,7 +497,7 @@ azure:
 ## <a name="gitlab">GitLab Issues</a>
 * GitLab Issues leverages the same configuration as specified for WebHook listeners → API token (**token**) and valid urls are required
 
-```
+```yaml
 gitlab:
    webhook-token: XXXX
    token: xxx
@@ -505,6 +505,40 @@ gitlab:
    api-url: https://gitlab.com/api/v4/
    false-positive-label: false-positive
    block-merge: true
+   fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
+```
+#### <a name="gitlabfields">Fields</a>
+Every value mentioned in fields will be added in Labels.
+* **type**
+  * **cx-scan**: Used to map specific Checkmarx Scan Custom Field values
+  * **cx-sca**: Used to map specific Checkmarx SCA Scan tags values
+  * **static**: Used for static values (specifically requires a default-value to be provided)
+  * **result**: Used to map known values from Checkmarx results or repository/scan request details.  Refer to the Result values below.
+  
+* **name**: If cx-scan or cx-sca reflects the type, it is the name of the custom field within Checkmarx SAST or key of tag in case o SCA
+* **default-value** Static value if no value can be determined for the respective field (Optional)
+* If **result** is provided as type, the name must be one of the following:
+
+```
+application - Command line option --app
+project - Command line option --cx-project
+namespace - Command line option --namespace
+repo-name - Command line option --repo-name
+repo-url - Command line option --repo-url
+branch - Command line option --branch
+severity - Severity of issue in Checkmarx
+category - Category of issue in Checkmarx
+cwe - CWE of issue in Checkmarx
+recommendation - Recommendation details based on Mitre/Custom Wiki
+loc - csv of lines of code
+issue-link - Direct link to issue within Checkmarx
+filename - Filename provided by Checkmarx issue
+language - Language provided by Checkmarx issue
+similarity-id - Cx Similarity ID
 ```
 [[/Images/bug2.png|Screenshot of GitLab issue]]
 
@@ -591,6 +625,40 @@ github:
    api-url: https://api.github.com/repos/
    false-positive-label: false-positive
    block-merge: true
+   fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
+```
+#### <a name="githubfields">Fields</a>
+Every value mentioned in fields will be added in Labels.
+* **type**
+  * **cx-scan**: Used to map specific Checkmarx Scan Custom Field values
+  * **cx-sca**: Used to map specific Checkmarx SCA Scan tags values
+  * **static**: Used for static values (specifically requires a default-value to be provided)
+  * **result**: Used to map known values from Checkmarx results or repository/scan request details.  Refer to the Result values below.
+
+* **name**: If cx-scan or cx-sca reflects the type, it is the name of the custom field within Checkmarx SAST or key of tag in case o SCA
+* **default-value** Static value if no value can be determined for the respective field (Optional)
+* If **result** is provided as type, the name must be one of the following:
+
+```
+application - Command line option --app
+project - Command line option --cx-project
+namespace - Command line option --namespace
+repo-name - Command line option --repo-name
+repo-url - Command line option --repo-url
+branch - Command line option --branch
+severity - Severity of issue in Checkmarx
+category - Category of issue in Checkmarx
+cwe - CWE of issue in Checkmarx
+recommendation - Recommendation details based on Mitre/Custom Wiki
+loc - csv of lines of code
+issue-link - Direct link to issue within Checkmarx
+filename - Filename provided by Checkmarx issue
+language - Language provided by Checkmarx issue
+similarity-id - Cx Similarity ID
 ```
 [[/Images/bug4.png|Screenshot of GitHub issue]]
 
@@ -642,6 +710,17 @@ Sarif as a bug tracker is used to generate a sarif report and uploading it to th
 
 [[/Images/sarif-report-3.png]]
 
+* CxFlow can effectively group similar issues across various bug trackers, including those using the SARIF format. This consolidation helps streamline the review process and reduces redundant efforts. However, if users prefer to analyze each issue individually, they can easily disable the clubbing feature by using the command-line argument `--checkmarx.disable-clubbing=true`. This setting allows for a more granular examination of each reported vulnerability, ensuring that no important details are overlooked.
+
+* Example of sample before disable clubbing.
+
+  [[/Images/2.png]]
+
+* Example of sample after disable clubbing.
+
+  [[/Images/1.png]]
+
+
 ## <a name="service">Service Now</a>
 Integration with Incident records is available by adding the following configuration block:
 ```
@@ -663,6 +742,7 @@ cx-flow:
     - GitLab
       ...
 ```
+
 
 ## <a name="cxxml">CxXML</a>
 The XML bug-tracker (defined as CxXml) is useful, if you want to retrieve the latest scan results per project (batch mode) from Checkmarx per project, Team, or the entire instance. This is the original XML report provided by Checkmarx. When using CxXML with both CxSAST and CxSCA scanners enabled, two seprate reports will be generated, one for CxSAST report and one for CxSCA report.

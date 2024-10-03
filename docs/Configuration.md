@@ -7,6 +7,7 @@
   * [Cx-Flow Section](#cxflow)
     * [E-Mail notifications](#email)
     * [Filtering](#filtering)
+    * [Excluding Vulnerability](#excludeFilter)
     * [Excluding Files from Zip Archive](#excludezip)
     * [Break build](#break)
   * [Checkmarx Section](#checkmarx)
@@ -25,6 +26,7 @@
   * [GitHub](#github)
   * [GitLab](#gitlab)
   * [Azure DevOps](#azure)
+  * [Sarif](#sarif)
   * [Bitbucket (Cloud and Server)](#bitbucket)
 * [JSON Config Override](#json)
 * [BugTrackers](#bugtrackers)
@@ -505,6 +507,20 @@ cx-flow:
 * **State** → Urgent | Confirmed
 
 All values are case-sensitive as per the output from Checkmarx (i.e. High severity, Stored_XSS, Confirmed).
+#### <a name="excludeFilter">Excluding Vulnerability</a>
+We can exclude vulnerabilities according to category, cwe and state.  
+
+```yaml
+cx-flow:
+ exclude-category: Stored_XSS
+ exclude-cwe: 79
+ exclude-state: Confirmed
+```
+* **Category** → Vulnerability name within Checkmarx
+* **CWE** → CWE value from Checkmarx
+* **State** → Urgent | Confirmed
+
+All values are case-sensitive as per the output from Checkmarx (Stored_XSS, Confirmed).
 
 #### <a name="excludezip">Excluding and Including Files from Zip Archive</a>
 
@@ -688,11 +704,38 @@ settings-override: true #default false if not provide
 
 ### <a name="branchproject">Branched Project</a>
 A branched project is a child of a base project in CxSAST. Upon initiating a scan from the default branch of a repository, CxSAST creates a base project in the server with name `RepoName-defaultBranchName` and any subsequent scans from the branches of that repository will create child projects off of it with name `RepoName-currentBranchName`. The project count in CxSAST does not increase when a branched project is added. Branching of projects can be enabled by setting the `cx-branch` property to `true`.
+
+### Base Project Creation:
+
+* When you initiate a scan from the default branch of a repository, CxSAST automatically creates a base project on the server.
+* The naming convention used is RepoName-defaultBranchName (e.g., `MyRepo-main` if `main` is your default branch).
+
+### Child Projects (Branched Projects):
+
+* For scans initiated from other branches (not the default), CxSAST creates branched projects or child projects.
+* These child projects are named using the convention `RepoName-currentBranchName` (e.g., `MyRepo-feature1`).
+* Importantly, the total project count in CxSAST does not increase when these branched projects are added. They are treated as extensions of the base project.
+
+### Enabling Project Branching:
+* To enable project branching, you need to set the `cx-branch` property to `true`.
+* Additionally, you must provide both the `default branch name` and the `current branch name`.
+### Project Count
+
+- The overall project count in CxSAST does not increase when branched projects are added. Branched projects are managed under the umbrella of the base project, which keeps the total project count static.
+
+### Enabling Project Branching
+
+### Implementation Example:
+* When configuring the scan (e.g., via a CxSAST API or build pipeline), you might set these properties like this:
+
 ```yaml
 checkmarx:
   ...
   cx-branch: true #default false if not provided
 ```
+
+* CLI parameter to provide default branch name is `default-branch = main` and current branch can be passed `branch = feature1`. 
+* In case of webhook it will be passed automatically in payloads.
 
 ### <a name="scanqueuing"> Scan Queuing and Scan Queuing Timeout</a>
 If the number of concurrent scans which can run on CxSAST server is all utilized, then enabling `scan-queuing` will allow CxFlow to keep the event of the scan within itself and let the existing scans finish before sending the new scan event to CxSAST. Cx-flow keeps events with itself for a number of minutes, specified by the `scan-queuing-timeout` parameter, with a default value of **120** minutes.
@@ -838,21 +881,30 @@ github:
   max-description-length : <should be greater than 4 and less than 50000>
   max-delay : <minimum value should be 3>
   comment-update: false
+  zero-vulnerability-summary: true
+  fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
 ```
 
-| Configuration            | Default        | Description                                                                                                                                                                                                       |
-|--------------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `webhook-token`          |                | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request. GitHub signs the request with this value, and the signature is validated on the receiving end. |
-| `token`                  |                | The API token with access to the repository, with at least Read only access to the code, the ability to add comments to pull requests, and the ability to create GitHub Issues.                                   |
-| `url`                    |                | Main repo url for GitHub                                                                                                                                                                                          |
-| `api-url`                |                | The API endpoint for GitHub, which is a different context or potentially FQDN than the main repo url.                                                                                                             |
-| `false-positive-label`   | false-positive | A label that can be defined within the GitHub Issue feedback that is used to ignore issues                                                                                                                        |
-| `block-merge`            | false          | When triggering scans based on PullRequest, this will create a new status of pending, which will block the merge ability until the scan is complete in Checkmarx.                                                 |
-| `scan-submitted-comment` | true           | Comment on PullRequest with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                 | 
-| `max-description-length` | 50000          | Manages number of characters to view in issue description.(value should be greater than 4 and less than 50000)                                                                                                    |
-| `max-delay`              |                | When Secondary rate limit is hit, it will delay each API call for issue creation(Mininum value should be 3)                                                                                                       |
-| `comment-update`         | true           | if false, will create a new comment for every scan                                                                                                                                                                |
+| Configuration                | Default        | Description                                                                                                                                                                                                       |
+|------------------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `webhook-token`              |                | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request. GitHub signs the request with this value, and the signature is validated on the receiving end. |
+| `token`                      |                | The API token with access to the repository, with at least Read only access to the code, the ability to add comments to pull requests, and the ability to create GitHub Issues.                                   |
+| `url`                        |                | Main repo url for GitHub                                                                                                                                                                                          |
+| `api-url`                    |                | The API endpoint for GitHub, which is a different context or potentially FQDN than the main repo url.                                                                                                             |
+| `false-positive-label`       | false-positive | A label that can be defined within the GitHub Issue feedback that is used to ignore issues                                                                                                                        |
+| `block-merge`                | false          | When triggering scans based on PullRequest, this will create a new status of pending, which will block the merge ability until the scan is complete in Checkmarx.                                                 |
+| `scan-submitted-comment`     | true           | Comment on PullRequest with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                 | 
+| `max-description-length`     | 50000          | Manages number of characters to view in issue description.(value should be greater than 4 and less than 50000)                                                                                                    |
+| `max-delay`                  |                | When Secondary rate limit is hit, it will delay each API call for issue creation(Mininum value should be 3)                                                                                                       |
+| `comment-update`             | true           | if false, will create a new comment for every scan                                                                                                                                                                |
+| `zero-vulnerability-summary` | false          | if true, will not comment in PR decoration any details for scans as vulnerabilities are zero.                                                                                                                     |
+| `fields`                     |                | Refer page: [Bug-Trackers-and-Feedback-Channels Chapter Github Fields](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#githubfields)                                             |
 **Note**: A service account is required with access to the repositories that will be scanned, pull requests that will be commented on, and GitHub issues that will be created/updated.
+
 
 ### <a name="gitlab">GitLab</a>
 ```yaml
@@ -864,18 +916,26 @@ gitlab:
   false-positive-label: false-positive
   block-merge: true
   comment-update: false
+  zero-vulnerability-summary: true
+  fields:
+    - type: result
+      name: application
+    - type: result
+      name: project
 ```
 
-| Configuration            | Default        | Description                                                                                                                                                                         |
-|--------------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `webhook-token`          |                | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.                                                                  |
-| `token`                  |                | This is the API token with access to the repository, with at least Read only access to code, the ability to add comments to pull requests, and the ability to create GitLab issues. |
-| `url`                    |                | Main repo url for GitLab.                                                                                                                                                           |
-| `api-url`                |                | The API endpoint for GitLab, which serves a different context or potential FQDN than the main repo url.                                                                             |
-| `false-positive-label`   | false-positive | A label that can be defined within the GitLab Issue feedback to ignore issues                                                                                                       |
-| `block-merge`            | false          | When triggering scans based on Merge Request, the Merge request is marked as WIP in GitLab, which blocks the merge ability until the scan is complete in Checkmarx.                 |
-| `scan-submitted-comment` | true           | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                 |
-| `comment-update`         | true           | if false, will create a new comment for every scan                                                                                                                                  |
+| Configuration                | Default        | Description                                                                                                                                                                         |
+|------------------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `webhook-token`              |                | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.                                                                  |
+| `token`                      |                | This is the API token with access to the repository, with at least Read only access to code, the ability to add comments to pull requests, and the ability to create GitLab issues. |
+| `url`                        |                | Main repo url for GitLab.                                                                                                                                                           |
+| `api-url`                    |                | The API endpoint for GitLab, which serves a different context or potential FQDN than the main repo url.                                                                             |
+| `false-positive-label`       | false-positive | A label that can be defined within the GitLab Issue feedback to ignore issues                                                                                                       |
+| `block-merge`                | false          | When triggering scans based on Merge Request, the Merge request is marked as WIP in GitLab, which blocks the merge ability until the scan is complete in Checkmarx.                 |
+| `scan-submitted-comment`     | true           | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                 |
+| `comment-update`             | true           | if false, will create a new comment for every scan                                                                                                                                  |
+| `zero-vulnerability-summary` | false          | if true, will not comment in PR decoration any details for scans as vulnerabilities are zero.                                                                                       |
+| `fields`                     |                | Refer page: [Bug-Trackers-and-Feedback-Channels Chapter Gitlab Fields](https://github.com/checkmarx-ltd/cx-flow/wiki/Bug-Trackers-and-Feedback-Channels#gitlabfields)               |
 
 **Note**: A service account is required with access to the repositories that are going to be scanned, pull requests that are commented on, and GitLab issues that are created/updated.
 
@@ -891,26 +951,44 @@ azure:
   block-merge: true
   closed-status: Closed
   open-status: Active
+  zero-vulnerability-summary: true
 ```
 
-| Configuration          | Default        | Description                                                                                                                                                                             |
-|------------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `webhook-token`        |                | **<user>:<token>** as defined when registering the event in ADO.  Used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.          |
-| `token`                |                | This is the API token with access to the repository. It has at least Read only access to code, the ability to add comments to pull requests, and the ability to create Azure WorkItems. |
-| `url`                  |                | Main repo url for Azure DevOps, including high level namespace.  **Note**: this is only required when running from the command line and not for WebHooks.                               |
-| `issue-type`           | issue          | The WorkItem type within Azure, i.e. issue / impediment.                                                                                                                                |
-| `issue-body`           | description    | The body to enter free text regarding the issue.  The default across various workItem types are **Description** or **System.Description**.                                              |
-| `app-tag-prefix`       | app            | Used for tracking existing issues.  Issues are tagged with this value, if **app** is provided (without namespace/repo/branch)                                                           | 
-| `owner-tag-prefix`     | owner          | Used for tracking existing issues.  Issues are tagged with this value                                                                                                                   |
-| `repo-tag-prefix`      | repo           | Used for tracking existing issues.  Issues are tagged with this value                                                                                                                   |
-| `branch-label-prefix`  | branch         | Used for tracking existing issues.  Issues are tagged with this value                                                                                                                   |
-| `api-version`          | 5.0            | Azure DevOps API version to use                                                                                                                                                         |
-| `open-status`          |                | Status when re-opening a a workItem                                                                                                                                                     |
-| `closed-status`        |                | Status when closing a workItem                                                                                                                                                          |
-| `false-positive-label` | false-positive | A label/tag that can be defined within the Azure Issue feedback being used to ignore issues.                                                                                            |
-| `block-merge`          | false          | When triggering scans is based on pull request, this marks the Pull in blocked state until the scan is complete at Checkmarx.                                                           |
-
+| Configuration                | Default        | Description                                                                                                                                                                             |
+|------------------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `webhook-token`              |                | **<user>:<token>** as defined when registering the event in ADO.  Used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.          |
+| `token`                      |                | This is the API token with access to the repository. It has at least Read only access to code, the ability to add comments to pull requests, and the ability to create Azure WorkItems. |
+| `url`                        |                | Main repo url for Azure DevOps, including high level namespace.  **Note**: this is only required when running from the command line and not for WebHooks.                               |
+| `issue-type`                 | issue          | The WorkItem type within Azure, i.e. issue / impediment.                                                                                                                                |
+| `issue-body`                 | description    | The body to enter free text regarding the issue.  The default across various workItem types are **Description** or **System.Description**.                                              |
+| `app-tag-prefix`             | app            | Used for tracking existing issues.  Issues are tagged with this value, if **app** is provided (without namespace/repo/branch)                                                           | 
+| `owner-tag-prefix`           | owner          | Used for tracking existing issues.  Issues are tagged with this value                                                                                                                   |
+| `repo-tag-prefix`            | repo           | Used for tracking existing issues.  Issues are tagged with this value                                                                                                                   |
+| `branch-label-prefix`        | branch         | Used for tracking existing issues.  Issues are tagged with this value                                                                                                                   |
+| `api-version`                | 5.0            | Azure DevOps API version to use                                                                                                                                                         |
+| `open-status`                |                | Status when re-opening a a workItem                                                                                                                                                     |
+| `closed-status`              |                | Status when closing a workItem                                                                                                                                                          |
+| `false-positive-label`       | false-positive | A label/tag that can be defined within the Azure Issue feedback being used to ignore issues.                                                                                            |
+| `block-merge`                | false          | When triggering scans is based on pull request, this marks the Pull in blocked state until the scan is complete at Checkmarx.                                                           |
+| `zero-vulnerability-summary` | false          | if true, will not comment in PR decoration any details for scans as vulnerabilities are zero.                                                                                           |
 **Note**: A service account is required with access to the repositories that are scanned, pull requests that are commented on, and Azure WorkItems that are created/updated.
+
+
+### <a name="sarif">Sarif</a>
+```yaml
+sarif:
+ hassnippet: true
+```
+
+| Configuration          | Default       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `hassnippet`        |false          | In Checkmarx CX-Flow, when the hasSnippet flag is set to true, the tool displays relevant code snippets under the "Region" section of the UI. These snippets provide a portion of the code where potential vulnerabilities are detected, giving developers context to better understand the issue. This feature helps in identifying the exact location of security concerns, streamlining the remediation process by offering precise, actionable insights directly within the code. |
+
+**Note**: Command line parameter for snippet is `--sarif.hassnippet=true`
+
+
+
+
 
 ### <a name="bitbucket">Bitbucket (Cloud and Server)</a>
 ```yaml
@@ -920,17 +998,18 @@ bitbucket:
   url: http://bitbucket.org
   api-url: http://api.bitbucket.org
   api-path: /2.0
+  zero-vulnerability-summary: true
 ```
 
-| Configuration            | Default | Description                                                                                                                                                                                                                                                                                                                                       |
-|--------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `webhook-token`          |         | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.  The Bitbucket cloud does not allow for a shared secret, therefore a URL parameter called token, must be provided in this case.                                                                                                |
-| `token`                  |         | This is the API token with access to the repository with at least Read only access to code and the ability to add comments to pull requests.  BitBucket requires the **<user>:<token>** format in the configuration. <br />`userid:app password`(Format while using BitBucket Cloud) <br />`userid:password`(Format while using BitBucket Server) |
-| `api-url`                |         | - [https://api.bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://api.companyxyzbitbucket](https://api.companyxyzbitbucket) (URL for the BitBucket server is just the server hostname with `api.` prefixed)                                                                                                  |
-| `url`                    |         | - [https://bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://companyxyzbitbucket](https://api.companyxyzbitbucket)(URL for the BitBucket server is just the server hostname)                                                                                                                                |
-| `api-path`               |         | The API URL path (appended to the URL) for BitBucket                                                                                                                                                                                                                                                                                              |
-| 'scan-submitted-comment` | true    | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                                                                                                                                               | 
-
+| Configuration                | Default | Description                                                                                                                                                                                                                                                                                                                                       |
+|------------------------------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `webhook-token`              |         | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request.  The Bitbucket cloud does not allow for a shared secret, therefore a URL parameter called token, must be provided in this case.                                                                                                |
+| `token`                      |         | This is the API token with access to the repository with at least Read only access to code and the ability to add comments to pull requests.  BitBucket requires the **<user>:<token>** format in the configuration. <br />`userid:app password`(Format while using BitBucket Cloud) <br />`userid:password`(Format while using BitBucket Server) |
+| `api-url`                    |         | - [https://api.bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://api.companyxyzbitbucket](https://api.companyxyzbitbucket) (URL for the BitBucket server is just the server hostname with `api.` prefixed)                                                                                                  |
+| `url`                        |         | - [https://bitbucket.org](https://api.bitbucket.org) (URL for the Cloud BitBucket)<br />- [https://companyxyzbitbucket](https://api.companyxyzbitbucket)(URL for the BitBucket server is just the server hostname)                                                                                                                                |
+| `api-path`                   |         | The API URL path (appended to the URL) for BitBucket                                                                                                                                                                                                                                                                                              |
+| 'scan-submitted-comment`     | true    | Comment on Merge Request with "Scan submitted (or not submitted) to Checkmarx ...".                                                                                                                                                                                                                                                               | 
+| `zero-vulnerability-summary` | false   | if true, will not comment in PR decoration any details for scans as vulnerabilities are zero.                                                                                                                                                                                                                                                     |
 **Note**: As mentioned in the prerequisites, a service account is required that has appropriate access to the repositories that will be scanned, pull requests that will be commented on, GitHub issues that will be created/updated.
 
 ## <a name="json">JSON Config Override</a>
