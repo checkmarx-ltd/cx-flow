@@ -703,11 +703,38 @@ settings-override: true #default false if not provide
 
 ### <a name="branchproject">Branched Project</a>
 A branched project is a child of a base project in CxSAST. Upon initiating a scan from the default branch of a repository, CxSAST creates a base project in the server with name `RepoName-defaultBranchName` and any subsequent scans from the branches of that repository will create child projects off of it with name `RepoName-currentBranchName`. The project count in CxSAST does not increase when a branched project is added. Branching of projects can be enabled by setting the `cx-branch` property to `true`.
+
+### Base Project Creation:
+
+* When you initiate a scan from the default branch of a repository, CxSAST automatically creates a base project on the server.
+* The naming convention used is RepoName-defaultBranchName (e.g., `MyRepo-main` if `main` is your default branch).
+
+### Child Projects (Branched Projects):
+
+* For scans initiated from other branches (not the default), CxSAST creates branched projects or child projects.
+* These child projects are named using the convention `RepoName-currentBranchName` (e.g., `MyRepo-feature1`).
+* Importantly, the total project count in CxSAST does not increase when these branched projects are added. They are treated as extensions of the base project.
+
+### Enabling Project Branching:
+* To enable project branching, you need to set the `cx-branch` property to `true`.
+* Additionally, you must provide both the `default branch name` and the `current branch name`.
+### Project Count
+
+- The overall project count in CxSAST does not increase when branched projects are added. Branched projects are managed under the umbrella of the base project, which keeps the total project count static.
+
+### Enabling Project Branching
+
+### Implementation Example:
+* When configuring the scan (e.g., via a CxSAST API or build pipeline), you might set these properties like this:
+
 ```yaml
 checkmarx:
   ...
   cx-branch: true #default false if not provided
 ```
+
+* CLI parameter to provide default branch name is `default-branch = main` and current branch can be passed `branch = feature1`. 
+* In case of webhook it will be passed automatically in payloads.
 
 ### <a name="scanqueuing"> Scan Queuing and Scan Queuing Timeout</a>
 If the number of concurrent scans which can run on CxSAST server is all utilized, then enabling `scan-queuing` will allow CxFlow to keep the event of the scan within itself and let the existing scans finish before sending the new scan event to CxSAST. Cx-flow keeps events with itself for a number of minutes, specified by the `scan-queuing-timeout` parameter, with a default value of **120** minutes.
