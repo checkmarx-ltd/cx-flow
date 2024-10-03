@@ -1,6 +1,8 @@
 package com.checkmarx.flow.config;
 
 import com.checkmarx.flow.service.PullRequestCommentsHelper;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -26,9 +28,13 @@ public class RepoProperties {
     private String flowSummaryHeader = PullRequestCommentsHelper.COMMENT_TYPE_SAST_FINDINGS_2;
     private boolean cxSummary = true;
     private boolean cxTableSummary = false;
+    private boolean zeroVulnerabilitySummary = false;
     private String cxSummaryHeader = "Checkmarx Scan Summary";
     private Map<String, OptionalScmInstanceProperties> optionalInstances;
     private boolean scanSubmittedComment = true;
+    @Getter
+    @Setter
+    private boolean commentUpdate =true;
 
     public Map<String, OptionalScmInstanceProperties> getOptionalInstances() {
         return optionalInstances;
@@ -186,6 +192,14 @@ public class RepoProperties {
 
     public String getCxSummaryHeader() {
         return cxSummaryHeader;
+    }
+
+    public boolean isZeroVulnerabilitySummary() {
+        return zeroVulnerabilitySummary;
+    }
+
+    public void setZeroVulnerabilitySummary(boolean zeroVulnerabilitySummary) {
+        this.zeroVulnerabilitySummary = zeroVulnerabilitySummary;
     }
 
     public void setCxSummaryHeader(String cxSummaryHeader) {

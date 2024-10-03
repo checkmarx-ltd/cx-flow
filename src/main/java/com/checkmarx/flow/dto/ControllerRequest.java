@@ -24,6 +24,9 @@ public class ControllerRequest {
     private List<String> severity;
     private List<String> cwe;
     private List<String> category;
+    private List<String> excludeCategory;
+    private List<String> excludeCwe;
+    private List<String> excludeState;
     private String project;
     private String team;
     private List<String> status;
