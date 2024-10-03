@@ -337,8 +337,32 @@ public class CxFlowRunner implements ApplicationRunner {
                 break;
             case BITBUCKETPULL:
             case bitbucketserverpull:
-                log.info("BitBucket Pull not currently supported from command line");
-                exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                if(usingBitBucketCloud){
+                    bugType = BugTracker.Type.BITBUCKETPULL;
+                    bt = BugTracker.builder()
+                            .type(bugType)
+                            .build();
+                    repoType = ScanRequest.Repository.BITBUCKET;
+                    if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(mergeId)) {
+                        log.error("Namespace/Repo/MergeId must be provided for Bitbucket pull bug tracking");
+                        exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                    }
+                    mergeNoteUri = bitBucketProperties.getCloudMergeNoteUri(namespace, repoName, mergeId);
+                }else if(usingBitBucketServer) {
+                    bugType = BugTracker.Type.BITBUCKETSERVERPULL;
+                    bt = BugTracker.builder()
+                            .type(bugType)
+                            .build();
+                    repoType = ScanRequest.Repository.BITBUCKETSERVER;
+                    if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(mergeId)) {
+                        log.error("Namespace/Repo/MergeId must be provided for Bitbucket-server pull bug tracking");
+                        exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                    }
+                    mergeNoteUri = bitBucketProperties.getServerMergeNoteUri(namespace, repoName, mergeId);
+                }else{
+                    log.info("Please provide cli parameters --bb for bitbucket cloud or --bbs for bitbucket server");
+                    exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                }
                 break;
             case EMAIL:
                 bugType = BugTracker.Type.EMAIL;
