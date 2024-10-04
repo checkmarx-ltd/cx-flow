@@ -547,7 +547,7 @@ public class GitLabIssueTracker implements IssueTracker {
                                 if(request.getApplication()!=null){
                                     value.add(f.getName() + ":" + request.getApplication());
                                 }else{
-                                    value.add(f.getName() + ":" +" ");
+                                    value.add(f.getName() + ":" +"NA");
                                 }
                                 break;
                             case "project":
