@@ -34,7 +34,10 @@ public class FilterFactory {
                     request.getCategory(),
                     request.getStatus(),
                     request.getState(),
-                    null);
+                    null,
+                    request.getExcludeCategory(),
+                    request.getExcludeCwe(),
+                    request.getExcludeState());
         } else if (flowProperties != null) {
             result = getFilterFromProperties(flowProperties);
         } else {
@@ -67,7 +70,10 @@ public class FilterFactory {
                 flowProperties.getFilterCategory(),
                 flowProperties.getFilterStatus(),
                 flowProperties.getFilterState(),
-                flowProperties.getFilterScript());
+                flowProperties.getFilterScript(),
+                flowProperties.getExcludeCategory(),
+                flowProperties.getExcludeCwe(),
+                flowProperties.getExcludeState());
     }
 
     private boolean hasRequiredProperties(ControllerRequest request) {
@@ -86,14 +92,19 @@ public class FilterFactory {
                                                  List<String> category,
                                                  List<String> status,
                                                  List<String> state,
-                                                 String filterScript) {
+                                                 String filterScript,
+                                                   List<String> excludeCategory,
+                                                   List<String> excludeCwe,
+                                                   List<String> excludeState) {
         List<Filter> simpleFilters = new ArrayList<>();
         simpleFilters.addAll(getListByFilterType(severity, Filter.Type.SEVERITY));
         simpleFilters.addAll(getListByFilterType(cwe, Filter.Type.CWE));
         simpleFilters.addAll(getListByFilterType(category, Filter.Type.TYPE));
         simpleFilters.addAll(getListByFilterType(status, Filter.Type.STATUS));
         simpleFilters.addAll(getListByFilterType(state, Filter.Type.STATE));
-
+        simpleFilters.addAll(getListByFilterType(excludeCategory,Filter.Type.EXCLUDETYPE));
+        simpleFilters.addAll(getListByFilterType(excludeCwe,Filter.Type.EXCLUDECWE));
+        simpleFilters.addAll(getListByFilterType(excludeState,Filter.Type.EXCLUDESTATE));
         return getFilterFromComponents(filterScript, simpleFilters);
     }
 

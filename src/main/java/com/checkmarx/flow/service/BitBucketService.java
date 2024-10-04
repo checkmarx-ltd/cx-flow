@@ -197,7 +197,7 @@ public class BitBucketService extends RepoService {
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
         log.error("Error occurred while sending Merge comment. http error {} ", e.getStatusCode());
-        log.error(ExceptionUtils.getStackTrace(e));
+        log.debug(ExceptionUtils.getStackTrace(e));
     }
     }
 
@@ -207,7 +207,7 @@ public class BitBucketService extends RepoService {
         restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
     } catch (HttpClientErrorException e) {
         log.error("Error occurred while sending server Merge Comment. http error {} ", e.getStatusCode());
-        log.error(ExceptionUtils.getStackTrace(e));
+        log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -232,7 +232,7 @@ public class BitBucketService extends RepoService {
                 restTemplate.exchange(request.getMergeNoteUri().concat("/" + taskId), HttpMethod.PUT, httpEntity, String.class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while sending server merge task. http error {} ", e.getStatusCode());
-                log.error(ExceptionUtils.getStackTrace(e));
+                log.debug(ExceptionUtils.getStackTrace(e));
             }
 
     } else {
@@ -244,7 +244,7 @@ public class BitBucketService extends RepoService {
                 restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
             } catch (HttpClientErrorException e) {
                 log.error("Error occurred while sending server merge task. http error {} ", e.getStatusCode());
-                log.error(ExceptionUtils.getStackTrace(e));
+                log.debug(ExceptionUtils.getStackTrace(e));
             }
         }
     }
@@ -270,7 +270,7 @@ public class BitBucketService extends RepoService {
                 }
             } catch (JSONException e) {
                 log.error("Error processing JSON response");
-                log.error(ExceptionUtils.getStackTrace(e));
+                log.debug(ExceptionUtils.getStackTrace(e));
             }
         }
         return null;
@@ -295,7 +295,7 @@ public class BitBucketService extends RepoService {
             response = restTemplate.exchange(blockerCommentUrl.concat("?state={state}"), HttpMethod.GET, httpEntity, String.class, params);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while retrieving Existing Open Tasks. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return response;
 
@@ -320,7 +320,7 @@ public class BitBucketService extends RepoService {
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while sending commit comment. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -549,10 +549,10 @@ public class BitBucketService extends RepoService {
             }
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while loading CxConfig From Bitbucket. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JSONException e) {
             log.error("Error processing JSON response");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return cxConfig;
     }
@@ -604,10 +604,10 @@ public class BitBucketService extends RepoService {
             }
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while loading CxConfig From Bitbucket. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JSONException | JsonProcessingException e) {
             log.error("Error processing JSON response");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return branchName;
     }

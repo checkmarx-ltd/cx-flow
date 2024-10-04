@@ -28,6 +28,15 @@ public class FlowProperties {
     private List<String> filterCategory;
     private List<String> filterStatus;
     private List<String> filterState;
+    @Getter
+    @Setter
+    private List<String> excludeCategory;
+    @Getter
+    @Setter
+    private List<String> excludeCwe;
+    @Getter
+    @Setter
+    private List<String> excludeState;
     private String filterScript;
     private String commentScript;
     private List<String> enabledVulnerabilityScanners=new ArrayList<>();

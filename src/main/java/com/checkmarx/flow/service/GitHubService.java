@@ -149,7 +149,7 @@ public class GitHubService extends RepoService {
             restTemplate.exchange(baseUrl, HttpMethod.PATCH, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while updating comment. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -174,10 +174,10 @@ public class GitHubService extends RepoService {
             }
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while getting comments. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JsonProcessingException e) {
             log.error("Error processing JSON response");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return result;
     }
@@ -222,7 +222,7 @@ public class GitHubService extends RepoService {
             restTemplate.exchange(url, HttpMethod.DELETE, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while deleting comment. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -250,7 +250,7 @@ public class GitHubService extends RepoService {
             restTemplate.exchange(request.getMergeNoteUri(), HttpMethod.POST, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while adding comment. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
     }
     public void startBlockMerge(ScanRequest request, String url){
@@ -495,7 +495,7 @@ public class GitHubService extends RepoService {
             log.debug(ExceptionUtils.getStackTrace(e));
         } catch (JSONException e) {
             log.error("Error processing JSON response");
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         return sources;
     }
@@ -596,8 +596,8 @@ public class GitHubService extends RepoService {
                     filename,
                     branch);
         } catch (HttpClientErrorException e) {
-            log.error("Error occurred while downloading file content. http error {} ", e.getStatusCode());
-            log.error(ExceptionUtils.getStackTrace(e));
+            log.error("Error occurred while downloading file content. Http Error {} ", e.getStatusCode());
+            log.debug(ExceptionUtils.getStackTrace(e));
         }
         } else {
             log.warn("Unable to load config-as-code.");

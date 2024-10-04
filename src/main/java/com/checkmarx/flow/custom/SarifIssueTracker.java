@@ -230,6 +230,23 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                         1 : (Integer.parseInt(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
                                 Integer len = (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
                                         1 : (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
+Region regioObj;
+                                if(properties.isHasSnippet()){
+                                    regioObj=  Region.builder()
+                                            .startLine(line)
+                                            .endLine(line)
+                                            .startColumn(col)
+                                            .endColumn(col+len)
+                                            .snippet(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet"))
+                                            .build();
+                                }else{
+                                    regioObj=  Region.builder()
+                                            .startLine(line)
+                                            .endLine(line)
+                                            .startColumn(col)
+                                            .endColumn(col+len)
+                                            .build();
+                                }
 
                                 fileCountMap.putIfAbsent(node.get("file"),len);
 
@@ -240,12 +257,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                                         .uriBaseId("%SRCROOT%")
                                                         .index(fileCountMap.size()-1)
                                                         .build())
-                                                .region(Region.builder()
-                                                        .startLine(line)
-                                                        .endLine(line)
-                                                        .startColumn(col)
-                                                        .endColumn(col+len)
-                                                        .build())
+                                                 .region(regioObj)
                                                 .build())
                                         .message(Message.builder()
                                                 .text(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet")).build())
@@ -495,6 +507,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         public Integer startColumn;
         @JsonProperty("endColumn")
         public Integer endColumn;
+@JsonProperty("snippet")
+        public String snippet;
     }
 
     @Data

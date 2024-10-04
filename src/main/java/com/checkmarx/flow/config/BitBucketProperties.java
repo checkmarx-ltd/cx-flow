@@ -33,4 +33,16 @@ public class BitBucketProperties extends RepoProperties {
         String format = "%s/%s/%s.git";
         return String.format(format, getUrl(), namespace, repoName);
     }
+
+    public String getCloudMergeNoteUri(String namespace, String repo, String mergeId){
+        String format = "%s/%s/repositories/%s/%s/pullRequests/%s/comments";
+        return String.format(format, getApiUrl(),getApiPath(), namespace, repo, mergeId);
+        //https://api.bitbucket.org/2.0/repositories/{namespace}/{repo}/pullRequests/{merge-id}/comments
+    }
+
+    public String getServerMergeNoteUri(String namespace, String repo, String mergeId){
+        String format = "%s/%s/projects/%s/repos/%s/pull-requests/%s/comments";
+        return String.format(format, getApiUrl(),getApiPath() ,namespace, repo, mergeId);
+        //http://localhost:8080/projects/{namespace}/repos/{repo}/pull-requests/{merge-id}/comments
+    }
 }
