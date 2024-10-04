@@ -6,7 +6,7 @@ buildscript {
         CxSBSDK = "0.6.17"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
-        springBootVersion = '3.2.5'
+        springBootVersion = '3.2.10'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
