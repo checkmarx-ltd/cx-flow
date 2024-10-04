@@ -8,11 +8,13 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.sca.report.Finding;
 import com.checkmarx.sdk.dto.sca.report.Package;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ivy.core.module.descriptor.Artifact;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 @Service("Sarif")
 @RequiredArgsConstructor
 @Slf4j
+
+
 public class SarifIssueTracker extends ImmutableIssueTracker {
     private final SarifProperties properties;
     private final FilenameFormatter filenameFormatter;
@@ -161,11 +165,18 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     private void generateSastResults(ScanResults results, List<SarifVulnerability> run) {
         List<Rule> sastScanrules;
         List<Result> sastScanresultList = Lists.newArrayList();
+        HashMap<String, Integer> fileCountMap = new HashMap<>();
+        List<artifact> artifactsLocations = Lists.newArrayList();
+
+
         List<ScanResults.XIssue> filteredXIssues =
                 results.getXIssues()
                         .stream()
                         .filter(x -> x.getVulnerability() != null)
                         .filter(x -> !x.isAllFalsePositive()).toList();
+
+
+
         //Distinct list of Vulns (Rules)
         List<ScanResults.XIssue> filteredByVulns =
                 results.getXIssues()
@@ -210,15 +221,16 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         additionalDetails.forEach((element) -> {
                             Map<String, Object> result = element;
                             Integer pathNodeId = Integer.valueOf(1); // First Node is added by Above Issue Detail
-                            while(result.containsKey(pathNodeId.toString())){ // Add all Nodes till Sink
+                            while(result.containsKey(pathNodeId.toString())){
+                                // Add all Nodes till Sink
                                 Map<String, String> node = (Map<String, String>)result.get(pathNodeId.toString());
-                                Integer line = (Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?
-                                        1 : Integer.valueOf(Optional.ofNullable(node.get("line")).orElse("1")); /* Sarif format does not support 0 as line number */
-                                Integer col = (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1")) <= 0) ?
-                                        1 : (Integer.valueOf(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
-                                Integer len = (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
-                                        1 : (Integer.valueOf(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
-                                Region regioObj;
+                                Integer line = (Integer.parseInt(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?
+                                        1 : Integer.parseInt(Optional.ofNullable(node.get("line")).orElse("1")); /* Sarif format does not support 0 as line number */
+                                Integer col = (Integer.parseInt(Optional.ofNullable(node.get("column")).orElse("1")) <= 0) ?
+                                        1 : (Integer.parseInt(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
+                                Integer len = (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
+                                        1 : (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
+Region regioObj;
                                 if(properties.isHasSnippet()){
                                     regioObj=  Region.builder()
                                             .startLine(line)
@@ -236,15 +248,16 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                             .build();
                                 }
 
+                                fileCountMap.putIfAbsent(node.get("file"),len);
 
                                 locations.add(Location.builder()
                                         .physicalLocation(PhysicalLocation.builder()
                                                 .artifactLocation(ArtifactLocation.builder()
                                                         .uri(node.get("file"))
                                                         .uriBaseId("%SRCROOT%")
-                                                        .index(pathNodeId-1)
+                                                        .index(fileCountMap.size()-1)
                                                         .build())
-                                                .region(regioObj)
+                                                 .region(regioObj)
                                                 .build())
                                         .message(Message.builder()
                                                 .text(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet")).build())
@@ -261,10 +274,11 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                             }
                     );
 
+
+
                     List<ThreadFlow> threadFlows = Lists.newArrayList();
                     threadFlows.add(ThreadFlow.builder()
                             .locations(threadFlowLocations).build());
-
                     List<CodeFlow> codeFlows = Lists.newArrayList();
                     codeFlows.add(CodeFlow.builder()
                             .threadFlows(threadFlows).build());
@@ -285,6 +299,11 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 }
         );
 
+        for (Map.Entry<String, Integer> entry : fileCountMap.entrySet()) {
+            String key = entry.getKey();
+            Integer len = entry.getValue();
+            artifactsLocations.add(artifact.builder().length(len).location(locationArtifacts.builder().uri(key).build()).build());
+        }
 
         run.add(SarifVulnerability
                 .builder()
@@ -298,6 +317,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                 .build())
                         .build())
                 .results(sastScanresultList)
+                        .artifacts(artifactsLocations)
                 .build());
     }
 
@@ -320,6 +340,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         public Tool tool;
         @JsonProperty("results")
         public List<Result> results;
+        @JsonProperty("artifacts")
+        public List<artifact> artifacts;
     }
 
     @Data
@@ -440,6 +462,24 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
 
     @Data
     @Builder
+    public static class artifact {
+        @JsonProperty("location")
+        public locationArtifacts location;
+
+        @JsonProperty("length")
+        public int length;
+
+    }
+    @Data
+    @Builder
+    public static class locationArtifacts {
+        @JsonProperty("uri")
+        public String uri;
+
+    }
+
+    @Data
+    @Builder
     public static class ArtifactLocation {
         @JsonProperty("uri")
         public String uri;
@@ -467,7 +507,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         public Integer startColumn;
         @JsonProperty("endColumn")
         public Integer endColumn;
-        @JsonProperty("snippet")
+@JsonProperty("snippet")
         public String snippet;
     }
 
