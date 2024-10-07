@@ -476,7 +476,7 @@ public class GitHubIssueTracker implements IssueTracker {
                                     if(request.getApplication()!=null){
                                         value.add(f.getName() + ":" + request.getApplication());
                                     }else{
-                                        value.add(f.getName() + ":" +" ");
+                                        value.add(f.getName() + ":" +"NA");
                                     }
                                     break;
                                 case "project":
@@ -625,11 +625,10 @@ public class GitHubIssueTracker implements IssueTracker {
                     }
                 }
                 strArray = value.toArray(new String[0]);
-
+            return strArray;
         } catch (Exception e) {
             return strArray;
         }
-        return strArray;
     }
 
     @Override
