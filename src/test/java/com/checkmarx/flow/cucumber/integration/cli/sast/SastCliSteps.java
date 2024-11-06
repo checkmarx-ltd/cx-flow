@@ -156,9 +156,9 @@ public class SastCliSteps {
 
     @Given("code has x High, y Medium and z low issues")
     public void setIssues() {
-        expectedHigh = 1;
+        expectedHigh = 2;
         expectedMedium = 2;
-        expectedLow = 4;
+        expectedLow = 8;
     }
 
     @When("running sast scan {word}")
