@@ -107,6 +107,7 @@ public class GitHubController extends WebhookController {
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
+            e.getStackTrace();
             throw new MachinaRuntimeException(e);
         }
 
