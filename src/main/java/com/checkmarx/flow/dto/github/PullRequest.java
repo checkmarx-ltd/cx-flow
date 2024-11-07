@@ -53,7 +53,7 @@ public class PullRequest {
     @JsonProperty("url")
     private String url;
     @JsonProperty("id")
-    private Integer id;
+    private Double id;
     @JsonProperty("html_url")
     private String htmlUrl;
     @JsonProperty("diff_url")
@@ -63,7 +63,7 @@ public class PullRequest {
     @JsonProperty("issue_url")
     private String issueUrl;
     @JsonProperty("number")
-    private Integer number;
+    private Double number;
     @JsonProperty("state")
     private String state;
     @JsonProperty("locked")
@@ -144,12 +144,12 @@ public class PullRequest {
     }
 
     @JsonProperty("id")
-    public Integer getId() {
+    public Double getId() {
         return id;
     }
 
     @JsonProperty("id")
-    public void setId(Integer id) {
+    public void setId(Double id) {
         this.id = id;
     }
 
@@ -194,12 +194,12 @@ public class PullRequest {
     }
 
     @JsonProperty("number")
-    public Integer getNumber() {
+    public Double getNumber() {
         return number;
     }
 
     @JsonProperty("number")
-    public void setNumber(Integer number) {
+    public void setNumber(Double number) {
         this.number = number;
     }
 
