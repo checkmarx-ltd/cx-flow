@@ -18,6 +18,7 @@ import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -107,7 +108,7 @@ public class GitHubController extends WebhookController {
         try {
             event = mapper.readValue(body, PullEvent.class);
         } catch (IOException e) {
-            e.getStackTrace();
+            log.error(ExceptionUtils.getStackTrace(e));
             throw new MachinaRuntimeException(e);
         }
 
