@@ -28,6 +28,17 @@ public class SarifProperties {
     @Getter
     @Setter
     private boolean hasSnippet = false;
+
+    @Getter
+    @Setter
+    private boolean enableOriginalUriBaseIds = false;
+
+
+    @Getter
+    @Setter
+    private String srcRootPath = "%SRCROOT%";
+
+
     private Map<String, String> severityMap = new HashMap<>();
     private Map<String, String> securitySeverityMap = new HashMap<>();
 
