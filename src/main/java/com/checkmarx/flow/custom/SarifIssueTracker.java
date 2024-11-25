@@ -186,25 +186,43 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .collect(Collectors.toCollection(() ->
                                 new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getVulnerability))))
                         .stream().toList();
-        // Build the collection of the rules objects (Vulnerabilities)
-        sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
-                .id(i.getVulnerability())
-                .name(i.getVulnerability()+"_CX")
-                .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
-                .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
-                .help(Help.builder()
-                        .markdown(String.format("[%s Details](%s) <br />" +
-                                                "[Results](%s)",
-                                i.getVulnerability(),
-                                (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX),
-                                i.getLink()))
-                        .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
-                        .build())
-                .properties(Properties.builder()
-                        .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
-                        .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
-                        .build())
-                .build()).collect(Collectors.toList());
+        if(properties.isEnableTextNHelpSame()){
+            sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
+                    .id(i.getVulnerability())
+                    .name(i.getVulnerability()+"_CX")
+                    .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
+                    .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
+                    .help(Help.builder()
+                            .markdown((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                            .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                            .build())
+                    .properties(Properties.builder()
+                            .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
+                            .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
+                            .build())
+                    .build()).collect(Collectors.toList());
+        }else{
+            // Build the collection of the rules objects (Vulnerabilities)
+            sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
+                    .id(i.getVulnerability())
+                    .name(i.getVulnerability()+"_CX")
+                    .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
+                    .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
+                    .help(Help.builder()
+                            .markdown(String.format("[%s Details](%s) <br />" +
+                                            "[Results](%s)",
+                                    i.getVulnerability(),
+                                    (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX),
+                                    i.getLink()))
+                            .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                            .build())
+                    .properties(Properties.builder()
+                            .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
+                            .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
+                            .build())
+                    .build()).collect(Collectors.toList());
+
+        }
         //All issues to create the results/locations that are not all false positive
         AtomicInteger count = new AtomicInteger();
         filteredXIssues.forEach(

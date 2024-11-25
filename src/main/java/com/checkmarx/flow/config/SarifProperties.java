@@ -31,6 +31,10 @@ public class SarifProperties {
     private Map<String, String> severityMap = new HashMap<>();
     private Map<String, String> securitySeverityMap = new HashMap<>();
 
+    @Getter
+    @Setter
+    private boolean enableTextNHelpSame = false;
+
     @PostConstruct
     private void loadSeverityMap(){
         severityMap.put("High", "error");
