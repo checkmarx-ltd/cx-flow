@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 @RequiredArgsConstructor
 public class ConfigAsCodeBranchSteps {
     private static final int BRANCH_ARGUMENT_INDEX = 7;
-
+    private static final int BRANCH_ARGUMENT_INDEX1 = 6;
     private final GitHubProperties gitHubProperties;
     private final FlowProperties flowProperties;
     private final CxProperties cxProperties;
@@ -57,6 +57,22 @@ public class ConfigAsCodeBranchSteps {
     public void githubNotifiesCxFlow(String srcBranch) {
         log.info("Creating RestTemplate mock.");
         RestTemplate restTemplateMock = mock(RestTemplate.class);
+
+        //added mock for branch validation
+        when(restTemplateMock.exchange(
+                anyString(),                          // Match any URL
+                eq(HttpMethod.GET),                   // Match GET method
+                any(HttpEntity.class),                // Match any HttpEntity
+                eq(String.class),                     // Match response type
+                anyString(),                          // Match namespace
+                anyString(),                          // Match repoName
+                anyString()                           // Match branch
+        )).thenAnswer(invocation ->{
+            assertEquals(BRANCH_ARGUMENT_INDEX1 + 1, invocation.getArguments().length,
+                "Unexpected argument count for the restTemplate call.");
+            actualBranch = invocation.getArgument(BRANCH_ARGUMENT_INDEX1);
+            return new ResponseEntity<>(actualBranch, HttpStatus.OK);});
+
         when(gettingFileFromRepo(restTemplateMock)).thenAnswer(this::interceptConfigAsCodeBranch);
 
         PullEvent pullEvent = CxConfigSteps.createPullEventDto(srcBranch, defaultBranch, gitHubProperties);
@@ -116,6 +132,6 @@ public class ConfigAsCodeBranchSteps {
                 "Unexpected argument count for the restTemplate call.");
 
         actualBranch = invocation.getArgument(BRANCH_ARGUMENT_INDEX);
-        return null;
+        return new ResponseEntity<>(actualBranch, HttpStatus.OK);
     }
 }

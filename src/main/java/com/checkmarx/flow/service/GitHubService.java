@@ -26,7 +26,6 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.ShardManager.ShardSession;
 import com.checkmarx.sdk.ShardManager.ShardSessionTracker;
 import com.checkmarx.sdk.config.CxProperties;
-import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.cx.CxProject;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
@@ -42,10 +41,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
@@ -54,8 +50,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import javax.naming.ConfigurationException;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -84,6 +78,7 @@ public class GitHubService extends RepoService {
     private final CxClient cxService;
 
     private static final String FILE_CONTENT = "/{namespace}/{repo}/contents/{config}?ref={branch}";
+    private static final String VALIDATE_BRANCH ="/{namespace}/{repo}/branches/{branch}";
     private static final String LANGUAGE_TYPES = "/{namespace}/{repo}/languages";
     private static final String REPO_CONTENT = "/{namespace}/{repo}/contents?ref={branch}";
 
@@ -560,9 +555,13 @@ public class GitHubService extends RepoService {
 
     private CxConfig loadConfigAsCode(String filename, ScanRequest request) {
         CxConfig result = null;
-
+        String fileContent = null;
         String effectiveBranch = determineConfigAsCodeBranch(request);
-        String fileContent = downloadFileContent(filename, request, effectiveBranch);
+        if (!validateBranch( effectiveBranch,request )) {
+            log.warn("Branch '{}' does not exist", effectiveBranch);
+            return null; // Exit early if the branch doesn't exist
+        }
+        fileContent = downloadFileContent(filename, request, effectiveBranch);
         if (fileContent == null) {
             log.warn(HTTP_BODY_IS_NULL);
         } else {
@@ -577,6 +576,33 @@ public class GitHubService extends RepoService {
         }
 
         return result;
+    }
+
+    private boolean validateBranch(String branch, ScanRequest request) {
+        ResponseEntity<String> response = null;
+
+        if (StringUtils.isNotEmpty(branch)) {
+            log.info("validating branch if exists...");
+            HttpHeaders headers = createAuthHeaders(request);
+            String urlTemplate = scmConfigOverrider.determineConfigApiUrl(properties, request).concat(VALIDATE_BRANCH);
+            try {
+                response = restTemplate.exchange(
+                        urlTemplate,
+                        HttpMethod.GET,
+                        new HttpEntity<>(headers),
+                        String.class,
+                        request.getNamespace(),
+                        request.getRepoName(),
+                        branch);
+            } catch (HttpClientErrorException e) {
+                    if(e.getStatusCode().value()!=404){
+                        log.error("Error occurred while validating branch. Http Error {} ", e.getStatusCode());
+                    }
+               }
+        } else {
+            log.warn("Unable to validate branch");
+        }
+        return response != null && response.getStatusCode().value() == 200;
     }
 
     private String downloadFileContent(String filename, ScanRequest request, String branch) {
