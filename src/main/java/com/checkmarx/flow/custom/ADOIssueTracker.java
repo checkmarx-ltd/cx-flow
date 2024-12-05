@@ -12,6 +12,8 @@ import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONArray;
@@ -281,7 +283,7 @@ public class ADOIssueTracker implements IssueTracker {
         }
 
         log.debug("Request body: {}", body);
-        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getWorkItemObjectToString(body), ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
         try {
             ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.POST, httpEntity, String.class);
             String url = new JSONObject(response.getBody()).getJSONObject("_links").getJSONObject("self").getString("href");
@@ -291,6 +293,17 @@ public class ADOIssueTracker implements IssueTracker {
             log.debug(ExceptionUtils.getStackTrace(e));
             return null;
         }
+    }
+
+    private String getWorkItemObjectToString(List<CreateWorkItemAttr> body){
+        ObjectMapper mapper = new ObjectMapper();
+        String requestBody = null;
+        try {
+            requestBody = mapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return requestBody;
     }
 
     private StringBuilder getNamespaceTag(String namespace) {
@@ -382,7 +395,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Collections.singletonList(state));
 
-        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getWorkItemObjectToString(body), ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
         try {
             restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
@@ -410,7 +423,7 @@ public class ADOIssueTracker implements IssueTracker {
 
         List<CreateWorkItemAttr> body = new ArrayList<>(Arrays.asList(state, description));
 
-        HttpEntity<List<CreateWorkItemAttr>> httpEntity = new HttpEntity<>(body, ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
+        HttpEntity<String> httpEntity = new HttpEntity<>(getWorkItemObjectToString(body), ADOUtils.createPatchAuthHeaders(scmConfigOverrider.determineConfigToken(properties, request.getScmInstance())));
         try {
             restTemplate.exchange(endpoint, HttpMethod.PATCH, httpEntity, String.class);
         } catch (HttpClientErrorException e) {
