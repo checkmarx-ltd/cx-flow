@@ -18,6 +18,7 @@
 * [How do you manage the project creation within CxSAST when running CxFlow in WebHook mode?](#manageprojectcreation)
 * [If using global WebHooks, can specific projects be excluded from scanning?](#globalwebhooks)
 * [Why cxflow spring boot fails to start application if application.xml is present in source code in GitLab pipeline](#applicationxml)
+* [Why does the CXFlow GitLab MR scan comment reflect the repository creator instead of the MR creator?](#mergeomment)
 
 ## <a name="whatiscxflow">Q: What is CxFlow?</a>
 CxFlow is a solution that enables creating projects automatically, scans orchestration and facilitates feedback channels in a closed loop mode.
@@ -114,3 +115,6 @@ Please exclude files which contains windows reserved keyword or folder with wind
 
 ## <a name="ado">Q: How to check all Work Items in ADO ?</a>
 All work items in search bar or run a query in ADO to find all work items.
+
+## <a name="mergeomment">Why does the CXFlow GitLab MR scan comment reflect the repository creator instead of the MR creator?</a>
+If the scan comment is reflecting the repository creator, this is because the token being used is associated with the person or account that initially created the repository. You can find the solution and steps to resolve this issue in the [CXFlow GitLab MR Scan Comment Issue](cxflow_gitlab_scan_issue.md) document.
