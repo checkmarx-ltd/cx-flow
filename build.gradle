@@ -199,10 +199,15 @@ dependencies {
     }
 
 
-    compile("software.amazon.awssdk:dynamodb:2.22.0")
+    compile("software.amazon.awssdk:dynamodb:2.22.0"){
+        exclude group: 'io.netty', module: 'netty-common'
+    }
     compile("software.amazon.awssdk:regions:2.22.0")
     compile("software.amazon.awssdk:auth:2.22.0")
-    compile("software.amazon.awssdk:sts:2.22.0")
+    compile("software.amazon.awssdk:sts:2.22.0"){
+        exclude group: 'io.netty', module: 'netty-common'
+    }
+    compile "io.netty:netty-common:4.1.115.Final"
 
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
