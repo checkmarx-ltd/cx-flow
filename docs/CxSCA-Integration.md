@@ -356,6 +356,30 @@ SCA Resolver also provide Exploitable Path feature which leverages SAST’s abil
 * The SCA Resolver requires dependency resolution utilities to be installed and the project to be in a buildable state. For a list of requirements, see [Package Managers Support in SCA Resolver](https://checkmarx.com/resource/documents/en/34965-19198-installing-supported-package-managers-for-resolver.html).
 
 * **Note:** The SCA Resolver does not need to be downloaded if using Docker. The SCA Resolver will be located in the /app directory of the Docker image.
+### Ways to add dependency resolution utilities in Cx-Flow docker Image
+**Note:** The methods outlined for adding dependency resolution utilities to the Docker image are just a few options. Other approaches may exist, and these steps might not be suitable for all scenarios. Please explore further based on your specific needs.
+* #### Install dependency resolution utilities in the Same Dockerfile.
+If you want dependency resolution utilities to be part of the cx-flow image, you can create your own custom Dockerfile to install dependency resolution utilities directly:
+```dockerfile
+#example
+FROM checkmarx/cx-flow
+
+# Install Maven
+RUN apt-get update && apt-get install -y maven
+
+WORKDIR /app
+RUN mvn clean install
+
+# Continue with your app configuration
+CMD ["java", "-jar", "/app/target/my-app.jar"]
+```
+* #### Use Docker Volumes to Mount Local Maven Repository
+If you don't want to build dependencies inside the Docker container but want Maven to be available in the image, you can mount your local Maven repository as a volume. For example:
+```shell
+docker run -v /path/to/local/maven/repo:/root/.m2 checkmarx/cx-flow
+```
+This will allow the container to access your local Maven repository, and you can continue managing dependencies outside the container, making it more lightweight.
+
 
 ### Enabling the SCA Resolver in Cx-Flow
 The SCA Resolver functions in offline mode when used in conjunction with Cx-Flow and the mandatory parameters like(-s ,-r, -n) are not required as Cx-Flow supplies all necessary information.
