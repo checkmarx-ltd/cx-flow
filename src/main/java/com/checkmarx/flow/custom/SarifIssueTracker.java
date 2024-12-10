@@ -48,16 +48,16 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing SARIF output");
-        List<SarifVulnerability> run=Lists.newArrayList();
-        if(results.getXIssues() != null) {
+        List<SarifVulnerability> run = Lists.newArrayList();
+        if (results.getXIssues() != null) {
             log.info("Generating SAST Sarif Report");
-            generateSastResults(results,run);
+            generateSastResults(results, run);
             // Filter issues without false-positives
             // Build the run object
         }
-        if(results.getScaResults() != null ){
+        if (results.getScaResults() != null) {
             log.info("Generating SCA Sarif Report");
-            generateScaResults(results,run);
+            generateScaResults(results, run);
         }
 
         // Build the report
@@ -95,7 +95,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, v.getCveName(), v.getDescription(), v.getScore(), v.getReferences())).append("\r");
                 if (!tags.contains(String.valueOf(v.getScore())))
                     tags.add(String.valueOf(v.getScore()));
-                    securitySeverities.add(v.getScore());
+                securitySeverities.add(v.getScore());
             });
 
             double maxSecuritySeverity = 0.0;
@@ -106,12 +106,12 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
             tags.replaceAll(s -> "CVSS-" + s);
             tags.add("security");
             Rule rule = Rule.builder().id(key)
-                    .name(key+"_CX")
+                    .name(key + "_CX")
                     .shortDescription(ShortDescription.builder().text(key).build())
                     .fullDescription(FullDescription.builder().text(key).build())
                     .help(Help.builder().markdown(String.valueOf(markDownValue).replace("\n", " ").replace("[", "").replace("]", "")).text(String.valueOf(markDownValue).replace("\n", " ")).build())
                     .properties(Properties.builder().tags(tags)
-                                .securitySeverity(maxSecuritySeverity != 0.0 ? String.valueOf(maxSecuritySeverity) : DEFAULT_SEVERITY).build())
+                            .securitySeverity(maxSecuritySeverity != 0.0 ? String.valueOf(maxSecuritySeverity) : DEFAULT_SEVERITY).build())
                     .build();
 
             List<Location> locations = Lists.newArrayList();
@@ -176,7 +176,6 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .filter(x -> !x.isAllFalsePositive()).toList();
 
 
-
         //Distinct list of Vulns (Rules)
         List<ScanResults.XIssue> filteredByVulns =
                 results.getXIssues()
@@ -189,16 +188,16 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         // Build the collection of the rules objects (Vulnerabilities)
         sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
                 .id(i.getVulnerability())
-                .name(i.getVulnerability()+"_CX")
+                .name(i.getVulnerability() + "_CX")
                 .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
                 .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
                 .help(Help.builder()
                         .markdown(String.format("[%s Details](%s) <br />" +
-                                                "[Results](%s)",
+                                        "[Results](%s)",
                                 i.getVulnerability(),
-                                (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX),
+                                (i.getAdditionalDetails().get(RECOMMENDED_FIX) == null) ? "" : i.getAdditionalDetails().get(RECOMMENDED_FIX),
                                 i.getLink()))
-                        .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                        .text((String) ((i.getAdditionalDetails().get(RECOMMENDED_FIX) == null) ? "Fix not available." : i.getAdditionalDetails().get(RECOMMENDED_FIX)))
                         .build())
                 .properties(Properties.builder()
                         .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
@@ -216,48 +215,52 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         isFalsePositive.set(v.isFalsePositive());
                     });
                     /* Attack Vector */
-                    if(!isFalsePositive.get()) {
-                        List<Map<String, Object>> additionalDetails = (List<Map<String, Object>>)issue.getAdditionalDetails().get("results");
+                    if (!isFalsePositive.get()) {
+                        List<Map<String, Object>> additionalDetails = (List<Map<String, Object>>) issue.getAdditionalDetails().get("results");
                         additionalDetails.forEach((element) -> {
                             Map<String, Object> result = element;
-                            Integer pathNodeId = Integer.valueOf(1); // First Node is added by Above Issue Detail
-                            while(result.containsKey(pathNodeId.toString())){
+                            Integer pathNodeId = 1; // First Node is added by Above Issue Detail
+                            boolean isKeyPresent = result.containsKey(pathNodeId.toString());
+                            if (!isKeyPresent && properties.isSourceNodefound()) {
+                                pathNodeId = findLowestIntegerKey(result);
+                            }
+                            while (result.containsKey(pathNodeId.toString())) {
                                 // Add all Nodes till Sink
-                                Map<String, String> node = (Map<String, String>)result.get(pathNodeId.toString());
+                                Map<String, String> node = (Map<String, String>) result.get(pathNodeId.toString());
                                 Integer line = (Integer.parseInt(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?
                                         1 : Integer.parseInt(Optional.ofNullable(node.get("line")).orElse("1")); /* Sarif format does not support 0 as line number */
                                 Integer col = (Integer.parseInt(Optional.ofNullable(node.get("column")).orElse("1")) <= 0) ?
                                         1 : (Integer.parseInt(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
                                 Integer len = (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
                                         1 : (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
-Region regioObj;
-                                if(properties.isHasSnippet()){
-                                    regioObj=  Region.builder()
+                                Region regioObj;
+                                if (properties.isHasSnippet()) {
+                                    regioObj = Region.builder()
                                             .startLine(line)
                                             .endLine(line)
                                             .startColumn(col)
-                                            .endColumn(col+len)
+                                            .endColumn(col + len)
                                             .snippet(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet"))
                                             .build();
-                                }else{
-                                    regioObj=  Region.builder()
+                                } else {
+                                    regioObj = Region.builder()
                                             .startLine(line)
                                             .endLine(line)
                                             .startColumn(col)
-                                            .endColumn(col+len)
+                                            .endColumn(col + len)
                                             .build();
                                 }
 
-                                fileCountMap.putIfAbsent(node.get("file"),len);
+                                fileCountMap.putIfAbsent(node.get("file"), len);
 
                                 locations.add(Location.builder()
                                         .physicalLocation(PhysicalLocation.builder()
                                                 .artifactLocation(ArtifactLocation.builder()
                                                         .uri(node.get("file"))
                                                         .uriBaseId("%SRCROOT%")
-                                                        .index(fileCountMap.size()-1)
+                                                        .index(fileCountMap.size() - 1)
                                                         .build())
-                                                 .region(regioObj)
+                                                .region(regioObj)
                                                 .build())
                                         .message(Message.builder()
                                                 .text(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet")).build())
@@ -273,7 +276,6 @@ Region regioObj;
                                         .location(location).build());
                             }
                     );
-
 
 
                     List<ThreadFlow> threadFlows = Lists.newArrayList();
@@ -317,8 +319,30 @@ Region regioObj;
                                 .build())
                         .build())
                 .results(sastScanresultList)
-                        .artifacts(artifactsLocations)
+                .artifacts(artifactsLocations)
                 .build());
+    }
+
+
+    public static Integer findLowestIntegerKey(Map<String, Object> map) {
+        Integer lowestKey = null;
+
+        for (String key : map.keySet()) {
+            try {
+                // Attempt to parse the key as an integer
+                int intKey = Integer.parseInt(key);
+
+                // Update the lowest key if needed
+                if (lowestKey == null || intKey < lowestKey) {
+                    lowestKey = intKey;
+                }
+            } catch (NumberFormatException e) {
+                // Skip non-integer keys
+                log.info("Skipping non-integer key: " + key);
+            }
+        }
+
+        return lowestKey;
     }
 
 
@@ -470,6 +494,7 @@ Region regioObj;
         public int length;
 
     }
+
     @Data
     @Builder
     public static class locationArtifacts {
@@ -507,7 +532,7 @@ Region regioObj;
         public Integer startColumn;
         @JsonProperty("endColumn")
         public Integer endColumn;
-@JsonProperty("snippet")
+        @JsonProperty("snippet")
         public String snippet;
     }
 

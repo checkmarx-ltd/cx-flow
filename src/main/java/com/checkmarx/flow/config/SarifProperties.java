@@ -28,6 +28,10 @@ public class SarifProperties {
     @Getter
     @Setter
     private boolean hasSnippet = false;
+
+    @Getter
+    @Setter
+    private boolean sourceNodefound = false;
     private Map<String, String> severityMap = new HashMap<>();
     private Map<String, String> securitySeverityMap = new HashMap<>();
 
