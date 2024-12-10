@@ -92,6 +92,12 @@ public class FlowProperties {
     @Getter
     @Setter
     private Integer queuecapacityarg;
+    @Getter
+    @Setter
+    private List<String> projectCustomField;
+    @Getter
+    @Setter
+    private List<String> scanCustomField;
 
     public String getContact() {
         return this.contact;

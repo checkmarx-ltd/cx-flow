@@ -220,8 +220,8 @@ public class CxFlowRunner implements ApplicationRunner {
         branchProtectionEnabled = args.containsOption("branch-protection-enabled");
         sbom = args.containsOption("sbom");
         CxPropertiesBase cxProperties = cxScannerService.getProperties();
-        Map<String, String> projectCustomFields = makeCustomFieldMap(args.getOptionValues("project-custom-field"));
-        Map<String, String> scanCustomFields = makeCustomFieldMap(args.getOptionValues("scan-custom-field"));
+        Map<String, String> projectCustomFields = makeProjectCustomFieldMap(args.getOptionValues("project-custom-field"));
+        Map<String, String> scanCustomFields = makeScanCustomFieldMap(args.getOptionValues("scan-custom-field"));
 
         if (((ScanUtils.empty(namespace) && ScanUtils.empty(repoName) && ScanUtils.empty(branch)) &&
                 ScanUtils.empty(application)) && !args.containsOption(BATCH_OPTION) && !args.containsOption(IAST_OPTION)) {
@@ -832,7 +832,7 @@ public class CxFlowRunner implements ApplicationRunner {
                 if (nvp.length == 2) {
                     customFields.put(nvp[0], nvp[1]);
                 } else {
-                    log.warn("{}: invalid project custom field", value);
+                    log.warn("{}: invalid custom field", value);
                 }
             }
             return customFields;
@@ -841,6 +841,39 @@ public class CxFlowRunner implements ApplicationRunner {
         }
     }
 
+    public Map<String,String> makeProjectCustomFieldMap(List<String> values){
+        if(flowProperties.getProjectCustomField()!=null){
+            values = flowProperties.getProjectCustomField();
+        }
+        if(values==null){
+            return null;
+        }
+        return values.stream().map(value->value.split(":",2)).filter(arr->{
+            if(arr.length==2){
+                return true;
+            }else{
+                log.warn("{}: invalid project custom field",Arrays.toString(arr));
+                return false;
+            }
+        }).collect(Collectors.toMap(arr->arr[0],arr->arr[1]));
+    }
+
+   public Map<String,String> makeScanCustomFieldMap(List<String> values){
+        if(flowProperties.getScanCustomField()!=null){
+            values = flowProperties.getScanCustomField();
+        }
+        if(values==null){
+            return null;
+        }
+        return values.stream().map(value->value.split(":",2)).filter(arr->{
+            if(arr.length==2){
+                return true;
+            }else{
+                log.warn("{}: invalid scan custom field",Arrays.toString(arr));
+                return false;
+            }
+        }).collect(Collectors.toMap(arr->arr[0],arr->arr[1]));
+    }
     /**
      * Load a config-as-code file from the specified directory.
      *
