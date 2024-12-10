@@ -165,6 +165,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     private void generateSastResults(ScanResults results, List<SarifVulnerability> run) {
         List<Rule> sastScanrules;
         List<Result> sastScanresultList = Lists.newArrayList();
+        Map<String, UriBase> baseIdsMap = new HashMap<>();
+        List<String> listOfFilePaths = new ArrayList<>();
         HashMap<String, Integer> fileCountMap = new HashMap<>();
         List<artifact> artifactsLocations = Lists.newArrayList();
 
@@ -185,25 +187,44 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .collect(Collectors.toCollection(() ->
                                 new TreeSet<>(Comparator.comparing(ScanResults.XIssue::getVulnerability))))
                         .stream().toList();
-        // Build the collection of the rules objects (Vulnerabilities)
-        sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
-                .id(i.getVulnerability())
-                .name(i.getVulnerability() + "_CX")
-                .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
-                .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
-                .help(Help.builder()
-                        .markdown(String.format("[%s Details](%s) <br />" +
-                                        "[Results](%s)",
-                                i.getVulnerability(),
-                                (i.getAdditionalDetails().get(RECOMMENDED_FIX) == null) ? "" : i.getAdditionalDetails().get(RECOMMENDED_FIX),
-                                i.getLink()))
-                        .text((String) ((i.getAdditionalDetails().get(RECOMMENDED_FIX) == null) ? "Fix not available." : i.getAdditionalDetails().get(RECOMMENDED_FIX)))
-                        .build())
-                .properties(Properties.builder()
-                        .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
-                        .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
-                        .build())
-                .build()).collect(Collectors.toList());
+        if(properties.isEnableTextNHelpSame()){
+            sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
+                    .id(i.getVulnerability())
+                    .name(i.getVulnerability()+"_CX")
+                    .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
+                    .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
+                    .help(Help.builder()
+                            .markdown((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                            .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                            .build())
+                    .properties(Properties.builder()
+                            .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
+                            .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
+                            .build())
+                    .build()).collect(Collectors.toList());
+        }else{
+            // Build the collection of the rules objects (Vulnerabilities)
+            sastScanrules = filteredByVulns.stream().map(i -> Rule.builder()
+                    .id(i.getVulnerability())
+                    .name(i.getVulnerability()+"_CX")
+                    .shortDescription(ShortDescription.builder().text(i.getVulnerability()).build())
+                    .fullDescription(FullDescription.builder().text(i.getVulnerability()).build())
+                    .help(Help.builder()
+                            .markdown(String.format("[%s Details](%s) <br />" +
+                                            "[Results](%s)",
+                                    i.getVulnerability(),
+                                    (i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "":i.getAdditionalDetails().get(RECOMMENDED_FIX),
+                                    i.getLink()))
+                            .text((String)((i.getAdditionalDetails().get(RECOMMENDED_FIX)==null) ? "Fix not available.":i.getAdditionalDetails().get(RECOMMENDED_FIX)))
+                            .build())
+                    .properties(Properties.builder()
+                            .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
+                            .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
+                            .build())
+                    .build()).collect(Collectors.toList());
+
+        }
+
         //All issues to create the results/locations that are not all false positive
         AtomicInteger count = new AtomicInteger();
         filteredXIssues.forEach(
@@ -252,12 +273,15 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                 }
 
                                 fileCountMap.putIfAbsent(node.get("file"), len);
+                                listOfFilePaths.add(node.get("file"));
 
                                 locations.add(Location.builder()
                                         .physicalLocation(PhysicalLocation.builder()
                                                 .artifactLocation(ArtifactLocation.builder()
                                                         .uri(node.get("file"))
-                                                        .uriBaseId("%SRCROOT%")
+                                                        .uriBaseId(
+                                properties.isEnableOriginalUriBaseIds()? node.get("file").split("/")[0]:"%SRCROOT%"
+                                                        )
                                                         .index(fileCountMap.size() - 1)
                                                         .build())
                                                 .region(regioObj)
@@ -276,6 +300,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                         .location(location).build());
                             }
                     );
+
 
 
                     List<ThreadFlow> threadFlows = Lists.newArrayList();
@@ -307,24 +332,57 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
             artifactsLocations.add(artifact.builder().length(len).location(locationArtifacts.builder().uri(key).build()).build());
         }
 
-        run.add(SarifVulnerability
-                .builder()
-                .tool(Tool.builder()
-                        .driver(Driver.builder()
-                                .name(properties.getSastScannerName())
-                                .informationUri("https://checkmarx.com/")
-                                .organization(properties.getSastOrganization())
-                                .semanticVersion(properties.getSemanticVersion())
-                                .rules(sastScanrules)
-                                .build())
-                        .build())
-                .results(sastScanresultList)
-                .artifacts(artifactsLocations)
-                .build());
+        if(properties.isEnableOriginalUriBaseIds()){
+            Set<String> modules = getFirstDirectories(listOfFilePaths);
+
+            baseIdsMap.put("SRCROOT", UriBase.builder()
+                    .uri(properties.getSrcRootPath())
+                    .build());
+            for(String modulesVal : modules){
+                baseIdsMap.put(modulesVal, UriBase.builder()
+                        .uri(modulesVal)
+                        .uriBaseID("SRCROOT")
+                        .build());
+            }
+        }
+
+        if(properties.isEnableOriginalUriBaseIds()){
+            run.add(SarifVulnerability
+                    .builder()
+                    .tool(Tool.builder()
+
+                            .driver(Driver.builder()
+                                    .name(properties.getSastScannerName())
+                                    .informationUri("https://checkmarx.com/")
+                                    .organization(properties.getSastOrganization())
+                                    .semanticVersion(properties.getSemanticVersion())
+                                    .rules(sastScanrules)
+                                    .build())
+                            .build())
+                    .results(sastScanresultList)
+                    .originalUriBaseIds(baseIdsMap)
+                    .artifacts(artifactsLocations)
+                    .build());
+        }else{
+            run.add(SarifVulnerability
+                    .builder()
+                    .tool(Tool.builder()
+
+                            .driver(Driver.builder()
+                                    .name(properties.getSastScannerName())
+                                    .informationUri("https://checkmarx.com/")
+                                    .organization(properties.getSastOrganization())
+                                    .semanticVersion(properties.getSemanticVersion())
+                                    .rules(sastScanrules)
+                                    .build())
+                            .build())
+                    .results(sastScanresultList)
+                    .artifacts(artifactsLocations)
+                    .build());
+        }
+
     }
-
-
-    public static Integer findLowestIntegerKey(Map<String, Object> map) {
+ public static Integer findLowestIntegerKey(Map<String, Object> map) {
         Integer lowestKey = null;
 
         for (String key : map.keySet()) {
@@ -346,6 +404,14 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     }
 
 
+    public static Set<String> getFirstDirectories(List<String> filePaths) {
+        return filePaths.stream()
+                // Split each path by '/' and get the first segment
+                .map(path -> path.split("/")[0])
+                // Collect into a set to ensure unique names
+                .collect(Collectors.toSet());
+    }
+
     @Data
     @Builder
     public static class SarifReport {
@@ -366,6 +432,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
         public List<Result> results;
         @JsonProperty("artifacts")
         public List<artifact> artifacts;
+        @JsonProperty("originalUriBaseIds")
+        private Map<String, UriBase> originalUriBaseIds;
     }
 
     @Data
@@ -564,6 +632,12 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     public static class ThreadFlowLocation {
         @JsonProperty("location")
         public Location location;
+    }
+    @Data
+    @Builder
+    public static class UriBase {
+        private String uri;
+        private String uriBaseID;
     }
 
 }
