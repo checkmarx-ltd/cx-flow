@@ -33,7 +33,8 @@ public class SarifProperties {
     @Setter
 
     private boolean sourceNodefound = false;
-
+    @Getter
+    @Setter
     private boolean enableOriginalUriBaseIds = false;
 
 
