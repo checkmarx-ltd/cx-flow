@@ -48,16 +48,16 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     @Override
     public void complete(ScanRequest request, ScanResults results) throws MachinaException {
         log.info("Finalizing SARIF output");
-        List<SarifVulnerability> run=Lists.newArrayList();
-        if(results.getXIssues() != null) {
+        List<SarifVulnerability> run = Lists.newArrayList();
+        if (results.getXIssues() != null) {
             log.info("Generating SAST Sarif Report");
-            generateSastResults(results,run);
+            generateSastResults(results, run);
             // Filter issues without false-positives
             // Build the run object
         }
-        if(results.getScaResults() != null ){
+        if (results.getScaResults() != null) {
             log.info("Generating SCA Sarif Report");
-            generateScaResults(results,run);
+            generateScaResults(results, run);
         }
 
         // Build the report
@@ -95,7 +95,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                 markDownValue.append(String.format(MARKDOWN_TABLE_FORMAT, v.getCveName(), v.getDescription(), v.getScore(), v.getReferences())).append("\r");
                 if (!tags.contains(String.valueOf(v.getScore())))
                     tags.add(String.valueOf(v.getScore()));
-                    securitySeverities.add(v.getScore());
+                securitySeverities.add(v.getScore());
             });
 
             double maxSecuritySeverity = 0.0;
@@ -106,12 +106,12 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
             tags.replaceAll(s -> "CVSS-" + s);
             tags.add("security");
             Rule rule = Rule.builder().id(key)
-                    .name(key+"_CX")
+                    .name(key + "_CX")
                     .shortDescription(ShortDescription.builder().text(key).build())
                     .fullDescription(FullDescription.builder().text(key).build())
                     .help(Help.builder().markdown(String.valueOf(markDownValue).replace("\n", " ").replace("[", "").replace("]", "")).text(String.valueOf(markDownValue).replace("\n", " ")).build())
                     .properties(Properties.builder().tags(tags)
-                                .securitySeverity(maxSecuritySeverity != 0.0 ? String.valueOf(maxSecuritySeverity) : DEFAULT_SEVERITY).build())
+                            .securitySeverity(maxSecuritySeverity != 0.0 ? String.valueOf(maxSecuritySeverity) : DEFAULT_SEVERITY).build())
                     .build();
 
             List<Location> locations = Lists.newArrayList();
@@ -165,6 +165,8 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
     private void generateSastResults(ScanResults results, List<SarifVulnerability> run) {
         List<Rule> sastScanrules;
         List<Result> sastScanresultList = Lists.newArrayList();
+        Map<String, UriBase> baseIdsMap = new HashMap<>();
+        List<String> listOfFilePaths = new ArrayList<>();
         HashMap<String, Integer> fileCountMap = new HashMap<>();
         List<artifact> artifactsLocations = Lists.newArrayList();
 
@@ -174,7 +176,6 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         .stream()
                         .filter(x -> x.getVulnerability() != null)
                         .filter(x -> !x.isAllFalsePositive()).toList();
-
 
 
         //Distinct list of Vulns (Rules)
@@ -223,6 +224,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                     .build()).collect(Collectors.toList());
 
         }
+
         //All issues to create the results/locations that are not all false positive
         AtomicInteger count = new AtomicInteger();
         filteredXIssues.forEach(
@@ -234,48 +236,51 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         isFalsePositive.set(v.isFalsePositive());
                     });
                     /* Attack Vector */
-                    if(!isFalsePositive.get()) {
-                        List<Map<String, Object>> additionalDetails = (List<Map<String, Object>>)issue.getAdditionalDetails().get("results");
+                    if (!isFalsePositive.get()) {
+                        List<Map<String, Object>> additionalDetails = (List<Map<String, Object>>) issue.getAdditionalDetails().get("results");
                         additionalDetails.forEach((element) -> {
                             Map<String, Object> result = element;
                             Integer pathNodeId = Integer.valueOf(1); // First Node is added by Above Issue Detail
-                            while(result.containsKey(pathNodeId.toString())){
+                            while (result.containsKey(pathNodeId.toString())) {
                                 // Add all Nodes till Sink
-                                Map<String, String> node = (Map<String, String>)result.get(pathNodeId.toString());
+                                Map<String, String> node = (Map<String, String>) result.get(pathNodeId.toString());
                                 Integer line = (Integer.parseInt(Optional.ofNullable(node.get("line")).orElse("1")) == 0) ?
                                         1 : Integer.parseInt(Optional.ofNullable(node.get("line")).orElse("1")); /* Sarif format does not support 0 as line number */
                                 Integer col = (Integer.parseInt(Optional.ofNullable(node.get("column")).orElse("1")) <= 0) ?
                                         1 : (Integer.parseInt(Optional.ofNullable(node.get("column")).orElse("1"))); /* Sarif format does not support 0 as column number */
                                 Integer len = (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1")) == 0) ?
                                         1 : (Integer.parseInt(Optional.ofNullable(node.get("length")).orElse("1"))); /* Sarif format does not support 0 as column number */
-Region regioObj;
-                                if(properties.isHasSnippet()){
-                                    regioObj=  Region.builder()
+                                Region regioObj;
+                                if (properties.isHasSnippet()) {
+                                    regioObj = Region.builder()
                                             .startLine(line)
                                             .endLine(line)
                                             .startColumn(col)
-                                            .endColumn(col+len)
+                                            .endColumn(col + len)
                                             .snippet(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet"))
                                             .build();
-                                }else{
-                                    regioObj=  Region.builder()
+                                } else {
+                                    regioObj = Region.builder()
                                             .startLine(line)
                                             .endLine(line)
                                             .startColumn(col)
-                                            .endColumn(col+len)
+                                            .endColumn(col + len)
                                             .build();
                                 }
 
-                                fileCountMap.putIfAbsent(node.get("file"),len);
+                                fileCountMap.putIfAbsent(node.get("file"), len);
+                                listOfFilePaths.add(node.get("file"));
 
                                 locations.add(Location.builder()
                                         .physicalLocation(PhysicalLocation.builder()
                                                 .artifactLocation(ArtifactLocation.builder()
                                                         .uri(node.get("file"))
-                                                        .uriBaseId("%SRCROOT%")
-                                                        .index(fileCountMap.size()-1)
+                                                        .uriBaseId(
+                                properties.isEnableOriginalUriBaseIds()? node.get("file").split("/")[0]:"%SRCROOT%"
+                                                        )
+                                                        .index(fileCountMap.size() - 1)
                                                         .build())
-                                                 .region(regioObj)
+                                                .region(regioObj)
                                                 .build())
                                         .message(Message.builder()
                                                 .text(StringUtils.isEmpty(node.get("snippet")) ? "Code Snippet" : node.get("snippet")).build())
@@ -323,22 +328,65 @@ Region regioObj;
             artifactsLocations.add(artifact.builder().length(len).location(locationArtifacts.builder().uri(key).build()).build());
         }
 
-        run.add(SarifVulnerability
-                .builder()
-                .tool(Tool.builder()
-                        .driver(Driver.builder()
-                                .name(properties.getSastScannerName())
-                                .informationUri("https://checkmarx.com/")
-                                .organization(properties.getSastOrganization())
-                                .semanticVersion(properties.getSemanticVersion())
-                                .rules(sastScanrules)
-                                .build())
-                        .build())
-                .results(sastScanresultList)
-                        .artifacts(artifactsLocations)
-                .build());
+        if(properties.isEnableOriginalUriBaseIds()){
+            Set<String> modules = getFirstDirectories(listOfFilePaths);
+
+            baseIdsMap.put("SRCROOT", UriBase.builder()
+                    .uri(properties.getSrcRootPath())
+                    .build());
+            for(String modulesVal : modules){
+                baseIdsMap.put(modulesVal, UriBase.builder()
+                        .uri(modulesVal)
+                        .uriBaseID("SRCROOT")
+                        .build());
+            }
+        }
+
+        if(properties.isEnableOriginalUriBaseIds()){
+            run.add(SarifVulnerability
+                    .builder()
+                    .tool(Tool.builder()
+
+                            .driver(Driver.builder()
+                                    .name(properties.getSastScannerName())
+                                    .informationUri("https://checkmarx.com/")
+                                    .organization(properties.getSastOrganization())
+                                    .semanticVersion(properties.getSemanticVersion())
+                                    .rules(sastScanrules)
+                                    .build())
+                            .build())
+                    .results(sastScanresultList)
+                    .originalUriBaseIds(baseIdsMap)
+                    .artifacts(artifactsLocations)
+                    .build());
+        }else{
+            run.add(SarifVulnerability
+                    .builder()
+                    .tool(Tool.builder()
+
+                            .driver(Driver.builder()
+                                    .name(properties.getSastScannerName())
+                                    .informationUri("https://checkmarx.com/")
+                                    .organization(properties.getSastOrganization())
+                                    .semanticVersion(properties.getSemanticVersion())
+                                    .rules(sastScanrules)
+                                    .build())
+                            .build())
+                    .results(sastScanresultList)
+                    .artifacts(artifactsLocations)
+                    .build());
+        }
+
     }
 
+
+    public static Set<String> getFirstDirectories(List<String> filePaths) {
+        return filePaths.stream()
+                // Split each path by '/' and get the first segment
+                .map(path -> path.split("/")[0])
+                // Collect into a set to ensure unique names
+                .collect(Collectors.toSet());
+    }
 
     @Data
     @Builder
@@ -360,6 +408,8 @@ Region regioObj;
         public List<Result> results;
         @JsonProperty("artifacts")
         public List<artifact> artifacts;
+        @JsonProperty("originalUriBaseIds")
+        private Map<String, UriBase> originalUriBaseIds;
     }
 
     @Data
@@ -488,6 +538,7 @@ Region regioObj;
         public int length;
 
     }
+
     @Data
     @Builder
     public static class locationArtifacts {
@@ -525,7 +576,7 @@ Region regioObj;
         public Integer startColumn;
         @JsonProperty("endColumn")
         public Integer endColumn;
-@JsonProperty("snippet")
+        @JsonProperty("snippet")
         public String snippet;
     }
 
@@ -557,6 +608,12 @@ Region regioObj;
     public static class ThreadFlowLocation {
         @JsonProperty("location")
         public Location location;
+    }
+    @Data
+    @Builder
+    public static class UriBase {
+        private String uri;
+        private String uriBaseID;
     }
 
 }

@@ -46,6 +46,13 @@ public class FlowProperties {
     @Getter
     @Setter
     private boolean deleteForkedProject = false;
+
+
+    @Getter
+    @Setter
+    private boolean disablePRFeedBack = false;
+
+
     private Integer profilingDepth = 1;
     private String profileConfig = "CxProfile.json";
     private boolean trackApplicationOnly = false;
@@ -92,6 +99,12 @@ public class FlowProperties {
     @Getter
     @Setter
     private Integer queuecapacityarg;
+    @Getter
+    @Setter
+    private List<String> projectCustomField;
+    @Getter
+    @Setter
+    private List<String> scanCustomField;
 
     public String getContact() {
         return this.contact;
