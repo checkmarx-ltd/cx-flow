@@ -240,7 +240,11 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                         List<Map<String, Object>> additionalDetails = (List<Map<String, Object>>) issue.getAdditionalDetails().get("results");
                         additionalDetails.forEach((element) -> {
                             Map<String, Object> result = element;
-                            Integer pathNodeId = Integer.valueOf(1); // First Node is added by Above Issue Detail
+                            Integer pathNodeId = 1; // First Node is added by Above Issue Detail
+                            boolean isKeyPresent = result.containsKey(pathNodeId.toString());
+                            if (!isKeyPresent && properties.isSourceNodefound()) {
+                                pathNodeId = findLowestIntegerKey(result);
+                            }
                             while (result.containsKey(pathNodeId.toString())) {
                                 // Add all Nodes till Sink
                                 Map<String, String> node = (Map<String, String>) result.get(pathNodeId.toString());
@@ -377,6 +381,26 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                     .build());
         }
 
+    }
+ public static Integer findLowestIntegerKey(Map<String, Object> map) {
+        Integer lowestKey = null;
+
+        for (String key : map.keySet()) {
+            try {
+                // Attempt to parse the key as an integer
+                int intKey = Integer.parseInt(key);
+
+                // Update the lowest key if needed
+                if (lowestKey == null || intKey < lowestKey) {
+                    lowestKey = intKey;
+                }
+            } catch (NumberFormatException e) {
+                // Skip non-integer keys
+                log.info("Skipping non-integer key: " + key);
+            }
+        }
+
+        return lowestKey;
     }
 
 
