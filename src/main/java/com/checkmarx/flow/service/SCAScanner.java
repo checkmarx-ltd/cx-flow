@@ -62,8 +62,8 @@ public class SCAScanner extends AbstractASTScanner {
     ScaScanner scaScannerClient;
 
     public SCAScanner(ScaScanner scaClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,
-                      ScaProperties scaProperties, ResultsService resultsService, PDFProperties pdfProperties, CxProperties cxProperties, BugTrackerEventTrigger bugTrackerEventTrigger1, @Qualifier("scaScanner") AbstractScanner client) {
-        super(scaClient, flowProperties,scaProperties, ScaProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
+                      ScaProperties scaProperties, ResultsService resultsService, PDFProperties pdfProperties, CxProperties cxProperties, BugTrackerEventTrigger bugTrackerEventTrigger1, @Qualifier("scaScanner") AbstractScanner client,ProjectNameGenerator projectNameGenerator) {
+        super(scaClient, flowProperties,scaProperties, ScaProperties.CONFIG_PREFIX, bugTrackerEventTrigger,projectNameGenerator,resultsService);
 
 
 

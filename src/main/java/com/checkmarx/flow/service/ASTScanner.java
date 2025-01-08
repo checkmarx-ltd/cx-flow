@@ -24,8 +24,8 @@ import java.util.Optional;
 @Slf4j
 public class ASTScanner extends AbstractASTScanner {
 
-    public ASTScanner(AstScanner astClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,ResultsService resultsService) {
-        super(astClient, flowProperties,null, AstProperties.CONFIG_PREFIX, bugTrackerEventTrigger,resultsService);
+    public ASTScanner(AstScanner astClient, FlowProperties flowProperties, BugTrackerEventTrigger bugTrackerEventTrigger,ProjectNameGenerator projectNameGenerator,ResultsService resultsService) {
+        super(astClient, flowProperties,null, AstProperties.CONFIG_PREFIX, bugTrackerEventTrigger,projectNameGenerator,resultsService);
     }
 
     @Override
