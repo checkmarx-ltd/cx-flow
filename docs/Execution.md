@@ -4,6 +4,7 @@
 * [Parse](#parse)
 * [Batch](#batch)
 * [Project](#project)
+* [Delete](#delete)
 
 ## <a name="webhook">WebHook</a>
 Refer to [Webhook Registration](https://github.com/checkmarx-ltd/cx-flow/wiki/WebHook-Registration) for instructions on registering for WebHooks.
@@ -178,3 +179,31 @@ java -jar cx-flow-<ver>.jar \
 docker pull checkmarx/cx-flow
 docker run checkmarx/cx-flow <applicable parameters>
 ```
+
+## <a name="delete">Delete</a>
+Following Command can be used to only delete project.
+
+*Note:* namespace/branch/repo-name/repo-url are compulsory fields.
+```
+java -jar cx-flow-<ver>.jar \
+--delete \
+--namespace=<namespace> \
+--branch=<branch> \
+--repo-url=<repo-url> \
+--repo-name=<repo-name> \
+--cx-project=<project name>
+```
+
+Following command can be used if project need deleted after the scan.
+
+```
+java -jar cx-flow-<ver>.jar \
+--scan \
+--namespace=<namespace> \
+--branch=<branch> \
+--repo-url=<repo-url> \
+--repo-name=<repo-name> \
+--cx-project=<project name> \
+--delete-project
+```
+*Note:* Project deletion via CLI parameter is not applicable if `--f` parameter is used.
