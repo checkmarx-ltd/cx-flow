@@ -2,12 +2,14 @@
 package com.checkmarx.flow.dto.github;
 
 import com.checkmarx.flow.dto.RepoIssue;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.beans.ConstructorProperties;
 import java.util.List;
 
+@JsonIgnoreProperties
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Issue extends RepoIssue {
 

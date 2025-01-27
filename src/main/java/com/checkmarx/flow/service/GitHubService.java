@@ -14,10 +14,7 @@ import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
-import com.checkmarx.flow.dto.github.Content;
-import com.checkmarx.flow.dto.github.PullEvent;
-import com.checkmarx.flow.dto.github.PushEvent;
-import com.checkmarx.flow.dto.github.Repository;
+import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
@@ -200,6 +197,22 @@ public class GitHubService extends RepoService {
                 ConfigProvider configProvider = ConfigProvider.getInstance();
                 Repository repository = event.getRepository();
                 String branch = event.getPullRequest().getHead().getRef();
+
+                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getLogin(),
+                        repository.getName(), branch,
+                        properties.getToken(), SourceProviderType.GITHUB));
+            } catch (ConfigurationException e) {
+                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
+            }
+        }
+    }
+
+    public void initConfigProviderOnCommandEvent(String uid, CommentEvent event,String branch) {
+        if (properties != null) {
+            try {
+                ConfigProvider configProvider = ConfigProvider.getInstance();
+                Repository repository = event.getRepository();
+               // String branch = event.getPullRequest().getHead().getRef();
 
                 configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getLogin(),
                         repository.getName(), branch,
