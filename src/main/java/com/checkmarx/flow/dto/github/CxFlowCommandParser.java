@@ -10,6 +10,8 @@ public class CxFlowCommandParser {
             return "rescan";
         }else if (comment.contains("@cxflow hi")) {
             return "hi";
+        }else if (comment.contains("@cxflow cancel")) {
+            return "cancel";
         } else {
             return "unsupported";
         }

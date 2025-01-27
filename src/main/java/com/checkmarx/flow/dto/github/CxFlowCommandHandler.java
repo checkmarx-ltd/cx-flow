@@ -14,6 +14,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
 import com.checkmarx.sdk.dto.sast.CxConfig;
+import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +42,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Service
@@ -80,6 +83,9 @@ public class CxFlowCommandHandler extends WebhookController {
 
     private Mac hmac;
 
+    @Autowired
+    private CxService objCxservice;
+
     @PostConstruct
     public void init() throws NoSuchAlgorithmException, InvalidKeyException {
         // initialize HMAC with SHA1 algorithm and secret
@@ -87,31 +93,57 @@ public class CxFlowCommandHandler extends WebhookController {
     }
 
     private void setHmacToken(String webhookToken) throws NoSuchAlgorithmException, InvalidKeyException {
-        if(properties != null && !ScanUtils.empty(webhookToken)) {
+        if (properties != null && !ScanUtils.empty(webhookToken)) {
             SecretKeySpec secret = new SecretKeySpec(webhookToken.getBytes(CHARSET), HMAC_ALGORITHM);
             hmac = Mac.getInstance(HMAC_ALGORITHM);
             hmac.init(secret);
         }
     }
-    public String handleCxFlowCommand(GitHubProperties properties,String commentBody, int issueNumber, String repoFullName, String userName,CommentEvent event,String signature,String product,ControllerRequest controllerRequest,String body) throws Exception {
+
+    public String handleCxFlowCommand(GitHubProperties properties, String commentBody, int issueNumber, String repoFullName, String userName, CommentEvent event, String signature, String product, ControllerRequest controllerRequest, String body) throws Exception {
+        if(commentBody.startsWith(">")) return "";
         String command = CxFlowCommandParser.parseCommand(commentBody);
+        int scanID = 0;
+        if (command.equalsIgnoreCase("cancel") || command.equalsIgnoreCase("update")) {
+            Pattern pattern;
+            if(command.equalsIgnoreCase("cancel")){
+                pattern = Pattern.compile("@cxflow cancel (\\d+)");
+            }else{
+                pattern = Pattern.compile("@cxflow update (\\d+)");
+            }
+            Matcher matcher = pattern.matcher(commentBody);
+            if (matcher.find()) {
+                scanID = Integer.parseInt(matcher.group(1));
+            }else{
+                    postComment(repoFullName, issueNumber, "> "+commentBody+"\n\nPlease provide Scan ID.", properties);
+                    return "NA";
+
+            }
+        }
         switch (command) {
             case "update":
-                // Call internal update process
-                return triggerUpdateProcess(issueNumber, repoFullName);
+                postComment(repoFullName, issueNumber, "> "+commentBody+"\n\n - Scan is in  : "+objCxservice.getScanStatusName(scanID)+" state.", properties);
+                return "Scan update done.";
             case "hi":
                 // Call internal rescan process
 
-                postComment(repoFullName,issueNumber,"Hi "+userName+" \n How can i help you... \n 1). You can get status of currect scan by sending" +
-                        " command @CxFlow update scanid\n 2) You can reschedule scan by typing @CxFlow rescan.",properties);
+                postComment(repoFullName, issueNumber, "> @cxflow hi\n\n" + "\n Hi " + userName + "," + " \n How can CX-Flow help you? \n - Get the status of the current scan by posting the command: @CXFlow update scanID" +
+                        "\n - Perform a new scan by posting the command: @CXFlow rescan \n - Cancel a running scan by posting the command: @CXFlow cancel scanID \n ", properties);
                 return "OK";
             case "rescan":
                 // Call internal rescan process
 
-                postComment(repoFullName,issueNumber,"Rescan initiated.",properties);
-                return triggerRescanProcess(event,signature,product,controllerRequest, getPullRequest(repoFullName, issueNumber,properties),body);
+                postComment(repoFullName, issueNumber, "> "+commentBody+"\n\n"+"- Rescan initiated.", properties);
+                return triggerRescanProcess(event, signature, product, controllerRequest, getPullRequest(repoFullName, issueNumber, properties), body);
+
+            case "cancel":
+                // Call internal rescan process
+
+                objCxservice.cancelScan(scanID);
+                postComment(repoFullName, issueNumber, "> "+commentBody+"\n\nScan cancelled with Scan ID : "+scanID, properties);
+                return "Scan Deleted with Scan ID : "+scanID;
             default:
-                return unsupportedCommandResponse(issueNumber,userName,properties,repoFullName);
+                return unsupportedCommandResponse(issueNumber, userName, properties, repoFullName);
         }
     }
 
@@ -126,13 +158,13 @@ public class CxFlowCommandHandler extends WebhookController {
 //        return "Rescan initiated for issue #" + issueNumber + " in repository " + repoFullName;
 //    }
 
-    private String unsupportedCommandResponse(int issueNumber,String userName,GitHubProperties properties, String repoFullName) {
+    private String unsupportedCommandResponse(int issueNumber, String userName, GitHubProperties properties, String repoFullName) {
 
-        postComment(repoFullName,issueNumber,"I'm afraid I can't do that, "+userName+" .",properties);
-        return "I'm afraid I can't do that, "+userName+" .";
+        postComment(repoFullName, issueNumber, "I'm afraid I can't do that, " + userName + " .", properties);
+        return "I'm afraid I can't do that, " + userName + " .";
     }
 
-    public void postComment(String repoFullName, int issueNumber, String comment,GitHubProperties properties) {
+    public void postComment(String repoFullName, int issueNumber, String comment, GitHubProperties properties) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(org.springframework.http.MediaType.valueOf(MediaType.APPLICATION_JSON));
@@ -147,8 +179,8 @@ public class CxFlowCommandHandler extends WebhookController {
         restTemplate.postForEntity(url, request, String.class);
     }
 
-    public static PullRequest getPullRequest( String repo, int pullNumber,GitHubProperties properties) throws Exception {
-        String urlString = GITHUB_API_URL   + repo + "/pulls/" + pullNumber;
+    public static PullRequest getPullRequest(String repo, int pullNumber, GitHubProperties properties) throws Exception {
+        String urlString = GITHUB_API_URL + repo + "/pulls/" + pullNumber;
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
@@ -185,15 +217,14 @@ public class CxFlowCommandHandler extends WebhookController {
             CommentEvent event,
             String signature,
             String product,
-            ControllerRequest controllerRequest,PullRequest pullRequest,String body
-    ){
+            ControllerRequest controllerRequest, PullRequest pullRequest, String body
+    ) {
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
         log.info("Processing GitHub PULL request");
 
         Integer installationId = null;
         controllerRequest = ensureNotNull(controllerRequest);
-
 
 
         //gitHubService.initConfigProviderOnCommandEvent(uid, event);
@@ -204,19 +235,19 @@ public class CxFlowCommandHandler extends WebhookController {
         try {
             String action = event.getAction();
             // synchronize - happens when user pushes code into a branch for which a pull request exists
-            if(!action.equalsIgnoreCase("created") &&
+            if (!action.equalsIgnoreCase("created") &&
                     !action.equalsIgnoreCase("opened") &&
                     !action.equalsIgnoreCase("reopened") &&
-                    !action.equalsIgnoreCase("synchronize")){
+                    !action.equalsIgnoreCase("synchronize")) {
                 log.info("Pull requested not processed.  Status was not opened ({})", action);
-                if(!flowProperties.isDeleteForkedProject()){
+                if (!flowProperties.isDeleteForkedProject()) {
                     return null;
                 }
 
             }
             Repository repository = event.getRepository();
             String app = repository.getName();
-            if(!ScanUtils.empty(controllerRequest.getApplication())){
+            if (!ScanUtils.empty(controllerRequest.getApplication())) {
                 app = controllerRequest.getApplication();
             }
 
@@ -234,7 +265,7 @@ public class CxFlowCommandHandler extends WebhookController {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
             }
 
-            if(ScanUtils.empty(product)){
+            if (ScanUtils.empty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
             }
             ScanRequest.Product p = ScanRequest.Product.valueOf(product.toUpperCase(Locale.ROOT));
@@ -244,7 +275,7 @@ public class CxFlowCommandHandler extends WebhookController {
             List<String> branches = getBranches(controllerRequest, flowProperties);
             BugTracker bt = ScanUtils.getBugTracker(controllerRequest.getAssignee(), bugType, jiraProperties, controllerRequest.getBug());
             FilterConfiguration filter = filterFactory.getFilter(controllerRequest, flowProperties);
-            Map<FindingSeverity,Integer> thresholdMap = getThresholds(controllerRequest);
+            Map<FindingSeverity, Integer> thresholdMap = getThresholds(controllerRequest);
 
             //build request object
             String gitUrl = Optional.ofNullable(pullRequest.getHead().getRepo())
@@ -255,12 +286,11 @@ public class CxFlowCommandHandler extends WebhookController {
             String gitAuthUrl;
             log.info("Using url: {}", gitUrl);
 
-            if(event.getInstallation() != null && event.getInstallation().getId() != null){
+            if (event.getInstallation() != null && event.getInstallation().getId() != null) {
                 installationId = event.getInstallation().getId();
                 token = gitHubAppAuthService.getInstallationToken(installationId);
                 token = FlowConstants.GITHUB_APP_CLONE_USER.concat(":").concat(token);
-            }
-            else{
+            } else {
                 token = scmConfigOverrider.determineConfigToken(properties, controllerRequest.getScmInstance());
             }
             gitAuthUrl = gitAuthUrlGenerator.addCredToUrl(ScanRequest.Repository.GITHUB, gitUrl, token);
@@ -270,7 +300,7 @@ public class CxFlowCommandHandler extends WebhookController {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(pullRequest.getHead().getRepo().getOwner().getLogin().replace(" ","_"))
+                    .namespace(pullRequest.getHead().getRepo().getOwner().getLogin().replace(" ", "_"))
                     .repoName(repository.getName())
                     .repoUrl(repository.getCloneUrl())
                     .repoUrlWithAuth(gitAuthUrl)
@@ -288,7 +318,7 @@ public class CxFlowCommandHandler extends WebhookController {
                     .excludeFiles(controllerRequest.getExcludeFiles())
                     .bugTracker(bt)
                     .isPRCloseEvent(action.equalsIgnoreCase("closed"))
-                    .isForked(pullRequest.getHead().getRepo().getFork()!=null?pullRequest.getHead().getRepo().getFork():false)
+                    .isForked(pullRequest.getHead().getRepo().getFork() != null ? pullRequest.getHead().getRepo().getFork() : false)
                     .filter(filter)
                     .thresholds(thresholdMap)
                     .organizationId(getOrganizationid(repository))
@@ -299,32 +329,32 @@ public class CxFlowCommandHandler extends WebhookController {
             setScmInstance(controllerRequest, request);
 
             //Check if an installation Id is provided and store it for later use
-            if(installationId != null){
+            if (installationId != null) {
                 request.putAdditionalMetadata(
                         FlowConstants.GITHUB_APP_INSTALLATION_ID, installationId.toString()
                 );
             }
             /*Check for Config as code (cx.config) and override*/
-            log.debug(repository.getId()+" :: Calling  getCxConfigOverride function : "+System.currentTimeMillis());
-            CxConfig cxConfig =  gitHubService.getCxConfigOverride(request);
-            log.debug(repository.getId()+" :: Calling  overrideScanRequestProperties function : "+System.currentTimeMillis());
+            log.debug(repository.getId() + " :: Calling  getCxConfigOverride function : " + System.currentTimeMillis());
+            CxConfig cxConfig = gitHubService.getCxConfigOverride(request);
+            log.debug(repository.getId() + " :: Calling  overrideScanRequestProperties function : " + System.currentTimeMillis());
             request = configOverrider.overrideScanRequestProperties(cxConfig, request);
-            log.debug(repository.getId()+" :: Calling  putAdditionalMetadata function : "+System.currentTimeMillis());
+            log.debug(repository.getId() + " :: Calling  putAdditionalMetadata function : " + System.currentTimeMillis());
 
             request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, body);
             request.putAdditionalMetadata("statuses_url", pullRequest.getStatusesUrl());
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
-            if(helperService.isBranch2Scan(request, branches)){
-                log.debug(repository.getId()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
-                log.debug(repository.getId()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
-                log.debug(repository.getId()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
-                long startTime=System.currentTimeMillis();
-                log.debug(repository.getId()+" :: Start Time : "+startTime);
+            if (helperService.isBranch2Scan(request, branches)) {
+                log.debug(repository.getId() + " :: Calling  isBranch2Scan function End : " + System.currentTimeMillis());
+                log.debug(repository.getId() + " :: Free Memory : " + Runtime.getRuntime().freeMemory());
+                log.debug(repository.getId() + " :: Total Numbers of processors : " + Runtime.getRuntime().availableProcessors());
+                long startTime = System.currentTimeMillis();
+                log.debug(repository.getId() + " :: Start Time : " + startTime);
                 flowService.initiateAutomation(request);
-                long endTime=System.currentTimeMillis();
-                log.debug(repository.getId()+" :: End Time  : "+endTime);
-                log.debug(repository.getId()+" :: Total Time Taken  : "+(endTime-startTime));
+                long endTime = System.currentTimeMillis();
+                log.debug(repository.getId() + " :: End Time  : " + endTime);
+                log.debug(repository.getId() + " :: Total Time Taken  : " + (endTime - startTime));
             }
         } catch (IllegalArgumentException e) {
             return null;
@@ -332,6 +362,7 @@ public class CxFlowCommandHandler extends WebhookController {
 
         return "OK";
     }
+
     protected ControllerRequest ensureNotNull(ControllerRequest requestToCheck) {
         return Optional.ofNullable(requestToCheck)
                 .orElseGet(() -> ControllerRequest.builder().build());
@@ -349,7 +380,7 @@ public class CxFlowCommandHandler extends WebhookController {
     }
 
     public void verifyHmacSignature(String message, String signature, ControllerRequest controllerRequest) {
-        if(hmac == null) {
+        if (hmac == null) {
             log.error("Hmac was not initialized. Trying to initialize...");
             try {
                 init();
@@ -363,8 +394,8 @@ public class CxFlowCommandHandler extends WebhookController {
             log.error(e.getMessage());
         }
 
-        if(hmac != null) {
-            if(message != null) {
+        if (hmac != null) {
+            if (message != null) {
                 byte[] sig = hmac.doFinal(message.getBytes(CHARSET));
                 String computedSignature = "sha1=" + DatatypeConverter.printHexBinary(sig);
                 if (!computedSignature.equalsIgnoreCase(signature)) {
@@ -372,7 +403,7 @@ public class CxFlowCommandHandler extends WebhookController {
                     throw new InvalidTokenException("Invalid Credentials: Make sure webhook token is correct");
                 }
                 log.info("Signature verified");
-            } else{
+            } else {
                 log.error("Signature cannot be verified because message is null.");
                 throw new InvalidTokenException();
             }
@@ -381,6 +412,7 @@ public class CxFlowCommandHandler extends WebhookController {
             throw new InvalidTokenException();
         }
     }
+
     private String getOrganizationid(Repository repository) {
         // E.g. "cxflowtestuser/VB_3845" ==> "cxflowtestuser"
         return StringUtils.substringBefore(repository.getFullName(), "/");

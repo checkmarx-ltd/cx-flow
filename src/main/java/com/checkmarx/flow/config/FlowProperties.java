@@ -52,6 +52,10 @@ public class FlowProperties {
     @Setter
     private boolean disablePRFeedBack = false;
 
+    @Getter
+    @Setter
+    private boolean enablecxFlowInteractive = false;
+
 
     private Integer profilingDepth = 1;
     private String profileConfig = "CxProfile.json";
