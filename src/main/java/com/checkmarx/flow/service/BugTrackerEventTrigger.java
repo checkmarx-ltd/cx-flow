@@ -1,5 +1,6 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -119,7 +120,11 @@ public class BugTrackerEventTrigger {
 
             case GITHUBPULL:
                 if (gitService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
-                    gitService.sendMergeComment(request, SCAN_MESSAGE_INTERACTIVE+" "+scanId,gitService.isCommentUpdate());
+                    if(gitService.getProperties().isEnableAddComment()){
+                        gitService.addComment(request, SCAN_MESSAGE_INTERACTIVE+" "+scanId);
+                    }else{
+                        gitService.sendMergeComment(request, SCAN_MESSAGE_INTERACTIVE+" "+scanId,gitService.isCommentUpdate());
+                    }
                     gitService.startBlockMerge(request, cxProperties.getUrl());
                 }
                 break;

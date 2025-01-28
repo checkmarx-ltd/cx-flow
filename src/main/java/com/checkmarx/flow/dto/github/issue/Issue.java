@@ -30,7 +30,7 @@ public class Issue {
    String htmlUrl;
 
    @JsonProperty("id")
-   int id;
+   long id;
 
    @JsonProperty("node_id")
    String nodeId;
@@ -148,10 +148,10 @@ public class Issue {
         return htmlUrl;
     }
     
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
-    public int getId() {
+    public long getId() {
         return id;
     }
     

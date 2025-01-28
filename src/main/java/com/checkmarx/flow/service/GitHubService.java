@@ -31,6 +31,8 @@ import com.checkmarx.sdk.service.scanner.CxClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -66,6 +68,8 @@ public class GitHubService extends RepoService {
 
     private final GitHubAppAuthService gitHubAppAuthService;
     private final RestTemplate restTemplate;
+
+    @Getter
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
@@ -130,7 +134,11 @@ public class GitHubService extends RepoService {
     void processPull(ScanRequest request, ScanResults results) {
             String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
+        if(properties.isEnableAddComment()){
+            addComment(request,comment);
+        }else{
             sendMergeComment(request, comment,isCommentUpdate());
+        }
     }
 
     public void updateComment(String baseUrl, String comment, ScanRequest scanRequest) {

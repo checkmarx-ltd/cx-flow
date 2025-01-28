@@ -43,8 +43,8 @@ public abstract class RepoService {
                             request.getRepoType());
                     updateComment(commentToUpdate.getCommentUrl(), comment, request);
                 } else {
-                    log.debug("sendMergeComment: Going to create a new {} pull request comment", request.getRepoType());
                     addComment(request, comment);
+                    log.debug("sendMergeComment: Going to create a new {} pull request comment", request.getRepoType());
                 }
             }else {
                 log.debug("sendMergeComment: Going to create a new {} pull request comment", request.getRepoType());

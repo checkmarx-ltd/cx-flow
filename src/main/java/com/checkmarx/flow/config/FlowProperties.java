@@ -57,6 +57,10 @@ public class FlowProperties {
     private boolean enablecxFlowInteractive = false;
 
 
+
+
+
+
     private Integer profilingDepth = 1;
     private String profileConfig = "CxProfile.json";
     private boolean trackApplicationOnly = false;
