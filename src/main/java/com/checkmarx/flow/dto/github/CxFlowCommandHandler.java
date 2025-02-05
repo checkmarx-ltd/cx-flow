@@ -104,12 +104,12 @@ public class CxFlowCommandHandler extends WebhookController {
         if(commentBody.startsWith(">")) return "";
         String command = CxFlowCommandParser.parseCommand(commentBody);
         int scanID = 0;
-        if (command.equalsIgnoreCase("cancel") || command.equalsIgnoreCase("update")) {
+        if (command.equalsIgnoreCase("cancel") || command.equalsIgnoreCase("status")) {
             Pattern pattern;
             if(command.equalsIgnoreCase("cancel")){
                 pattern = Pattern.compile("@cxflow cancel (\\d+)");
             }else{
-                pattern = Pattern.compile("@cxflow update (\\d+)");
+                pattern = Pattern.compile("@cxflow status (\\d+)");
             }
             Matcher matcher = pattern.matcher(commentBody);
             if (matcher.find()) {
@@ -121,13 +121,13 @@ public class CxFlowCommandHandler extends WebhookController {
             }
         }
         switch (command) {
-            case "update":
+            case "status":
                 postComment(repoFullName, issueNumber, "> "+commentBody+"\n\n - Scan is in  : "+objCxservice.getScanStatusName(scanID)+" state.", properties);
-                return "Scan update done.";
+                return "Scan status done.";
             case "hi":
                 // Call internal rescan process
 
-                postComment(repoFullName, issueNumber, "> @cxflow hi\n\n" + "\n Hi " + userName + "," + " \n How can CX-Flow help you? \n - Get the status of the current scan by posting the command: @CXFlow update scanID" +
+                postComment(repoFullName, issueNumber, "> @cxflow hi\n\n" + "\n Hi " + userName + "," + " \n How can CX-Flow help you? \n - Get the status of the current scan by posting the command: @CXFlow status scanID" +
                         "\n - Perform a new scan by posting the command: @CXFlow rescan \n - Cancel a running scan by posting the command: @CXFlow cancel scanID \n ", properties);
                 return "OK";
             case "rescan":
@@ -147,10 +147,7 @@ public class CxFlowCommandHandler extends WebhookController {
         }
     }
 
-    private String triggerUpdateProcess(int issueNumber, String repoFullName) {
-        // Logic for handling update
-        return "Update triggered for issue #" + issueNumber + " in repository " + repoFullName;
-    }
+
 
 //    private String triggerRescanProcess(int issueNumber, String repoFullName,GitHubProperties properties) {
 //        // Logic for handling rescan

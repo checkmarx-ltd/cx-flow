@@ -35,6 +35,7 @@
 * [SAST Scan ID in Github Action Output variable](#outputscanid)
 * [Streaming CxFlow logs to AWS OpenSearch or ElasticSearch](#awslogs)
 * [Issue Labels](#issuelbls)
+* [Interactive Cx-flow](#intrcxflw)
 
 CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
@@ -1320,3 +1321,61 @@ gitlab:
 --github.issueslabel.medium="Medium,Not critical" --github.issueslabel.low="ignore" --github.issueslabel.high="high,must fix" #assigns 2 labels, high and must fix" --github.issueslabel.info="very low"
 ```
 
+* [Interactive Cx-flow](#intrcxflw)
+## <a name="intrcxflw">Interactive Cx-flow</a>
+
+- Interactive Cx-flow functionality currently available only for GitHub.
+## Supported Commands
+
+### 1. Check Scan Status
+To get the status of the current scan, post the following comment:
+```
+@CxFlow status scanID
+```
+- Replace `scanID` with the actual scan ID you want to query.
+- CXFlow will respond with the current status of the scan (e.g., in-progress, completed, failed).
+
+### 2. Initiate a New Scan
+To perform a rescan, post the following comment:
+```
+@CxFlow rescan
+```
+- This will trigger a new scan for the project and return updates on the scan process.
+
+### 3. Cancel a Running Scan
+To cancel a currently running scan, post the following comment:
+```
+@CxFlow cancel scanID
+```
+- Replace `scanID` with the ID of the scan you want to cancel.
+- CXFlow will attempt to cancel the scan and provide a confirmation.
+
+---
+
+## Configuration
+
+To enable this interaction with CXFlow, make sure to configure your environment as follows:
+
+### 1. Creating a Specific User for Comments
+- If you want CXFlow to post comments as a specific user (e.g., a bot account like `CxFlow Bot`), create this user in your bug tracking tool and provide the necessary permissions to read and write comments.
+- Generate an access token for this user (e.g., GitHub Personal Access Token) and include it in the CXFlow configuration YML file to authenticate the user.
+
+### 2. Webhook Configuration
+- This feature works in **webhook mode**. Ensure that your webhook is configured correctly and that the user or bot account has permissions to add comments.
+- Make sure the webhook can handle comment events and that it is allowed to post comments.
+
+### 3. Enabling Comment Features in CXFlow Configuration (YML)
+- In the `github` section of the CXFlow YML configuration file, set the `enableAddComment` parameter to `true` to allow CXFlow to add comments on issues or pull requests:
+    ```yaml
+    github:
+      enableAddComment: true
+    ```
+- In the `cx-flow` section, enable interactive commands by setting `enableCxFlowInteractive` to `true`:
+    ```yaml
+    cx-flow:
+      enableCxFlowInteractive: true
+    ```
+
+---
+
+By following these steps, CXFlow will be able to respond to `@CxFlow` comment queries and perform the specified scan actions directly from your bug tracker.
