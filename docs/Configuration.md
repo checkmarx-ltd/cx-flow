@@ -35,6 +35,7 @@
 * [SAST Scan ID in Github Action Output variable](#outputscanid)
 * [Streaming CxFlow logs to AWS OpenSearch or ElasticSearch](#awslogs)
 * [Issue Labels](#issuelbls)
+* [Jasypt](#jasypt)
 
 CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
@@ -1319,4 +1320,21 @@ gitlab:
 --gitlab.issueslabel.medium="Medium,Not critical" --gitlab.issueslabel.low="ignore" --gitlab.issueslabel.high="high,must fix" #assigns 2 labels, high and must fix" --gitlab.issueslabel.info="very low"
 --github.issueslabel.medium="Medium,Not critical" --github.issueslabel.low="ignore" --github.issueslabel.high="high,must fix" #assigns 2 labels, high and must fix" --github.issueslabel.info="very low"
 ```
+
+
+### <a name="jasypt">Jasypt </a>
+```yaml
+jasypt:
+  encryptor:
+    password: key
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+    isBase64: false
+```
+
+| Configuration          | Default | Description                                                                  |
+|------------------------|---------|------------------------------------------------------------------------------|
+| `isBase64`        | false   | If isBase64 is true user can pass base64 encryption password key to cx-flow. |
+
+
 
