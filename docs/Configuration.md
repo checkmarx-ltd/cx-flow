@@ -1336,5 +1336,12 @@ jasypt:
 |------------------------|---------|------------------------------------------------------------------------------|
 | `isBase64`        | false   | If isBase64 is true user can pass base64 encryption password key to cx-flow. |
 
+### User can generate encrypted password by using below command.
+
+* Download jasypt jar (jasypt-1.9.3.jar) from maven 
+
+```
+java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input="CheckMarxPassword" password="PASSKEY" algorithm=PBEWithMD5AndDES
+```
 
 
