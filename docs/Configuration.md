@@ -36,6 +36,7 @@
 * [Streaming CxFlow logs to AWS OpenSearch or ElasticSearch](#awslogs)
 * [Issue Labels](#issuelbls)
 * [Jasypt](#jasypt)
+* [Interactive Cx-flow](#intrcxflw)
 
 CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
 https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-external-config.html
@@ -626,6 +627,7 @@ For more details on break build, please refer to [Thresholds and policies](https
 | `post-action-postback-id`              |                       | No                                  | Yes     | Yes               | Sets the SAST project's post-scan action to use the post-scan action with the provided Id defined in SAST.If not provided, the project does not get configured to use a post-scan action.                                                                                                                                                                                                                                                                                               |
 | `settings-override`                    |                       | No                                  | Yes     | Yes               | Defaults value false, if set to true the projects settings are re-written/overridden when each SAST scan is invoked from CxFlow                                                                                                                                                                                                                                                                                                                                                         |
 | `cx-branch`                            | false                 | No                                  | Yes     | Yes               | A flag to enable branching of projects in CxSAST.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `isDefaultBranchEmpty`                            | false                 | No                                  | Yes     | Yes               | It will create a project in SAST without appending a hyphen at the end of the project name.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `scan-queuing`                         | false                 | No                                  | Yes     | Yes               | A flag to enable queuing of scan events.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `scan-queuing-timeout`                 | 720                   | No                                  | Yes     | Yes               | The amount of time (in minutes) for which cx-flow will keep a scan event data in its queue before sending to CxSAST, when all the available concurrent scans in CxSAST are in use.                                                                                                                                                                                                                                                                                                      | 
 | `disable-clubbing`                     | false                 | No                                  | Yes     | Yes               | If set to true, results are not grouped at all.By default, results are grouped only by vulnerability and filename.                                                                                                                                                                                                                                                                                                                                                                      |
@@ -991,6 +993,7 @@ sarif:
  hassnippet: true
  enableOriginalUriBaseIds: true
  srcRootPath: %SRCROOT%
+ enableFullURIPath: false
 ```
 
 | Configuration          | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -999,7 +1002,8 @@ sarif:
 | `enableTextNHelpSame`        | false     | In Checkmarx CX-Flow, when the enableTextNHelpSame flag is set to true, sarif report will have same value in help and text under rules section.                                                                                                                                                                                                                                                                                                                                       |
 | `enableOriginalUriBaseIds`        | false     | In Checkmarx CX-Flow, when the enableOriginalUriBaseIds flag is set to true, Sarif report will have modules details scanned in project.                                                                                                                                                                                                                                                                                                                                               |
 | `srcRootPath`        | %SRCROOT% | In Checkmarx CX-Flow, when the srcRootPath has value, It will display same root path in report.                                                                                                                                                                                                                                                                                                                                                                                       |
-| `sourceNodefound`        | false     | In Checkmarx CX-Flow, if the source node is not found at node 1, it will search for the next lowest node, alternatively node 1, if this boolean variable is set to true.                                                                                                                                                                                                                                                                                                                                                                             |
+| `sourceNodefound`        | false     | In Checkmarx CX-Flow, if the source node is not found at node 1, it will search for the next lowest node, alternatively node 1, if this boolean variable is set to true.                                                                                                                                                                                                                                                                                                              |
+| `enableFullURIPath`        | true      | If the artifact location's URI contains module and if this boolean variable is set to false, the module will be excluded from the URI.                                                                                                                                                                                                                                                                                                                                                 |
 
 **Note**: Command line parameter for snippet is `--sarif.hassnippet=true`
 
@@ -1322,6 +1326,7 @@ gitlab:
 ```
 
 
+
 ### <a name="jasypt">Jasypt </a>
 ```yaml
 jasypt:
@@ -1344,4 +1349,64 @@ jasypt:
 java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input="CheckMarxPassword" password="PASSKEY" algorithm=PBEWithMD5AndDES
 ```
 
+
+
+* [Interactive Cx-flow](#intrcxflw)
+## <a name="intrcxflw">Interactive Cx-flow</a>
+
+- Interactive Cx-flow functionality currently available only for GitHub.
+## Supported Commands
+
+### 1. Check Scan Status
+To get the status of the current scan, post the following comment:
+```
+@CxFlow status scanID
+```
+- Replace `scanID` with the actual scan ID you want to query.
+- CXFlow will respond with the current status of the scan (e.g., in-progress, completed, failed).
+
+### 2. Initiate a New Scan
+To perform a rescan, post the following comment:
+```
+@CxFlow rescan
+```
+- This will trigger a new scan for the project and return updates on the scan process.
+
+### 3. Cancel a Running Scan
+To cancel a currently running scan, post the following comment:
+```
+@CxFlow cancel scanID
+```
+- Replace `scanID` with the ID of the scan you want to cancel.
+- CXFlow will attempt to cancel the scan and provide a confirmation.
+
+---
+
+## Configuration
+
+To enable this interaction with CXFlow, make sure to configure your environment as follows:
+
+### 1. Creating a Specific User for Comments
+- If you want CXFlow to post comments as a specific user (e.g., a bot account like `CxFlow Bot`), create this user in your bug tracking tool and provide the necessary permissions to read and write comments.
+- Generate an access token for this user (e.g., GitHub Personal Access Token) and include it in the CXFlow configuration YML file to authenticate the user.
+
+### 2. Webhook Configuration
+- This feature works in **webhook mode**. Ensure that your webhook is configured correctly and that the user or bot account has permissions to add comments.
+- Make sure the webhook can handle comment events and that it is allowed to post comments.
+
+### 3. Enabling Comment Features in CXFlow Configuration (YML)
+- In the `github` section of the CXFlow YML configuration file, set the `enableAddComment` parameter to `true` to allow CXFlow to add comments on issues or pull requests:
+    ```yaml
+    github:
+      enableAddComment: true
+    ```
+- In the `cx-flow` section, enable interactive commands by setting `enableCxFlowInteractive` to `true`:
+    ```yaml
+    cx-flow:
+      enableCxFlowInteractive: true
+    ```
+
+---
+
+By following these steps, CXFlow will be able to respond to `@CxFlow` comment queries and perform the specified scan actions directly from your bug tracker.
 
