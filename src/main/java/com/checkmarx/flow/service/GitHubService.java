@@ -14,10 +14,7 @@ import com.checkmarx.flow.dto.RepoIssue;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.Sources;
-import com.checkmarx.flow.dto.github.Content;
-import com.checkmarx.flow.dto.github.PullEvent;
-import com.checkmarx.flow.dto.github.PushEvent;
-import com.checkmarx.flow.dto.github.Repository;
+import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.dto.report.AnalyticsReport;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.GitHubClientRunTimeException;
@@ -34,6 +31,8 @@ import com.checkmarx.sdk.service.scanner.CxClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -69,6 +68,8 @@ public class GitHubService extends RepoService {
 
     private final GitHubAppAuthService gitHubAppAuthService;
     private final RestTemplate restTemplate;
+
+    @Getter
     private final GitHubProperties properties;
     private final FlowProperties flowProperties;
     private final ThresholdValidator thresholdValidator;
@@ -133,7 +134,11 @@ public class GitHubService extends RepoService {
     void processPull(ScanRequest request, ScanResults results) {
             String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
+        if(properties.isEnableAddComment()){
+            addComment(request,comment);
+        }else{
             sendMergeComment(request, comment,isCommentUpdate());
+        }
     }
 
     public void updateComment(String baseUrl, String comment, ScanRequest scanRequest) {
@@ -200,6 +205,22 @@ public class GitHubService extends RepoService {
                 ConfigProvider configProvider = ConfigProvider.getInstance();
                 Repository repository = event.getRepository();
                 String branch = event.getPullRequest().getHead().getRef();
+
+                configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getLogin(),
+                        repository.getName(), branch,
+                        properties.getToken(), SourceProviderType.GITHUB));
+            } catch (ConfigurationException e) {
+                log.warn("Failed to init config provider with the following error: {}", e.getMessage());
+            }
+        }
+    }
+
+    public void initConfigProviderOnCommandEvent(String uid, CommentEvent event,String branch) {
+        if (properties != null) {
+            try {
+                ConfigProvider configProvider = ConfigProvider.getInstance();
+                Repository repository = event.getRepository();
+               // String branch = event.getPullRequest().getHead().getRef();
 
                 configProvider.init(uid, new RepoReader(properties.getApiUrl(), repository.getOwner().getLogin(),
                         repository.getName(), branch,

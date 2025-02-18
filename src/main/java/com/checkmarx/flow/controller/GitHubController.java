@@ -13,14 +13,15 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
-import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +48,8 @@ public class GitHubController extends WebhookController {
     private static final String SIGNATURE = "X-Hub-Signature";
     private static final String EVENT = "X-GitHub-Event";
     private static final String PING = EVENT + "=ping";
+
+    private static final String COMMENT = EVENT + "=issue_comment";
     private static final String PULL = EVENT + "=pull_request";
     private static final String PUSH = EVENT + "=push";
     private static final String DELETE = EVENT + "=delete";
@@ -64,6 +67,9 @@ public class GitHubController extends WebhookController {
     private final ConfigurationOverrider configOverrider;
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
+
+    @Autowired
+    private CxFlowCommandHandler cxFlowCommandHandlerService;
 
     private Mac hmac;
 
@@ -86,6 +92,38 @@ public class GitHubController extends WebhookController {
 
         return "ok";
     }
+
+    @PostMapping(value={"/{product}", "/"}, headers = COMMENT)
+    public String commentRequest(
+            @RequestBody String body,
+            @PathVariable(value = "product", required = false) String product,
+            @RequestHeader(value = SIGNATURE) String signature,
+            ControllerRequest controllerRequest) throws Exception {
+        log.info("Processing GitHub Comment request");
+        //verifyHmacSignature(body, signature, null);
+
+        CommentEvent event;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            event = mapper.readValue(body, CommentEvent.class);
+        } catch (IOException e) {
+            log.error(ExceptionUtils.getStackTrace(e));
+            throw new MachinaRuntimeException(e);
+        }
+
+
+
+        if (event.getAction().equals("created") && event.getComment().getBody().toLowerCase().contains("@cxflow")) {
+            String commentBody = event.getComment().getBody();
+            String userName = event.getSender().getLogin();
+            cxFlowCommandHandlerService.handleCxFlowCommand(properties,commentBody, event.getIssue().getNumber(),
+                    event.getRepository().getFullName(),userName,event,signature,product,controllerRequest,body);
+        }
+
+        return "ok";
+    }
+
+
 
     /**
      * Pull Request event submitted (JSON)
@@ -250,6 +288,10 @@ public class GitHubController extends WebhookController {
 
         return getSuccessMessage();
     }
+
+
+
+
 
     /**
      * Push Request event submitted (JSON), along with the Product (cx for example)
