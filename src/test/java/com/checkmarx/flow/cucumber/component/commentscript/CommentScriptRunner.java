@@ -7,7 +7,6 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 
 @RunWith(Cucumber.class)
-@ContextConfiguration(classes = {JasyptConfig.class})
 @CucumberOptions(
         features = "src/test/resources/cucumber/features/componentTests/configure-sast-comment-script.feature",
         tags = "not @Skip")
