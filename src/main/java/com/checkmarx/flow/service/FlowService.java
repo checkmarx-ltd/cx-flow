@@ -36,6 +36,22 @@ public class FlowService {
     public void initiateAutomation(ScanRequest scanRequest) {
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
         scanRequest.setProject(effectiveProjectName);
+
+        try {
+            String branchName = projectNameGenerator.getHelperService().getBranchName(scanRequest);
+            String DefaultbranchName = projectNameGenerator.getHelperService().getDefaultBranchName(scanRequest);
+
+            if(branchName!=null && !branchName.equalsIgnoreCase("")){
+                scanRequest.setBranch(branchName);
+
+            }
+            if(DefaultbranchName!=null && !DefaultbranchName.equalsIgnoreCase("")){
+                scanRequest.setDefaultBranch(DefaultbranchName);
+            }
+        } catch (Exception e) {
+            log.info("Issue occurred while setting Default branch name or branch name.");
+        }
+
         List<VulnerabilityScanner> enabledScanners = getEnabledScanners(scanRequest);
         validateEnabledScanners(enabledScanners);
         runScanRequest(scanRequest, enabledScanners);
