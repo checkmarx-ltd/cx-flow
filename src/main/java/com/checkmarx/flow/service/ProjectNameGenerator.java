@@ -65,6 +65,33 @@ public class ProjectNameGenerator {
         return normalize(projectName, flowProperties.isPreserveProjectName());
     }
 
+    public String determineScaProjectName(ScanRequest request) {
+        String projectName;
+        String repoName = request.getRepoName();
+        String branch = request.getBranch();
+        String namespace = request.getNamespace();
+
+        log.debug("Determining project name for SCA vulnerability scanner.");
+        String nameOverride = tryGetProjectNameFromScript(request);
+        if (StringUtils.isNotEmpty(nameOverride)) {
+            log.debug("Project name override is present. Using the override: {}.", nameOverride);
+            projectName = nameOverride;
+        } else {
+            if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(repoName) && StringUtils.isNotEmpty(branch)) {
+                log.debug("Namespace, repo name and branch are specified. Using them all.");
+                projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
+            } else if (StringUtils.isNotEmpty(request.getApplication())) {
+                log.debug("Using application name.");
+                projectName = request.getApplication();
+            } else {
+                final String message = "Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)";
+                log.error(message);
+                throw new MachinaRuntimeException(String.format("Unable to determine project name. %s", message));
+            }
+        }
+        return normalize(projectName, flowProperties.isPreserveProjectName());
+    }
+
     private static String normalize(String rawProjectName, boolean preserveProjectName) {
         String result = null;
         if (rawProjectName != null) {

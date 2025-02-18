@@ -1,4 +1,4 @@
-* [Deleting CxSAST Project upon Branch Deletion](#deleteproject)
+* [Deleting Project upon Branch Deletion](#deleteproject)
 * [CxFlow Branch Configuration](#branchconfiguration)
 * [Using the deletion feature together with configuration-as-code](#deletionwithcxconfig)
 * [References](#references)
@@ -8,14 +8,15 @@
   * [GitLab](#gitlab)
   * [BitBucket](#bitbucket)
 
-## <a name="deleteproject">Deleting CxSAST Project upon Branch Deletion</a>
+## <a name="deleteproject">Deleting Project upon Branch Deletion</a>
 
-CxFlow is able to create a new CxSAST project when initiating scan, if the project doesn't exist yet.
+CxFlow is able to create a new project when initiating scan, if the project doesn't exist yet.
 
-When working with CxFlow in web service mode and using webhook events to trigger CxSAST scan, CxFlow will create a new CxSAST project for each SCM feature branch which open a pull request into scanned branch. This might cause flood of projects on CxSAST for feature branch and unexpected consumption of licenses.
+When working with CxFlow in web service mode and using webhook events to trigger scan, CxFlow will create a new project for each SCM feature branch which open a pull request into scanned branch. This might cause flood of projects on for feature branch and unexpected consumption of licenses.
 
-In order to overcome this, CxFlow can automatically delete CxSAST project upon branch deletion.
+In order to overcome this, CxFlow can automatically delete project upon branch deletion.
 
+**Note:** If Both CxSAST and CxSCA is enabled both projects will get deleted. 
 ### <a name="branchconfiguration">CxFlow Branch Configuration</a>
 
 If the branch is a scanned branch - named under ‘cx-flow.branches’ section - CxFlow will not delete the Checkmarx project when the branch is deleted.  Therefore, if you want to delete your Checkmarx Project, the branch name cannot be under this section.

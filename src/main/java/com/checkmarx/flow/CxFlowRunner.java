@@ -725,6 +725,23 @@ public class CxFlowRunner implements ApplicationRunner {
             log.debug("{}: branch not eligible for scanning", request.getBranch());
             return;
         }
+
+        try {
+            String branchName = helperService.getBranchName(request);
+            String DefaultbranchName = helperService.getDefaultBranchName(request);
+
+            if(branchName!=null && !branchName.equalsIgnoreCase("")){
+                request.setBranch(branchName);
+
+            }
+            if(DefaultbranchName!=null && !DefaultbranchName.equalsIgnoreCase("")){
+                request.setDefaultBranch(DefaultbranchName);
+            }
+        } catch (Exception e) {
+            log.info("Issue occurred while setting Default branch name or branch name.");
+        }
+
+
         BugTracker bugTracker = request.getBugTracker();
         String customBean = bugTracker!=null ? bugTracker.getCustomBean() : flowProperties.getBugTracker();
 

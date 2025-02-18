@@ -7,7 +7,7 @@ import java.util.Map;
 
 @JsonIgnoreProperties
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class EventCommon {
+public class EventCommon  {
     @JsonProperty("repository")
     private Repository repository;
     @JsonProperty("sender")

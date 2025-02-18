@@ -36,6 +36,22 @@ public class FlowService {
     public void initiateAutomation(ScanRequest scanRequest) {
         String effectiveProjectName = projectNameGenerator.determineProjectName(scanRequest);
         scanRequest.setProject(effectiveProjectName);
+
+        try {
+            String branchName = projectNameGenerator.getHelperService().getBranchName(scanRequest);
+            String DefaultbranchName = projectNameGenerator.getHelperService().getDefaultBranchName(scanRequest);
+
+            if(branchName!=null && !branchName.equalsIgnoreCase("")){
+                scanRequest.setBranch(branchName);
+
+            }
+            if(DefaultbranchName!=null && !DefaultbranchName.equalsIgnoreCase("")){
+                scanRequest.setDefaultBranch(DefaultbranchName);
+            }
+        } catch (Exception e) {
+            log.info("Issue occurred while setting Default branch name or branch name.");
+        }
+
         List<VulnerabilityScanner> enabledScanners = getEnabledScanners(scanRequest);
         validateEnabledScanners(enabledScanners);
         runScanRequest(scanRequest, enabledScanners);
@@ -95,16 +111,12 @@ public class FlowService {
 
     public void deleteProject(ScanRequest request) {
 
-        Optional<SastScanner> sastScanner = getEnabledScanners(request)
-                .stream().filter(scanner -> scanner instanceof SastScanner)
-                .map(scanner -> ((SastScanner) scanner))
-                .findFirst();
-
-        if(!sastScanner.isPresent()){
-            log.warn("Delete branch for non-SAST scanner is not supported");
-            return;
-         }
-
-        sastScanner.ifPresent(scanner -> scanner.deleteProject(request));
+        List<VulnerabilityScanner> enabledScanners  = getEnabledScanners(request);
+//                .stream().filter(scanner -> scanner instanceof SastScanner)
+//                .map(scanner -> ((SastScanner) scanner))
+//                .findFirst();
+        validateEnabledScanners(enabledScanners);
+        enabledScanners.forEach(scanner-> scanner.deleteProject(request));
+        //sastScanner.ifPresent(scanner -> scanner.deleteProject(request));
     }
 }
