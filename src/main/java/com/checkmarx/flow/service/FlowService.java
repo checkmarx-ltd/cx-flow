@@ -111,16 +111,12 @@ public class FlowService {
 
     public void deleteProject(ScanRequest request) {
 
-        Optional<SastScanner> sastScanner = getEnabledScanners(request)
-                .stream().filter(scanner -> scanner instanceof SastScanner)
-                .map(scanner -> ((SastScanner) scanner))
-                .findFirst();
-
-        if(!sastScanner.isPresent()){
-            log.warn("Delete branch for non-SAST scanner is not supported");
-            return;
-         }
-
-        sastScanner.ifPresent(scanner -> scanner.deleteProject(request));
+        List<VulnerabilityScanner> enabledScanners  = getEnabledScanners(request);
+//                .stream().filter(scanner -> scanner instanceof SastScanner)
+//                .map(scanner -> ((SastScanner) scanner))
+//                .findFirst();
+        validateEnabledScanners(enabledScanners);
+        enabledScanners.forEach(scanner-> scanner.deleteProject(request));
+        //sastScanner.ifPresent(scanner -> scanner.deleteProject(request));
     }
 }
