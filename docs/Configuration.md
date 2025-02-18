@@ -35,6 +35,7 @@
 * [SAST Scan ID in Github Action Output variable](#outputscanid)
 * [Streaming CxFlow logs to AWS OpenSearch or ElasticSearch](#awslogs)
 * [Issue Labels](#issuelbls)
+* [Jasypt](#jasypt)
 * [Interactive Cx-flow](#intrcxflw)
 
 CxFlow uses **Spring Boot** and for Server Mode, it requires an `application.yml` file to drive the execution. The sections below outlines available properties and when/how they can be used in different execution modes. In addition, all the Spring Boot configuration rules apply. For additional information on Spring Boot, refer to
@@ -1324,6 +1325,32 @@ gitlab:
 --github.issueslabel.medium="Medium,Not critical" --github.issueslabel.low="ignore" --github.issueslabel.high="high,must fix" #assigns 2 labels, high and must fix" --github.issueslabel.info="very low"
 ```
 
+
+
+### <a name="jasypt">Jasypt </a>
+```yaml
+jasypt:
+  encryptor:
+    password: key
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+    isBase64: false
+```
+
+| Configuration          | Default | Description                                                                  |
+|------------------------|---------|------------------------------------------------------------------------------|
+| `isBase64`        | false   | If isBase64 is true user can pass base64 encryption password key to cx-flow. |
+
+### User can generate encrypted password by using below command.
+
+* Download jasypt jar (jasypt-1.9.3.jar) from maven 
+
+```
+java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input="CheckMarxPassword" password="PASSKEY" algorithm=PBEWithMD5AndDES
+```
+
+
+
 * [Interactive Cx-flow](#intrcxflw)
 ## <a name="intrcxflw">Interactive Cx-flow</a>
 
@@ -1382,3 +1409,4 @@ To enable this interaction with CXFlow, make sure to configure your environment 
 ---
 
 By following these steps, CXFlow will be able to respond to `@CxFlow` comment queries and perform the specified scan actions directly from your bug tracker.
+
