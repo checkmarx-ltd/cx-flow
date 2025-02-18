@@ -509,6 +509,7 @@ cxflow:
     # - SonarQube
     # - GITHUBPULL
     # - BITBUCKETCOMMIT
+    # - BITBUCKETPULL
   branches:
 ```
 
@@ -812,6 +813,18 @@ This tutorial is designed to teach the following topics:
 
 ### <a name="bitbucketprep">Bitbucket Prep</a>
 ##### [Top of Tutorial](#bitbucket)
+* Update the bug-tracker section of the application.yml file with the following if you want to create bitbucket merge requests.
+```yaml
+bug-tracker: BITBUCKETPULL
+bug-tracker-impl:
+  - BITBUCKETPULL
+```
+* Update the bug-tracker section of the application.yml file with the following if you want to create JIRA Issues.
+```yaml
+bug-tracker: JIRA
+bug-tracker-impl:
+  - JIRA
+```
 * Login or sign up for an account at https://www.bitbucket.org
 * **Note** Use the same email address you used or will use to setup JIRA
 * Ensure JIRA & the application.yml are setup according to [CxFlow CLI & JIRA](#clijira)
