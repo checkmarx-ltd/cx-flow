@@ -743,9 +743,17 @@ public class HTMLHelper {
     private static void addScanSummarySection(ScanRequest request, ScanResults results, RepoProperties properties, StringBuilder body) {
         setScannerLogoHeader(request, results, body);
         CxScanSummary summary = results.getScanSummary();
+        CxScanSummary product = results.getProjectScanSummary();
         if (properties.isCxSummary()) {
             setScannerSummaryHeader(results, body);
-            setScannerTotalVulnerabilities(body, summary, request);
+            if(results.getProjectScanSummary()!=null){
+                setScannerTotalVulnerabilities(body, product, request);
+                appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_BRANCH_SUMMARY_HEADER), CRLF);
+                setScannerTotalVulnerabilities(body, summary, request);
+            }else{
+                setScannerTotalVulnerabilities(body, summary, request);
+            }
+
         }
         if (properties.isCxTableSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
             if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
@@ -833,7 +841,11 @@ public class HTMLHelper {
         if (Optional.ofNullable(results.getAstResults()).isPresent()) {
             appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.AST_SUMMARY_HEADER), CRLF);
         } else {
-            appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_SUMMARY_HEADER), CRLF);
+            if(results.getProjectScanSummary()!=null){
+                appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_PROJECT_SUMMARY_HEADER), CRLF);
+            }else {
+                appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_SUMMARY_HEADER), CRLF);
+            }
         }
     }
 
