@@ -37,6 +37,10 @@ public class SarifProperties {
     @Setter
     private boolean enableOriginalUriBaseIds = false;
 
+    @Getter
+    @Setter
+    private boolean enableFullURIPath = true;
+
 
     @Getter
     @Setter

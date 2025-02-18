@@ -1,5 +1,6 @@
 package com.checkmarx.flow.service;
 
+import com.checkmarx.flow.config.FlowProperties;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 public class BugTrackerEventTrigger {
 
     private static final String SCAN_MESSAGE = "Scan submitted to Checkmarx";
+    private static final String SCAN_MESSAGE_INTERACTIVE = "Scan submitted to Checkmarx with Scan ID : ";
     private static final String SCAN_NOT_SUBMITTED_MESSAGE = "Scan not submitted to Checkmarx due to existing Active scan for the same project.";
     private static final String SCAN_FAILED_MESSAGE = "Scan failed due to some error.";
 
@@ -98,6 +100,77 @@ public class BugTrackerEventTrigger {
         return bugTrackerType;
     }
 
+    public BugTracker.Type triggerScanStartedEventForInteractive(ScanRequest request,int scanId) {
+        boolean eventsWereTriggered = true;
+        BugTracker.Type bugTrackerType = request.getBugTracker().getType();
+
+        switch (bugTrackerType) {
+            case GITLABMERGE:
+                if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    gitLabService.sendMergeComment(request, SCAN_MESSAGE,gitLabService.isCommentUpdate());
+                }
+                gitLabService.startBlockMerge(request);
+                break;
+
+            case GITLABCOMMIT:
+                if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    gitLabService.sendCommitComment(request, SCAN_MESSAGE);
+                }
+                break;
+
+            case GITHUBPULL:
+                if (gitService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    if(gitService.getProperties().isEnableAddComment()){
+                        gitService.addComment(request, SCAN_MESSAGE_INTERACTIVE+" "+scanId);
+                    }else{
+                        gitService.sendMergeComment(request, SCAN_MESSAGE_INTERACTIVE+" "+scanId,gitService.isCommentUpdate());
+                    }
+                    gitService.startBlockMerge(request, cxProperties.getUrl());
+                }
+                break;
+
+            case BITBUCKETPULL:
+                if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    bbService.sendMergeComment(request, SCAN_MESSAGE);
+                }
+                break;
+
+            case BITBUCKETSERVERPULL:
+                if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    bbService.sendServerMergeComment(request, SCAN_MESSAGE);
+                }
+                bbService.setBuildStartStatus(request);
+                break;
+
+            case ADOPULL:
+                if (adoService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
+                    adoService.sendMergeComment(request, SCAN_MESSAGE);
+                    adoService.startBlockMerge(request);
+                }
+                break;
+
+            case JIRA:
+            case CUSTOM:
+            case NONE:
+            case WAIT:
+            case wait:
+                eventsWereTriggered = false;
+                break; // No action is needed
+
+            default:
+                eventsWereTriggered = false;
+                log.warn("Bug-Tracker type: {} is not supported", bugTrackerType);
+        }
+
+        if (eventsWereTriggered) {
+            log.debug("Completed triggering events for the '{}' bug tracker.", bugTrackerType);
+        }
+        else {
+            log.debug("Bug tracker events were not triggered, because bug tracker type is '{}'.", bugTrackerType);
+        }
+
+        return bugTrackerType;
+    }
 
     public void triggerOffScanStartedEvent(ScanRequest scanRequest) {
 

@@ -50,6 +50,9 @@ public class GitHubProperties extends RepoProperties {
     @Setter
     private List<LabelField> fields;
 
+    @Getter
+    @Setter
+    private boolean enableAddComment = false;
 
     public String getMergeNoteUri(String namespace, String repo, String mergeId){
         String format = "%s/%s/%s/issues/%s/comments";
