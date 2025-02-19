@@ -3,7 +3,6 @@ import org.gradle.api.tasks.testing.Test
 buildscript {
     ext {
 
-
         CxSBSDK = "0.6.20"
 
         ConfigProviderVersion = '1.0.14'
