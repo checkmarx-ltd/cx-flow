@@ -16,11 +16,11 @@ import java.util.Properties;
 @Configuration
 public class JasyptConfig {
 
-    @Value("${jasypt.encryptor.password}")
-    private String password;
-
-    @Value("${jasypt.encryptor.algorithm}")
+    @Value("${jasypt.encryptor.algorithm:PBEWithMD5AndDES}")
     private String algorithm;
+
+    @Value("${jasypt.encryptor.password:XXX}")
+    private String password;
 
     @Value("${jasypt.encryptor.isBase64:false}") // Boolean flag to determine if password is Base64 encoded
     private boolean isBase64;
