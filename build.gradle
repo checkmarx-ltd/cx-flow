@@ -2,10 +2,7 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
     ext {
-
-
-        CxSBSDK = "0.6.22"
-
+        CxSBSDK = "0.6.23"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
         springBootVersion = '3.2.11'
