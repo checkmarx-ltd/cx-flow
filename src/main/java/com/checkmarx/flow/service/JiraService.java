@@ -410,7 +410,7 @@ public class JiraService {
     private String getScannerTypeSeverity(ScanResults.XIssue issue, String severity, List<ScanResults.ScaDetails> scaDetails) {
         String scannerTypeSeverity;
         if (ScanUtils.isSAST(issue)) {
-            scannerTypeSeverity = severity;
+            scannerTypeSeverity = StringUtils.capitalize(severity.toLowerCase());
         } else {
             /*
                 Format should be aligned with SAST format
