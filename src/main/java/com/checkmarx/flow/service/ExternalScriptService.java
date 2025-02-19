@@ -37,6 +37,7 @@ public class ExternalScriptService {
                 log.error("Script must return a result of type 'java.lang.String'");
             }
         } catch (IOException e) {
+            
             log.error("Error reading script file for Checkmarx {} {}", entity, scriptFile, e);
         }
         return result;
@@ -52,6 +53,7 @@ public class ExternalScriptService {
             bindings.put("branches", branches);
             result = runScript(script, bindings);
         } catch (IOException e) {
+            
             log.error("Error reading script file {}", scriptFile, e);
         }
         return result;

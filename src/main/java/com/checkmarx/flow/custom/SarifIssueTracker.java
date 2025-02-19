@@ -21,6 +21,8 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -271,6 +273,9 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                             .endColumn(col + len)
                                             .build();
                                 }
+                                String regex = "^[^/]+/";
+                                Pattern pattern = Pattern.compile(regex);
+                                Matcher matcher = pattern.matcher(node.get("file"));
 
                                 fileCountMap.putIfAbsent(node.get("file"), len);
                                 listOfFilePaths.add(node.get("file"));
@@ -278,7 +283,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                                 locations.add(Location.builder()
                                         .physicalLocation(PhysicalLocation.builder()
                                                 .artifactLocation(ArtifactLocation.builder()
-                                                        .uri(node.get("file"))
+                                                        .uri(properties.isEnableFullURIPath() ?node.get("file")  : matcher.replaceFirst(""))
                                                         .uriBaseId(
                                 properties.isEnableOriginalUriBaseIds()? node.get("file").split("/")[0]:"%SRCROOT%"
                                                         )

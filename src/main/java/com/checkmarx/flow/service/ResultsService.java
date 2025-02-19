@@ -156,10 +156,16 @@ public class ResultsService {
                     if (gitService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         gitService.processPull(request, results);
                         gitService.endBlockMerge(request, results, scanDetails);
+                    }else if(!flowProperties.isDisablePRFeedBack()){
+                        gitService.processPull(request, results);
                     }
+
+
                     break;
                 case GITLABCOMMIT:
                     if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment() ) {
+                        gitLabService.processCommit(request, results);
+                    }else if(!flowProperties.isDisablePRFeedBack()){
                         gitLabService.processCommit(request, results);
                     }
                     break;
@@ -167,6 +173,8 @@ public class ResultsService {
                     if (gitLabService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         gitLabService.processMerge(request, results);
                         gitLabService.endBlockMerge(request);
+                    }else if(!flowProperties.isDisablePRFeedBack()){
+                        gitLabService.processMerge(request, results);
                     }
                     break;
                 case BITBUCKETCOMMIT:
@@ -177,18 +185,24 @@ public class ResultsService {
                 case BITBUCKETPULL:
                     if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         bbService.processMerge(request, results);
+                    }else if(!flowProperties.isDisablePRFeedBack()){
+                        bbService.processMerge(request, results);
                     }
                     break;
                 case BITBUCKETSERVERPULL:
                     if (bbService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         bbService.processServerMerge(request, results, scanDetails);
                         bbService.setBuildEndStatus(request, results, scanDetails);
+                    }else if(!flowProperties.isDisablePRFeedBack()){
+                        bbService.processServerMerge(request, results, scanDetails);
                     }
                     break;
                 case ADOPULL:
                     if (adoService.isScanSubmittedComment() && request.getScanSubmittedComment()) {
                         adoService.processPull(request, results);
                         adoService.endBlockMerge(request, results, scanDetails);
+                    }else if(!flowProperties.isDisablePRFeedBack()){
+                        adoService.processPull(request, results);
                     }
                     break;
                 case EMAIL:

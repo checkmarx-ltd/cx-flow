@@ -481,9 +481,32 @@ public class CxFlowRunner implements ApplicationRunner {
                     }
                     cxParse(request, f);
                 }
-            } else if (args.containsOption(BATCH_OPTION)) {
+                if(args.containsOption("delete-project")){
+                    if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(branch)) {
+                        log.error("Namespace/Repo/branch must be provided for deleting project via CLI");
+                        exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                    }
+                    log.info("deleting project... ");
+                    deleteProject(request);
+                }
+            }else if(args.containsOption("delete")){
+                if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(branch)) {
+                    log.error("Namespace/Repo/branch must be provided for deleting project via CLI");
+                    exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                }
+                log.info("deleting project... ");
+                deleteProject(request);
+            }  else if (args.containsOption(BATCH_OPTION)) {
                 log.info("Executing batch process");
                 cxBatch(request);
+                if(args.containsOption("delete-project")){
+                    if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(branch)) {
+                        log.error("Namespace/Repo/branch must be provided for deleting project via CLI");
+                        exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                    }
+                    log.info("deleting project... ");
+                    deleteProject(request);
+                }
             } else if (args.containsOption("project")) {
                 if (ScanUtils.empty(cxProject)) {
                     log.error("cx-project must be provided when --project option is used");
@@ -496,6 +519,14 @@ public class CxFlowRunner implements ApplicationRunner {
                     request.setScanId(scanId);
                 }
                 publishLatestScanResults(request);
+                if(args.containsOption("delete-project")){
+                    if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(branch)) {
+                        log.error("Namespace/Repo/branch must be provided for deleting project via CLI");
+                        exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                    }
+                    log.info("deleting project... ");
+                    deleteProject(request);
+                }
             } else if (args.containsOption("scan") || args.containsOption(IAST_OPTION)) {
                 log.info("Executing scan process");
                 request.setCliMode(CliMode.SCAN);
@@ -551,6 +582,14 @@ public class CxFlowRunner implements ApplicationRunner {
 
                 if (args.containsOption(IAST_OPTION)) {
                     configureIast(request, scanTag, args);
+                }
+                if(args.containsOption("delete-project")){
+                    if (ScanUtils.empty(namespace) || ScanUtils.empty(repoName) || ScanUtils.empty(branch)) {
+                        log.error("Namespace/Repo/branch must be provided for deleting project via CLI");
+                        exit(ExitCode.BUILD_INTERRUPTED_INTENTIONALLY);
+                    }
+                    log.info("deleting project... ");
+                    deleteProject(request);
                 }
             }
         } catch (Exception e) {
@@ -686,6 +725,23 @@ public class CxFlowRunner implements ApplicationRunner {
             log.debug("{}: branch not eligible for scanning", request.getBranch());
             return;
         }
+
+        try {
+            String branchName = helperService.getBranchName(request);
+            String DefaultbranchName = helperService.getDefaultBranchName(request);
+
+            if(branchName!=null && !branchName.equalsIgnoreCase("")){
+                request.setBranch(branchName);
+
+            }
+            if(DefaultbranchName!=null && !DefaultbranchName.equalsIgnoreCase("")){
+                request.setDefaultBranch(DefaultbranchName);
+            }
+        } catch (Exception e) {
+            log.info("Issue occurred while setting Default branch name or branch name.");
+        }
+
+
         BugTracker bugTracker = request.getBugTracker();
         String customBean = bugTracker!=null ? bugTracker.getCustomBean() : flowProperties.getBugTracker();
 
@@ -910,18 +966,24 @@ public class CxFlowRunner implements ApplicationRunner {
     }
 
     public void deleteProject(ScanRequest request) {
+        List<VulnerabilityScanner> enabledScanners  = getEnabledScanners(request);
+        validateEnabledScanners(enabledScanners);
+        enabledScanners.forEach(scanner-> scanner.deleteProject(request));
+    }
 
-        Optional<SastScanner> sastScanner = getEnabledScanners(request)
-                .stream().filter(scanner -> scanner instanceof SastScanner)
-                .map(scanner -> ((SastScanner) scanner))
-                .findFirst();
+    private void validateEnabledScanners(List<VulnerabilityScanner> enabledScanners) {
 
-        if(!sastScanner.isPresent()){
-            log.warn("Delete branch for non-SAST scanner is not supported");
-            return;
+        boolean isCxGoEnabled = enabledScanners.stream().anyMatch(scanner -> scanner instanceof CxGoScanner);
+
+        if (isCxGoEnabled && enabledScanners.size() > 1) {
+            throw new MachinaRuntimeException("CxGo scanner cannot be set with any other scanner");
         }
 
-        sastScanner.ifPresent(scanner -> scanner.deleteProject(request));
+        boolean isSastAndASTScannersFound = enabledScanners.stream().anyMatch(scanner -> scanner instanceof ASTScanner)
+                && enabledScanners.stream().anyMatch(scanner -> scanner instanceof SastScanner);
+        if (isSastAndASTScannersFound) {
+            throw new MachinaRuntimeException("Both SAST & AST-SAST scanners cannot be set together");
+        }
     }
 
 }

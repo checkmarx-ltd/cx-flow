@@ -119,6 +119,19 @@ public class HelperService {
         return getEffectiveEntityName(request, scriptFile, team, "team");
     }
 
+    public String getBranchName(ScanRequest request) {
+        String scriptFile = cxProperties.getBranchScript();
+        String branch = request.getBranch();
+        return getEffectiveEntityName(request, scriptFile, branch, "branch");
+    }
+
+    public String getDefaultBranchName(ScanRequest request) {
+        String scriptFile = cxProperties.getDefaultBranchScript();
+        String defaultBranch = request.getDefaultBranch();
+        return getEffectiveEntityName(request, scriptFile, defaultBranch, "defaultBranch");
+    }
+
+
     public String getCxProject(ScanRequest request) {
         String scriptFile = cxProperties.getProjectScript();
         String project = request.getProject();

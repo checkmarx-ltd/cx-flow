@@ -172,6 +172,7 @@ public class SastScanner extends AbstractVulnerabilityScanner {
         return cxProperties;
     }
 
+    @Override
     public void deleteProject(ScanRequest request) {
         try {
             String ownerId = scanRequestConverter.determineTeamAndOwnerID(request);

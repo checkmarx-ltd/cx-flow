@@ -12,6 +12,7 @@ import com.checkmarx.sdk.dto.ScanResults;
 import com.checkmarx.sdk.dto.ast.ASTResults;
 import com.checkmarx.sdk.dto.ast.ScanParams;
 import com.checkmarx.sdk.dto.sca.SCAResults;
+import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.scanner.AbstractScanner;
 import com.checkmarx.sdk.service.scanner.AstScanner;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
     private final ScaProperties scaProperties;
     private final String scanType;
     private final BugTrackerEventTrigger bugTrackerEventTrigger;
-
+    protected final ProjectNameGenerator projectNameGenerator;
     protected final ResultsService resultsService;
     protected ScanDetails scanDetails = null;
     protected static final String ERROR_BREAK_MSG = "Exiting with Error code 10 due to issues present";
@@ -247,6 +249,55 @@ public abstract class AbstractASTScanner implements VulnerabilityScanner {
         } else {
             log.warn("Project name returned NULL");
         }
+        return result;
+    }
+
+    @Override
+    public void deleteProject(ScanRequest request) {
+        String effectiveProjectName = projectNameGenerator.determineScaProjectName(request);;
+        if(scaProperties.getProjectName()!=null)
+        {
+            effectiveProjectName = normalize(scaProperties.getProjectName(),flowProperties.isPreserveProjectName());
+        }
+        request.setProject(effectiveProjectName);
+        ScanParams sdkScanParams = ScanParams.builder()
+                .branch(request.getBranch())
+                .projectName(request.getProject())
+                .remoteRepoUrl(null)
+                .scaConfig(request.getScaConfig())
+                .filterConfiguration(request.getFilter())
+                .build();
+        log.info("Going to delete Project Name: {}", effectiveProjectName);
+
+        if (canDeleteProject(request)) {
+            client.deleteProject(sdkScanParams);
+        }
+    }
+
+
+    private boolean isBranchProtected(String branchToCheck, List<String> protectedBranchPatterns, ScanRequest request) {
+        boolean result;
+        if (protectedBranchPatterns.isEmpty() && branchToCheck.equalsIgnoreCase(request.getDefaultBranch())) {
+            result = true;
+            log.info("Scanning default branch - {}", request.getDefaultBranch());
+        } else {
+            result= protectedBranchPatterns.stream().anyMatch(aBranch -> Pattern.matches(aBranch, branchToCheck));
+
+        }
+        return result;
+    }
+
+    private boolean canDeleteProject( ScanRequest request) {
+        boolean result = false;
+            boolean branchIsProtected = isBranchProtected(request.getBranch(),
+                    flowProperties.getBranches(),
+                    request);
+
+            if (branchIsProtected) {
+                log.info("Unable to delete SCA project, because the corresponding repo branch is protected.");
+            } else {
+                result = true;
+            }
         return result;
     }
 

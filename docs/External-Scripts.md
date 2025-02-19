@@ -17,6 +17,8 @@ For more information about the `getHash()` property, see the `hash` field docume
 * [SAST scan comment script](#scancomment)
 * [Use a Script to Filter Findings](#filterfindings)
 * [JIRA project key script](#jiraprojectkeyscript)
+* * [Branch Name script](#branchnamescript)
+* * [Default Branch Name script](#defaultbranchnamescript)
 
 ### <a name="projectscript">Project script</a>
 * CxFlow will use the string returned from the script execution to determine the Checkmarx project name
@@ -61,6 +63,36 @@ cx-flow:
 
 * Return value: String
 
+
+### <a name="branchnamescript">Branch Name Script</a>
+* CxFlow will change the name of branch according to provided groovy script.
+* To enable this flow add the following property to cxflow configuration (you can use any file name):
+
+```yaml
+cx-flow:
+  branchScript: ...\branch.groovy
+```
+
+* Script input:
+  * [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+  * List<String> branches
+
+* Return value: String
+
+### <a name="defaultbranchnamescript">Default branch name Script</a>
+* CxFlow will change the name of default branch according to provided groovy script.
+* To enable this flow add the following property to cxflow configuration (you can use any file name):
+
+```yaml
+cx-flow:
+  defaultBranchScript: ...\default.groovy
+```
+
+* Script input:
+  * [ScanRequest object](../src/main/java/com/checkmarx/flow/dto/ScanRequest.java)
+  * List<String> branches
+
+* Return value: String
 
 ### <a name="scancomment">SAST scan comment script</a>
 
