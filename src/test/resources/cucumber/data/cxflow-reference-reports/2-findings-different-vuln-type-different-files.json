@@ -9,7 +9,7 @@
   "version":"8.9.0.210",
   "additionalDetails": {
     "flow-summary": {
-      "High": 2
+      "HIGH": 2
     },
     "scanId": "1000026",
     "scanStartDate": "Sunday, January 19, 2020 2:40:11 AM"
@@ -22,7 +22,7 @@
       "cwe": "79",
       "description": "",
       "language": "Java",
-      "severity": "High",
+      "severity": "HIGH",
       "link": "http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=2",
       "filename": "DOS_Login.java",
       "falsePositiveCount": 0,
@@ -131,7 +131,7 @@
       "cwe": "89",
       "description": "",
       "language": "Java",
-      "severity": "High",
+      "severity": "HIGH",
       "link": "http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=5",
       "filename": "AnotherFile.java",
       "falsePositiveCount": 0,
@@ -225,7 +225,7 @@
     "cwe" : "79",
     "description" : "",
     "language" : "Java",
-    "severity" : "High",
+    "severity" : "HIGH",
     "link" : "http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=2",
     "filename" : "DOS_Login.java",
     "gitUrl" : "",
@@ -331,7 +331,7 @@
     "cwe" : "89",
     "description" : "",
     "language" : "Java",
-    "severity" : "High",
+    "severity" : "HIGH",
     "link" : "http://CX-FLOW-CLEAN/CxWebClient/ViewerMain.aspx?scanid=1000026&projectid=6&pathid=5",
     "filename" : "AnotherFile.java",
     "gitUrl" : "",
