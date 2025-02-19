@@ -62,9 +62,9 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.31'
+ext['tomcat.version'] = '10.1.34'
 ext['groovy.version'] = '4.0.15'
-ext['logback-classic.version'] = '1.2.10'
+ext['logback-classic.version'] = '1.5.13'
 ext['spring-core.version'] = '6.1.14'
 
 dependencies {
@@ -170,7 +170,7 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.24")
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
-    implementation('ch.qos.logback:logback-classic:1.4.14'){
+    implementation('ch.qos.logback:logback-classic:1.5.13'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -180,7 +180,7 @@ dependencies {
     implementation("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    implementation('ch.qos.logback:logback-core:1.4.14')
+    implementation('ch.qos.logback:logback-core:1.5.13')
     implementation('net.logstash.logback:logstash-logback-encoder:7.3')
     implementation("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     implementation("org.jasypt:jasypt:1.9.3")
@@ -206,7 +206,7 @@ dependencies {
     compile("software.amazon.awssdk:sts:2.22.0"){
         exclude group: 'io.netty', module: 'netty-common'
     }
-    compile "io.netty:netty-common:4.1.115.Final"
+    compile "io.netty:netty-common:4.1.118.Final"
 
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
