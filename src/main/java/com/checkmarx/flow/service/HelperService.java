@@ -121,13 +121,13 @@ public class HelperService {
 
     public String getBranchName(ScanRequest request) {
         String scriptFile = cxProperties.getBranchScript();
-        String branch = request.getTeam();
+        String branch = request.getBranch();
         return getEffectiveEntityName(request, scriptFile, branch, "branch");
     }
 
     public String getDefaultBranchName(ScanRequest request) {
         String scriptFile = cxProperties.getDefaultBranchScript();
-        String defaultBranch = request.getTeam();
+        String defaultBranch = request.getDefaultBranch();
         return getEffectiveEntityName(request, scriptFile, defaultBranch, "defaultBranch");
     }
 
