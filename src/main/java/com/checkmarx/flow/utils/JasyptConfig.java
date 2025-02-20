@@ -49,7 +49,7 @@ public class JasyptConfig {
         propertySources.addFirst(new PropertiesPropertySource("jasyptProperties", props));
 
         // Optionally print the passkey to verify
-        System.out.println("Final Jasypt Passkey: " + decodedPasskey);
+        //System.out.println("Final Jasypt Passkey: " + decodedPasskey);
     }
 
     @Bean(name = "jasyptStringEncryptor")
