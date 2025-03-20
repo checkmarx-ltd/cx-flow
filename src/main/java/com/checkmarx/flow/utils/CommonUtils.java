@@ -1,7 +1,6 @@
-package com.checkmarx.flow.dto.github;
+package com.checkmarx.flow.utils;
 
-public class CxFlowCommandParser {
-
+public class CommonUtils {
     public static String parseCommand(String comment) {
         comment = comment.trim().toLowerCase();
         if (comment.contains("@cxflow status")) {
@@ -17,4 +16,3 @@ public class CxFlowCommandParser {
         }
     }
 }
-
