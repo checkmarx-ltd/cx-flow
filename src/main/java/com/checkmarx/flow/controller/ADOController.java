@@ -103,21 +103,6 @@ public class ADOController extends AdoControllerBase {
                     .success(true)
                     .build());
         };
-
-    }
-
-
-    @PostMapping(value = {"/ado/pullComment", "/{product}/ado/pullComment"})
-    public ResponseEntity<EventResponse> pullrequestComment(
-            @RequestBody PRCommentEvent body,
-            @RequestHeader(value = AUTHORIZATION) String auth,
-            @PathVariable(value = "product", required = false) String product,
-            ControllerRequest controllerRequest,
-            AdoDetailsRequest adoDetailsRequest
-    ) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        String bodyJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(body);
-        return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder().message("comment scanned").success(true).build());
     }
 
     /**
