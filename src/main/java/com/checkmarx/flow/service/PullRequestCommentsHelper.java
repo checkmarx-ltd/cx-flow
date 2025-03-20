@@ -46,7 +46,6 @@ public class PullRequestCommentsHelper {
     }
 
     private static CommentType getCommentType(String comment) {
-        System.out.println("comment is -->"+comment);
         if (isSastAndScaComment(comment)) {
             return CommentType.SCA_AND_SAST;
         }

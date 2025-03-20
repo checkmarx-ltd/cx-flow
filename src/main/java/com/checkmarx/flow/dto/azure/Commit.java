@@ -15,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "url"
 })
 
-@JsonIgnoreProperties({"author","committer","comment"})
 public class Commit {
 
     @JsonProperty("commitId")

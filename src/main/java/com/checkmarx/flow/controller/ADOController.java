@@ -74,9 +74,7 @@ public class ADOController extends AdoControllerBase {
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNodebody = mapper.readTree(body);
-            log.info("This is JsonBody" + jsonNodebody);
             eventType = jsonNodebody.get("eventType").asText();
-            log.info("EventType:" + eventType);
             if (PULL_EVENT.contains(eventType)) {
                 event = mapper.convertValue(jsonNodebody, PRCreatedEvent.class);
             } else if (eventType.contains(COMMENT)) {
@@ -89,27 +87,19 @@ public class ADOController extends AdoControllerBase {
 
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
-        log.info("Processing Azure PULL request");
+        log.info("Processing Azure event on Pull request");
         Action action = Action.PULL;
         controllerRequest = ensureNotNull(controllerRequest);
         validateBasicAuth(auth, controllerRequest);
         adoDetailsRequest = ensureDetailsNotNull(adoDetailsRequest);
         ResourceContainers resourceContainers = event.getResourceContainers();
 
-//        if (!PULL_EVENT.contains(event.getEventType()) || !event.getResource().getStatus().equals("active")) {
-//            log.info("Pull requested not processed.  Event was not opened ({})", event.getEventType());
-//            return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-//                    .message("No processing occurred for updates to Pull Request")
-//                    .success(true)
-//                    .build());
-//        }
-
         return switch (eventType) {
             case (PRCREATED_EVENT), (PRUPDATED_EVENT) ->
                     processPullRequestCreation((PRCreatedEvent) event, controllerRequest, adoDetailsRequest, product, resourceContainers, body, action, uid);
             case (COMMENT) -> processPRComment((PRCommentEvent) event, properties,adoDetailsRequest,controllerRequest, product,resourceContainers,body,action,uid);
             default -> ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
-                    .message("No processing occurred")
+                    .message("No processing occurred for updates to Pull Request")
                     .success(true)
                     .build());
         };
@@ -304,8 +294,15 @@ public class ADOController extends AdoControllerBase {
     }
 
     public ResponseEntity<EventResponse> processPRComment(PRCommentEvent event, ADOProperties properties,AdoDetailsRequest adoDetailsRequest, ControllerRequest controllerRequest, String product,ResourceContainers resourceContainers,String body,Action action,String uid) {
-        log.info("Processing PR Comment Event");
+        log.info("Processing Pull Request Comment Event");
         try {
+            Repository repository= event.getResource().getPullRequest().getRepository();
+            if (repository.getName().startsWith(properties.getTestRepository())) {
+                log.info("Handling ADO PR  Test Event");
+                return ResponseEntity.status(HttpStatus.OK).body(EventResponse.builder()
+                        .message("Test Event").success(true).build());
+            }
+
             String commentBody = event.getResource().getComment().getContent();
             String baseUrl = event.getResourceContainers().getAccount().getBaseUrl();
             String projectName = event.getResource().getPullRequest().getRepository().getProject().getName();
@@ -317,8 +314,10 @@ public class ADOController extends AdoControllerBase {
             Integer threadId = Integer.parseInt(threadIdString);
             Map<FindingSeverity, Integer> thresholdMap = getThresholds(controllerRequest);
             List<String> branches = getBranches(controllerRequest, flowProperties);
-            adoService.adoPRCommentHandler(event,properties, commentBody, baseUrl, projectName, repositoryId, pullRequestId, threadId,thresholdMap,branches,controllerRequest,product,resourceContainers,body,action,uid ,adoDetailsRequest);
 
+            if(commentBody.toLowerCase().contains("@cxflow")){
+                adoService.adoPRCommentHandler(event,properties, commentBody, baseUrl, projectName, repositoryId, pullRequestId, threadId,thresholdMap,branches,controllerRequest,product,resourceContainers,body,action,uid ,adoDetailsRequest);
+            }
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);
         }
@@ -331,7 +330,7 @@ public class ADOController extends AdoControllerBase {
             Resource resource = event.getResource();
             Repository repository = resource.getRepository();
             String pullUrl = resource.getUrl();
-            log.info("This is PullRequestURL"+pullUrl);
+            log.debug("Pull request URL: {}", pullUrl);
             String app = repository.getName();
 
             if (repository.getName().startsWith(properties.getTestRepository())) {
@@ -412,7 +411,7 @@ public class ADOController extends AdoControllerBase {
 
             setScmInstance(controllerRequest, request);
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(event.getResourceContainers()));
-            adoService.fillRequestWithAdditionalData(request, repository, body.toString());
+            adoService.fillRequestWithAdditionalData(request, repository, body);
             adoService.checkForConfigAsCode(request, adoService.getConfigBranch(request, resource, action));
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             addMetadataToScanRequest(adoDetailsRequest, request);

@@ -11,6 +11,9 @@ public class Comment {
     @JsonProperty("parentCommentId")
     private Integer parentCommentId;
 
+    @JsonProperty("author")
+    private CommentAuthor author;
+
     @JsonProperty("content")
     private String content;
 
@@ -46,6 +49,16 @@ public class Comment {
     @JsonProperty("parentCommentId")
     public Integer getParentCommentId(){
         return parentCommentId;
+    }
+
+    @JsonProperty("author")
+    public void setAuthor(CommentAuthor author){
+        this.author=author;
+    }
+
+    @JsonProperty("author")
+    public CommentAuthor getAuthor(){
+        return author;
     }
 
     @JsonProperty("content")

@@ -2,7 +2,6 @@ package com.checkmarx.flow.dto.azure;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PullRequest {
@@ -46,10 +45,6 @@ public class PullRequest {
 
     @JsonProperty("lastMergeTargetCommit")
     private LastMergeTargetCommit lastMergeTargetCommit;
-
-    @JsonProperty("commits")
-    private List<Commit>commit;
-
 
     @JsonProperty("url")
     private  String url;
@@ -163,16 +158,6 @@ public class PullRequest {
     @JsonProperty("mergeId")
      public  String getMergeId(){
         return mergeId;
-    }
-
-    @JsonProperty("commits")
-    public  void setCommit(List<Commit>commit){
-        this.commit=commit;
-    }
-
-    @JsonProperty("commits")
-    public  List<Commit>getCommit(){
-        return commit;
     }
 
     @JsonProperty("url")

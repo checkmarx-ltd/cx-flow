@@ -674,7 +674,7 @@ public class ADOService {
     }
 
     private Optional<Integer> extractScanId(String command, String comment) {
-        log.info("extracting the command: " + command);
+        log.info("Extracting ScanId from comment: {}", command);
         Pattern pattern;
         pattern = command.equalsIgnoreCase("cancel") ? Pattern.compile("@cxflow cancel (\\d+)") : Pattern.compile("@cxflow status (\\d+)");
         Matcher matcher = pattern.matcher(comment);
@@ -687,10 +687,12 @@ public class ADOService {
     }
 
 
-    private void processPRCommentCommand(PRCommentEvent event, ADOProperties properties, String command, String baseUrl, String projectName, String repositoryId, Integer pullRequestId, Integer threadId, Optional<Integer> scanID, Map<FindingSeverity, Integer> thresholdMap, List<String> branches, ControllerRequest controllerRequest, String product, ResourceContainers resourceContainers, String body, ADOController.Action action, String uid, AdoDetailsRequest adoDetailsRequest) {
+    private void processPRCommentCommand(PRCommentEvent event, ADOProperties properties, String command, String baseUrl,
+                                         String projectName, String repositoryId, Integer pullRequestId, Integer threadId, Optional<Integer> scanID, Map<FindingSeverity, Integer> thresholdMap, List<String> branches, ControllerRequest controllerRequest, String product,
+                                         ResourceContainers resourceContainers, String body, ADOController.Action action, String uid, AdoDetailsRequest adoDetailsRequest,String userName) {
         switch (command) {
             case "hi":
-                postComment(properties, "How can CX-Flow help you?\n\n" + "- Get the status of the current scan by posting the command: <b>@CXFlow</b> status scanID\n" + "- Perform a new scan by posting the command: <b>@CXFlow</b> rescan\n" + "- Cancel a running scan by posting the command: <b>@CXFlow</b> cancel scanID", baseUrl, projectName, repositoryId, pullRequestId, threadId);
+                postComment(properties, " Hi " + userName + "," + "\n How can CX-Flow help you? \n" + "- Get the status of the current scan by posting the command: <b>@CXFlow</b> status scanID\n" + "- Perform a new scan by posting the command: <b>@CXFlow</b> rescan\n" + "- Cancel a running scan by posting the command: <b>@CXFlow</b> cancel scanID", baseUrl, projectName, repositoryId, pullRequestId, threadId);
                 log.info("Finished processing for PR comment :@Cxflow hi");
                 break;
 
@@ -710,19 +712,28 @@ public class ADOService {
                         postComment(properties, "- Cannot cancel already finished Scan with ScanID: " + scanID.get(), baseUrl, projectName, repositoryId, pullRequestId, threadId);
                     }
 
-                    log.info("Finished processing for PR comment :@Cxflow cancel");
+                    log.info("Finished processing for PR comment :@CxFlow cancel");
                 }
                 break;
 
             case "rescan":
                 postComment(properties, "- Rescan initiated.", baseUrl, projectName, repositoryId, pullRequestId, threadId);
                 String rescanStatus=triggerRescan(event, controllerRequest, adoDetailsRequest, product, resourceContainers, body, action, uid, thresholdMap, branches,threadId);
-                log.info("Finished processing for PR comment :@Cxflow rescan");
-                log.info("Status for rescan: "+ rescanStatus);
+                log.info("Finished processing for PR comment :@CxFlow {}",command);
+                log.info("Status for rescan: {} ", rescanStatus);
+                break;
+
+             default:
+                unsupportedCommand(properties,  baseUrl, projectName, repositoryId, pullRequestId, threadId,userName);
+                 log.info("Received Unsupported command for CxFlow");
         }
     }
 
-    public void postComment(ADOProperties properties, String content, String baseUrl, String projectName, String repositoryId, Integer pullRequestId, Integer threadId) {
+    private void unsupportedCommand(ADOProperties properties, String baseUrl, String projectName, String repositoryId, Integer pullRequestId, Integer threadId,String username){
+        postComment(properties, "I'm afraid I can't do that " + username, baseUrl, projectName, repositoryId, pullRequestId, threadId);
+    }
+
+    private void postComment(ADOProperties properties, String content, String baseUrl, String projectName, String repositoryId, Integer pullRequestId, Integer threadId) {
         try {
             log.info("Posting the Comment");
             RestTemplate restTemplate = new RestTemplate();
@@ -750,15 +761,16 @@ public class ADOService {
     }
 
     public void adoPRCommentHandler(PRCommentEvent event, ADOProperties properties, String comment, String baseUrl, String projectName, String repositoryId, Integer pullRequestId, Integer threadId, Map<FindingSeverity, Integer> thresholdMap, List<String> branches, ControllerRequest controllerRequest, String product, ResourceContainers resourceContainers, String body, ADOController.Action action, String uid, AdoDetailsRequest adoDetailsRequest) {
-        log.info("Parsing the  PR comment");
+        log.info("Parsing the PR comment");
+        String userName=event.getResource().getComment().getAuthor().getDisplayName();
         String command = CommonUtils.parseCommand(comment);
-
         Optional<Integer> scanID = isScanCommand(command) ? extractScanId(command, comment) : Optional.empty();
 
         if (scanID.isEmpty() && isScanCommand(command)) {
             processNoScanIdCommand(properties, command, baseUrl, projectName, repositoryId, pullRequestId, threadId);
         } else {
-            processPRCommentCommand(event, properties, command, baseUrl, projectName, repositoryId, pullRequestId, threadId, scanID, thresholdMap, branches, controllerRequest, product, resourceContainers, body, action, uid, adoDetailsRequest);
+            processPRCommentCommand(event, properties, command, baseUrl, projectName, repositoryId, pullRequestId, threadId, scanID, thresholdMap, branches, controllerRequest, product,
+                    resourceContainers, body, action, uid, adoDetailsRequest,userName);
         }
     }
 
