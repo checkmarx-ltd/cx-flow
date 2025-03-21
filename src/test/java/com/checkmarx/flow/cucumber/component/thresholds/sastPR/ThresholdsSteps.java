@@ -363,9 +363,7 @@ public class ThresholdsSteps {
                 flowProperties,
                 cxScannerService,
                 scmConfigOverrider,
-                thresholdValidator,
-                configOverrider,
-                flowService);
+                thresholdValidator);
         
         return new ResultsService(
                 cxScannerService,

@@ -13,7 +13,7 @@ import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.ADOUtils;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +53,8 @@ public class ADOController extends AdoControllerBase {
     private final FilterFactory filterFactory;
     private final ConfigurationOverrider configOverrider;
     private final ADOService adoService;
+    private  final ADOCommentService adoCommentService;
+    private final ADOConfigService adoConfigService;
     private final ScmConfigOverrider scmConfigOverrider;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
 
@@ -144,7 +146,7 @@ public class ADOController extends AdoControllerBase {
             setBugTracker(flowProperties, controllerRequest);
             BugTracker.Type bugType = ScanUtils.getBugTypeEnum(controllerRequest.getBug(), flowProperties.getBugTrackerImpl());
 
-            adoService.initAdoSpecificParams(adoDetailsRequest);
+            adoConfigService.initAdoSpecificParams(adoDetailsRequest);
 
             if (controllerRequest.getAppOnly() != null) {
                 flowProperties.setTrackApplicationOnly(controllerRequest.getAppOnly());
@@ -187,7 +189,7 @@ public class ADOController extends AdoControllerBase {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(adoService.determineNamespace(resourceContainers))
+                    .namespace(adoConfigService.determineNamespace(resourceContainers))
                     .altProject(determineAzureProject(repository))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
@@ -204,7 +206,7 @@ public class ADOController extends AdoControllerBase {
                     .bugTracker(bt)
                     .filter(filter)
                     .thresholds(thresholdMap)
-                    .organizationId(adoService.determineNamespace(resourceContainers))
+                    .organizationId(adoConfigService.determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();
             if (body.getResource().getCommits() != null) {
@@ -213,9 +215,9 @@ public class ADOController extends AdoControllerBase {
             setScmInstance(controllerRequest, request);
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(body.getResourceContainers()));
             addMetadataToScanRequest(adoDetailsRequest, request);
-            adoService.fillRequestWithAdditionalData(request, repository, body.toString());
+            adoConfigService.fillRequestWithAdditionalData(request, repository, body.toString());
             //if an override blob/file is provided, substitute these values
-            adoService.checkForConfigAsCode(request, adoService.getConfigBranch(request, resource, action));
+            adoConfigService.checkForConfigAsCode(request, adoConfigService.getConfigBranch(request, resource, action));
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
@@ -229,7 +231,7 @@ public class ADOController extends AdoControllerBase {
                 log.debug(request.getProject()+" :: End Time  : "+endTime);
                 log.debug(request.getProject()+" :: Total Time Taken  : "+(endTime-startTime));
             }
-            else if(adoService.isDeleteBranchEvent(resource) && properties.getDeleteCxProject()){
+            else if(adoConfigService.isDeleteBranchEvent(resource) && properties.getDeleteCxProject()){
                 flowService.deleteProject(request);
             }
 
@@ -240,7 +242,10 @@ public class ADOController extends AdoControllerBase {
         return getSuccessMessage();
     }
 
-
+    public void checkForConfigAsCode(ScanRequest request, String branch) {
+        CxConfig cxConfig = adoService.getCxConfigOverride(request, branch);
+        configOverrider.overrideScanRequestProperties(cxConfig, request);
+    }
 
     private List<String> determineEmails(Resource resource) {
         List<String> emails = new ArrayList<>();
@@ -262,6 +267,8 @@ public class ADOController extends AdoControllerBase {
         return azureProject;
     }
 
+
+
     /**
      * Validates the base64 / basic auth received in the request.
      */
@@ -271,6 +278,11 @@ public class ADOController extends AdoControllerBase {
             throw new InvalidTokenException();
         }
     }
+
+    /**
+     * Validates the base64 / basic auth received in the request.
+     */
+
 
     private String getTheProjectURL(ResourceContainers resourceContainers) {
         String projectId = resourceContainers.getProject().getId();
@@ -301,7 +313,7 @@ public class ADOController extends AdoControllerBase {
             List<String> branches = getBranches(controllerRequest, flowProperties);
 
             if(commentBody.toLowerCase().contains("@cxflow")){
-                adoService.adoPRCommentHandler(event,properties, commentBody, baseUrl, projectName, repositoryId, pullRequestId, threadId,thresholdMap,branches,controllerRequest,product,resourceContainers,body,action,uid ,adoDetailsRequest);
+                adoCommentService.adoPRCommentHandler(event,properties, commentBody, baseUrl, projectName, repositoryId, pullRequestId, threadId,thresholdMap,branches,controllerRequest,product,resourceContainers,body,action,uid ,adoDetailsRequest);
             }
         } catch (IllegalArgumentException e) {
             return getBadRequestMessage(e, controllerRequest, product);
@@ -344,7 +356,7 @@ public class ADOController extends AdoControllerBase {
             }
             List<String> branches = getBranches(controllerRequest, flowProperties);
 
-            adoService.initAdoSpecificParams(adoDetailsRequest);
+            adoConfigService.initAdoSpecificParams(adoDetailsRequest);
 
             if (StringUtils.isEmpty(product)) {
                 product = ScanRequest.Product.CX.getProduct();
@@ -373,7 +385,7 @@ public class ADOController extends AdoControllerBase {
                     .product(p)
                     .project(controllerRequest.getProject())
                     .team(controllerRequest.getTeam())
-                    .namespace(adoService.determineNamespace(resourceContainers))
+                    .namespace(adoConfigService.determineNamespace(resourceContainers))
                     .repoName(repository.getName())
                     .repoUrl(gitUrl)
                     .repoUrlWithAuth(gitAuthUrl)
@@ -390,14 +402,14 @@ public class ADOController extends AdoControllerBase {
                     .bugTracker(bt)
                     .filter(filter)
                     .thresholds(thresholdMap)
-                    .organizationId(adoService.determineNamespace(resourceContainers))
+                    .organizationId(adoConfigService.determineNamespace(resourceContainers))
                     .gitUrl(gitUrl)
                     .build();
 
             setScmInstance(controllerRequest, request);
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getTheProjectURL(event.getResourceContainers()));
-            adoService.fillRequestWithAdditionalData(request, repository, body);
-            adoService.checkForConfigAsCode(request, adoService.getConfigBranch(request, resource, action));
+            adoConfigService.fillRequestWithAdditionalData(request, repository, body);
+            adoConfigService.checkForConfigAsCode(request, adoConfigService.getConfigBranch(request, resource, action));
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             addMetadataToScanRequest(adoDetailsRequest, request);
             request.setId(uid);
