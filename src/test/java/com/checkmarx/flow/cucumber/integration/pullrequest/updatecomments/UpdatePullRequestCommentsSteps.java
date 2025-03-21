@@ -544,13 +544,19 @@ public class UpdatePullRequestCommentsSteps {
         pr.setName("AdoPullRequestTests");
         repo.setProject(pr);
         resource.setRepository(repo);
-
         pullEvent.setResource(resource);
-        ControllerRequest controllerRequest = new ControllerRequest();
-        controllerRequest.setProject("AdoPullRequestTests-master");
-        controllerRequest.setTeam("\\CxServer\\SP");
-        AdoDetailsRequest adoRequest = new AdoDetailsRequest();
-        adoControllerSpy.pullRequest(String.valueOf(pullEvent),"Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
+        try {
+            String pullEventStr = mapper.writeValueAsString(pullEvent);
+            ControllerRequest controllerRequest = new ControllerRequest();
+            controllerRequest.setProject("AdoPullRequestTests-master");
+            controllerRequest.setTeam("\\CxServer\\SP");
+            AdoDetailsRequest adoRequest = new AdoDetailsRequest();
+
+            adoControllerSpy.pullRequest(pullEventStr, "Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
+        }
+        catch (JsonProcessingException e) {
+            fail("Unable to parse " + pullEvent);
+        }
     }
 
     private void buildGitlabPullRequestEvent() {
