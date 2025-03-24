@@ -76,8 +76,8 @@ public class ADOCommentService {
     private Optional<Integer> extractScanId(String command, String comment) {
         log.info("Extracting ScanId from comment: {}", command);
         Pattern pattern;
-        pattern = command.equalsIgnoreCase("cancel") ? Pattern.compile("@cxflow cancel (\\d+)") : Pattern.compile("@cxflow status (\\d+)");
-        Matcher matcher = pattern.matcher(comment);
+        pattern = command.equalsIgnoreCase("cancel") ? Pattern.compile("(?i)@cxflow\\s+cancel\\s+(\\d+)") : Pattern.compile("(?i)@\\s*cxflow\\s+status\\s+(\\d+)");
+        Matcher matcher = pattern.matcher(comment.toLowerCase());
         return matcher.find() ? Optional.of(Integer.parseInt(matcher.group(1))) : Optional.empty();
     }
 
@@ -90,7 +90,7 @@ public class ADOCommentService {
     private void processPRCommentCommand(PRCommentEvent event, ADOProperties properties, String command, String baseUrl,
                                          String projectName, String repositoryId, Integer pullRequestId, Integer threadId, Optional<Integer> scanID, Map<FindingSeverity, Integer> thresholdMap, List<String> branches, ControllerRequest controllerRequest, String product,
                                          ResourceContainers resourceContainers, String body, ADOController.Action action, String uid, AdoDetailsRequest adoDetailsRequest, String userName) {
-        switch (command) {
+        switch (command.toLowerCase()) {
             case "hi":
                 postComment(properties, " Hi " + userName + "," + "\n How can CX-Flow help you? \n" + "- Get the status of the current scan by posting the command: <b>@CXFlow</b> status scanID\n" + "- Perform a new scan by posting the command: <b>@CXFlow</b> rescan\n" + "- Cancel a running scan by posting the command: <b>@CXFlow</b> cancel scanID", baseUrl, projectName, repositoryId, pullRequestId, threadId);
                 log.info("Finished processing for PR comment :@Cxflow hi");
@@ -237,7 +237,9 @@ public class ADOCommentService {
 
             request.putAdditionalMetadata(ADOService.PROJECT_SELF_URL, getProjectURL(event.getResourceContainers()));
             adoConfigService.fillRequestWithAdditionalData(request, repository, body.toString());
-            //checkForConfigAsCode(request, getConfigBranch(request, resource, action));
+
+            // todo: add configAsCode
+            //adoConfigService.checkForConfigAsCode(request, getConfigBranch(request, resource, action));
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoDetailsRequest.getAdoIssue());
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoDetailsRequest.getAdoBody());
@@ -274,7 +276,7 @@ public class ADOCommentService {
     }
 
     private enum ScanState {
-        SUCCESS("SUCESS"),
+        SUCCESS("SUCCESS"),
         FAILED("FAILED");
         private final String state;
 

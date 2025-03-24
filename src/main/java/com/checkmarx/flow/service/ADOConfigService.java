@@ -61,7 +61,7 @@ public class ADOConfigService {
     public String getConfigBranch(ScanRequest request, Resource resource, ADOController.Action action){
         String branch = request.getBranch();
         try{
-
+              // todo : swap the location of the checks
             if (isDeleteBranchEvent(resource) && action.equals(ADOController.Action.PUSH)){
                 branch = request.getDefaultBranch();
                 log.debug("branch to read config-as-code: {}", branch);
@@ -90,8 +90,6 @@ public class ADOConfigService {
 
         return false;
     }
-
-
 
     public String determineNamespace(ResourceContainers resourceContainers) {
 

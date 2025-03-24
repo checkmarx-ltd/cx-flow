@@ -51,8 +51,6 @@ public class ADOController extends AdoControllerBase {
     private final FlowService flowService;
     private final HelperService helperService;
     private final FilterFactory filterFactory;
-    private final ConfigurationOverrider configOverrider;
-    private final ADOService adoService;
     private  final ADOCommentService adoCommentService;
     private final ADOConfigService adoConfigService;
     private final ScmConfigOverrider scmConfigOverrider;
@@ -221,15 +219,15 @@ public class ADOController extends AdoControllerBase {
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
-                log.debug(request.getProject()+" :: Calling  isBranch2Scan function End : "+System.currentTimeMillis());
-                log.debug(request.getProject()+" :: Free Memory : "+Runtime.getRuntime().freeMemory());
-                log.debug(request.getProject()+" :: Total Numbers of processors : "+Runtime.getRuntime().availableProcessors());
+                log.debug("{} :: Calling  isBranch2Scan function End :  {}", request.getProject(),System.currentTimeMillis());
+                log.debug("{} :: Free Memory :  {}",request.getProject(),Runtime.getRuntime().freeMemory());
+                log.debug("{}  :: Total Numbers of processors :  {}",request.getProject(),Runtime.getRuntime().availableProcessors());
                 long startTime=System.currentTimeMillis();
-                log.debug(request.getProject()+" :: Start Time : "+startTime);
+                log.debug("{}  :: Start Time :  {}", request.getProject(),startTime);
                 flowService.initiateAutomation(request);
                 long endTime=System.currentTimeMillis();
-                log.debug(request.getProject()+" :: End Time  : "+endTime);
-                log.debug(request.getProject()+" :: Total Time Taken  : "+(endTime-startTime));
+                log.debug("{} :: End Time  :  {}",request.getProject(),endTime);
+                log.debug("{} :: Total Time Taken  :  {}", request.getProject(),(endTime-startTime));
             }
             else if(adoConfigService.isDeleteBranchEvent(resource) && properties.getDeleteCxProject()){
                 flowService.deleteProject(request);
@@ -240,11 +238,6 @@ public class ADOController extends AdoControllerBase {
         }
 
         return getSuccessMessage();
-    }
-
-    public void checkForConfigAsCode(ScanRequest request, String branch) {
-        CxConfig cxConfig = adoService.getCxConfigOverride(request, branch);
-        configOverrider.overrideScanRequestProperties(cxConfig, request);
     }
 
     private List<String> determineEmails(Resource resource) {
@@ -415,15 +408,15 @@ public class ADOController extends AdoControllerBase {
             request.setId(uid);
             //only initiate scan/automation if target branch is applicable
             if (helperService.isBranch2Scan(request, branches)) {
-                log.debug(request.getProject() + " :: Calling  isBranch2Scan function End : " + System.currentTimeMillis());
-                log.debug(request.getProject() + " :: Free Memory : " + Runtime.getRuntime().freeMemory());
-                log.debug(request.getProject() + " :: Total Numbers of processors : " + Runtime.getRuntime().availableProcessors());
+                log.debug("{} :: Calling  isBranch2Scan function End :  {}", request.getProject(),System.currentTimeMillis());
+                log.debug("{} :: Free Memory :  {}",request.getProject(),Runtime.getRuntime().freeMemory());
+                log.debug("{}  :: Total Numbers of processors :  {}",request.getProject(),Runtime.getRuntime().availableProcessors());
                 long startTime = System.currentTimeMillis();
-                log.debug(request.getProject() + " :: Start Time : " + startTime);
+                log.debug("{}  :: Start Time :  {}", request.getProject(),startTime);
                 flowService.initiateAutomation(request);
                 long endTime = System.currentTimeMillis();
-                log.debug(request.getProject() + " :: End Time  : " + endTime);
-                log.debug(request.getProject() + " :: Total Time Taken  : " + (endTime - startTime));
+                log.debug("{} :: End Time  :  {}",request.getProject(),endTime);
+                log.debug("{} :: Total Time Taken  :  {}", request.getProject(),(endTime-startTime));
             }
 
         } catch (IllegalArgumentException e) {
