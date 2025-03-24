@@ -59,6 +59,10 @@ public class ConfigurationOverrider {
             return null;
         }
 
+                if(override.getTurnOffComment()) request.setScanSubmittedComment(override.getTurnOffComment());
+                if(override.getTurnOffPrSummary()) flowProperties.setDisablePRFeedBack(override.getTurnOffPrSummary());
+
+
         Map<String, String> overrideReport = new HashMap<>();
         applyCxGoDynamicConfig(overrideReport, request);
         scaConfigOverrider.initScaConfig(request);
