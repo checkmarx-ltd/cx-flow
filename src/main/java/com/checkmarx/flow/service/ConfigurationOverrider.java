@@ -59,8 +59,8 @@ public class ConfigurationOverrider {
             return null;
         }
 
-                if(override.getTurnOffComment()) request.setScanSubmittedComment(override.getTurnOffComment());
-                if(override.getTurnOffPrSummary()) flowProperties.setDisablePRFeedBack(override.getTurnOffPrSummary());
+                if(override!=null && override.getTurnOffComment()) request.setScanSubmittedComment(override.getTurnOffComment());
+                if(override!=null && override.getTurnOffPrSummary()) flowProperties.setDisablePRFeedBack(override.getTurnOffPrSummary());
 
 
         Map<String, String> overrideReport = new HashMap<>();
