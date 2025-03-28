@@ -14,6 +14,7 @@ import com.checkmarx.flow.dto.RepoComment;
 import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.github.PullEvent;
+import com.checkmarx.flow.dto.github.PullRequest;
 import com.checkmarx.flow.dto.github.Repository;
 import com.checkmarx.flow.dto.github.*;
 import com.checkmarx.flow.dto.gitlab.LastCommit;
@@ -512,7 +513,7 @@ public class UpdatePullRequestCommentsSteps {
 
 
     public void buildADOPullRequestEvent() {
-        com.checkmarx.flow.dto.azure.PullEvent pullEvent = new com.checkmarx.flow.dto.azure.PullEvent();
+        com.checkmarx.flow.dto.azure.PRCreatedEvent pullEvent = new com.checkmarx.flow.dto.azure.PRCreatedEvent();
         pullEvent.setEventType("git.pullrequest.updated");
         pullEvent.setId("4519989c-c157-4bf8-9651-e94b8d0fca27");
         pullEvent.setSubscriptionId("25aa3b80-54ed-4b26-976a-b74f94940852");
@@ -543,13 +544,19 @@ public class UpdatePullRequestCommentsSteps {
         pr.setName("AdoPullRequestTests");
         repo.setProject(pr);
         resource.setRepository(repo);
-
         pullEvent.setResource(resource);
-        ControllerRequest controllerRequest = new ControllerRequest();
-        controllerRequest.setProject("AdoPullRequestTests-master");
-        controllerRequest.setTeam("\\CxServer\\SP");
-        AdoDetailsRequest adoRequest = new AdoDetailsRequest();
-        adoControllerSpy.pullRequest(pullEvent,"Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
+        try {
+            String pullEventStr = mapper.writeValueAsString(pullEvent);
+            ControllerRequest controllerRequest = new ControllerRequest();
+            controllerRequest.setProject("AdoPullRequestTests-master");
+            controllerRequest.setTeam("\\CxServer\\SP");
+            AdoDetailsRequest adoRequest = new AdoDetailsRequest();
+
+            adoControllerSpy.pullRequest(pullEventStr, "Basic Y3hmbG93OjEyMzQ=", null, controllerRequest, adoRequest);
+        }
+        catch (JsonProcessingException e) {
+            fail("Unable to parse " + pullEvent);
+        }
     }
 
     private void buildGitlabPullRequestEvent() {

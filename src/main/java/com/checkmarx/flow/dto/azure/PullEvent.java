@@ -35,8 +35,7 @@ public class PullEvent {
     private Message message;
     @JsonProperty("detailedMessage")
     private DetailedMessage detailedMessage;
-    @JsonProperty("resource")
-    private Resource resource;
+
     @JsonProperty("resourceVersion")
     private String resourceVersion;
     @JsonProperty("resourceContainers")
@@ -112,16 +111,6 @@ public class PullEvent {
     @JsonProperty("detailedMessage")
     public void setDetailedMessage(DetailedMessage detailedMessage) {
         this.detailedMessage = detailedMessage;
-    }
-
-    @JsonProperty("resource")
-    public Resource getResource() {
-        return resource;
-    }
-
-    @JsonProperty("resource")
-    public void setResource(Resource resource) {
-        this.resource = resource;
     }
 
     @JsonProperty("resourceVersion")

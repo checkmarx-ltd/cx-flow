@@ -1,16 +1,8 @@
 package com.checkmarx.flow.service;
 
-import com.checkmarx.flow.config.ADOProperties;
-import com.checkmarx.flow.config.FlowProperties;
-import com.checkmarx.flow.config.ScmConfigOverrider;
-import com.checkmarx.flow.dto.RepoComment;
-import com.checkmarx.flow.dto.RepoIssue;
-import com.checkmarx.flow.dto.ScanDetails;
-import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.Sources;
-import com.checkmarx.flow.dto.azure.Content;
-import com.checkmarx.flow.dto.azure.CreateWorkItemAttr;
-import com.checkmarx.flow.dto.azure.Value;
+import com.checkmarx.flow.config.*;
+import com.checkmarx.flow.dto.*;
+import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.dto.report.PullRequestReport;
 import com.checkmarx.flow.exception.ADOClientException;
 import com.checkmarx.flow.utils.ADOUtils;
@@ -19,6 +11,7 @@ import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.CxPropertiesBase;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import com.checkmarx.sdk.dto.ScanResults;
+import com.checkmarx.sdk.service.CxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,25 +22,19 @@ import org.apache.logging.log4j.util.Strings;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
+
 
 @Slf4j
 @Service
@@ -63,6 +50,8 @@ public class ADOService {
     private static final String IS_DELETED_FIELD_NAME = "isDeleted";
     private static final String NO_CONTENT_FOUND_IN_RESPONSE = "No content found in JSON response.";
     private static final String HTTP_RESPONSE_BODY_IS_NULL = "Response body is empty.";
+
+
     private static final Integer RESOLVED = 2;
     private static final Integer CLOSED = 4;
     private static final String PREVIEW = "-preview";
@@ -72,11 +61,17 @@ public class ADOService {
     private final CxPropertiesBase cxProperties;
     private final ScmConfigOverrider scmConfigOverrider;
     private final ThresholdValidator thresholdValidator;
+
+
+
     private String browseRepoEndpoint = "";
 
-    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties,
-                      FlowProperties flowProperties, CxScannerService cxScannerService,
-                      ScmConfigOverrider scmConfigOverrider, ThresholdValidator thresholdValidator) {
+
+    @Autowired
+    @Qualifier("cxService")
+    private CxService cxService;
+
+    public ADOService(@Qualifier("flowRestTemplate") RestTemplate restTemplate, ADOProperties properties, FlowProperties flowProperties, CxScannerService cxScannerService, ScmConfigOverrider scmConfigOverrider, ThresholdValidator thresholdValidator) {
         this.restTemplate = restTemplate;
         this.properties = properties;
         this.flowProperties = flowProperties;
@@ -90,7 +85,7 @@ public class ADOService {
             String comment = HTMLHelper.getMergeCommentMD(request, results, properties);
             log.debug("comment: {}", comment);
             sendMergeComment(request, comment);
-        } catch (HttpClientErrorException e){
+        } catch (HttpClientErrorException e) {
             log.error("Error occurred while creating Merge Request comment", e);
             throw new ADOClientException();
         }
@@ -520,9 +515,13 @@ public class ADOService {
         return cxConfig;
     }
 
+
+
+
+
     public Sources getRepoContent(ScanRequest request) {
         log.debug("Auto profiling is enabled");
-        if(ScanUtils.anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())){
+        if (ScanUtils.anyEmpty(request.getNamespace(), request.getRepoName(), request.getBranch())) {
             return null;
         }
         Sources sources = getRepoLanguagePercentages(request);
@@ -650,4 +649,8 @@ public class ADOService {
     public boolean isScanSubmittedComment() {
         return this.properties.isScanSubmittedComment();
     }
+
+
+
+
 }

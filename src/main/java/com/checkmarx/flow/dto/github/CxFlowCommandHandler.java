@@ -10,6 +10,7 @@ import com.checkmarx.flow.dto.ScanRequest;
 import com.checkmarx.flow.exception.InvalidTokenException;
 import com.checkmarx.flow.service.*;
 import com.checkmarx.flow.utils.HTMLHelper;
+import com.checkmarx.flow.utils.CommonUtils;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.config.Constants;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
@@ -104,7 +105,7 @@ public class CxFlowCommandHandler extends WebhookController {
 
     public String handleCxFlowCommand(GitHubProperties properties, String commentBody, int issueNumber, String repoFullName, String userName, CommentEvent event, String signature, String product, ControllerRequest controllerRequest, String body) throws Exception {
         if(commentBody.startsWith(">")) return "";
-        String command = CxFlowCommandParser.parseCommand(commentBody);
+        String command = CommonUtils.parseCommand(commentBody);
         int scanID = 0;
         if (command.equalsIgnoreCase("cancel") || command.equalsIgnoreCase("status")) {
             Pattern pattern;
@@ -119,7 +120,6 @@ public class CxFlowCommandHandler extends WebhookController {
             }else{
                     postComment(repoFullName, issueNumber, "> "+commentBody+"\n\nPlease provide Scan ID.", properties);
                     return "NA";
-
             }
         }
         switch (command) {

@@ -1,9 +1,7 @@
 
 package com.checkmarx.flow.dto.azure;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -17,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "sshUrl",
     "webUrl"
 })
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Repository {
 
     @JsonProperty("id")
@@ -33,10 +32,15 @@ public class Repository {
     private String defaultBranch;
     @JsonProperty("remoteUrl")
     private String remoteUrl;
+
+    @JsonSetter(nulls = Nulls.SKIP)
     @JsonProperty("sshUrl")
     private String sshUrl;
+
+    @JsonSetter(nulls = Nulls.SKIP)
     @JsonProperty("webUrl")
     private String webUrl;
+
     @JsonProperty("id")
     public String getId() {
         return id;
@@ -107,21 +111,24 @@ public class Repository {
         this.remoteUrl = remoteUrl;
     }
 
+    @JsonSetter(nulls = Nulls.SKIP)
     @JsonProperty("sshUrl")
     public String getSshUrl() {
         return sshUrl;
     }
-
+    @JsonSetter(nulls = Nulls.SKIP)
     @JsonProperty("sshUrl")
     public void setSshUrl(String sshUrl) {
         this.sshUrl = sshUrl;
     }
 
+    @JsonSetter(nulls = Nulls.SKIP)
     @JsonProperty("webUrl")
     public String getWebUrl() {
         return webUrl;
     }
 
+    @JsonSetter(nulls = Nulls.SKIP)
     @JsonProperty("webUrl")
     public void setWebUrl(String webUrl) {
         this.webUrl = webUrl;
