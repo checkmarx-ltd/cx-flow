@@ -65,7 +65,7 @@ public class ADOController extends AdoControllerBase {
 
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
-        log.info("Processing Azure PULL request");
+        log.info("Processing Azure PULL request ");
         Action action = Action.PULL;
         controllerRequest = ensureNotNull(controllerRequest);
         validateBasicAuth(auth, controllerRequest);
