@@ -15,6 +15,8 @@ Example Config As Code:
 {
   "version": 1.0,
   "project": "XYZ-${repo}-${branch}",
+  "turnOffComment" : "true", // This parameter will disable comments posted in PR by cxflow.
+  "turnOffPrSummary" : "true" // This parameter will disable PR summary posted by cxflow.
   "team": "/a/b/c",
   "sast": {
     "preset": "",
