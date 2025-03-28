@@ -371,8 +371,6 @@ public class DeleteBranchSteps {
                 flowServiceSpy,
                 helperService,
                 filterFactory,
-                configOverrider,
-                adoServiceMock,
                 adoCommentServiceMock,
                 adoConfigService,
                 scmConfigOverrider,
