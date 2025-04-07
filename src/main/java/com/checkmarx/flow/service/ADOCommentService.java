@@ -120,7 +120,7 @@ public class ADOCommentService {
                 postComment(properties, "- Rescan initiated.", baseUrl, projectName, repositoryId, pullRequestId, threadId);
                 String rescanStatus = triggerRescan(event, controllerRequest, adoDetailsRequest, product, resourceContainers, body, action, uid, thresholdMap, branches, threadId);
                 log.info("Finished processing for PR comment :@CxFlow {}", command);
-                log.info("Status for rescan: {} ", rescanStatus);
+                log.info("Rescan triggered Status: {} ", rescanStatus);
                 break;
 
             default:
@@ -239,7 +239,7 @@ public class ADOCommentService {
             adoConfigService.fillRequestWithAdditionalData(request, repository, body.toString());
 
             // todo: add configAsCode
-            //adoConfigService.checkForConfigAsCode(request, getConfigBranch(request, resource, action));
+            adoConfigService.checkForConfigAsCode(request, adoConfigService.getConfigBranchForCommentEvent(request, resource, action));
             request.putAdditionalMetadata("statuses_url", pullUrl.concat("/statuses"));
             request.putAdditionalMetadata(Constants.ADO_ISSUE_KEY, adoDetailsRequest.getAdoIssue());
             request.putAdditionalMetadata(Constants.ADO_ISSUE_BODY_KEY, adoDetailsRequest.getAdoBody());

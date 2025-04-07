@@ -87,7 +87,7 @@ public class ADOController extends AdoControllerBase {
 
         String uid = helperService.getShortUid();
         MDC.put(FlowConstants.MAIN_MDC_ENTRY, uid);
-        log.info("Processing Azure event on Pull request");
+        log.info("Processing Azure event on Pull request {}",event.getEventType());
         Action action = Action.PULL;
         controllerRequest = ensureNotNull(controllerRequest);
         validateBasicAuth(auth, controllerRequest);
@@ -283,6 +283,7 @@ public class ADOController extends AdoControllerBase {
         return baseUrl.concat(projectId);
     }
 
+// handles  the comment on the PR  for @cxflow command
     public ResponseEntity<EventResponse> processPRComment(PRCommentEvent event, ADOProperties properties,AdoDetailsRequest adoDetailsRequest, ControllerRequest controllerRequest, String product,ResourceContainers resourceContainers,String body,Action action,String uid) {
         log.info("Processing Pull Request Comment Event");
         try {

@@ -3,10 +3,7 @@ package com.checkmarx.flow.service;
 import com.checkmarx.flow.config.ADOProperties;
 import com.checkmarx.flow.controller.ADOController;
 import com.checkmarx.flow.dto.ScanRequest;
-import com.checkmarx.flow.dto.azure.AdoDetailsRequest;
-import com.checkmarx.flow.dto.azure.Repository;
-import com.checkmarx.flow.dto.azure.Resource;
-import com.checkmarx.flow.dto.azure.ResourceContainers;
+import com.checkmarx.flow.dto.azure.*;
 import com.checkmarx.flow.utils.HTMLHelper;
 import com.checkmarx.sdk.dto.sast.CxConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +55,12 @@ public class ADOConfigService {
         request.putAdditionalMetadata(ADOService.REPO_SELF_URL, repository.getUrl());
         request.putAdditionalMetadata(HTMLHelper.WEB_HOOK_PAYLOAD, hookPayload);
     }
+
+    public  String getConfigBranchForCommentEvent(ScanRequest request, ResourceComment resourceComment, ADOController.Action action){
+       return request.getBranch();
+    }
+
+
     public String getConfigBranch(ScanRequest request, Resource resource, ADOController.Action action){
         String branch = request.getBranch();
         try{

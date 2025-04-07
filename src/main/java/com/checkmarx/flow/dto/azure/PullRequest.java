@@ -3,6 +3,11 @@ package com.checkmarx.flow.dto.azure;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ *  this is only used in resourceComment POJO . this is equivalent to resource section of other events
+ * PR comment event has additional data under Pullrequest section , hence created a separate POJO
+ */
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PullRequest {
     @JsonProperty("repository")
