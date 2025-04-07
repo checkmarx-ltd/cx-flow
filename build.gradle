@@ -62,7 +62,7 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.34'
+ext['tomcat.version'] = '10.1.35'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.5.13'
 ext['spring-core.version'] = '6.1.14'
@@ -200,13 +200,17 @@ dependencies {
 
     compile("software.amazon.awssdk:dynamodb:2.22.0"){
         exclude group: 'io.netty', module: 'netty-common'
+        exclude group: 'io.netty', module: 'netty-handler'
     }
     compile("software.amazon.awssdk:regions:2.22.0")
     compile("software.amazon.awssdk:auth:2.22.0")
     compile("software.amazon.awssdk:sts:2.22.0"){
         exclude group: 'io.netty', module: 'netty-common'
+        exclude group: 'io.netty', module: 'netty-handler'
     }
     compile "io.netty:netty-common:4.1.118.Final"
+    compile "io.netty:netty-handler:4.1.118.Final"
+    compile "io.netty:netty-handler:4.1.118.Final"
 
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
