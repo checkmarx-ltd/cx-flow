@@ -1,4 +1,4 @@
-FROM alpine:3.19 AS java17
+FROM alpine:3.21 AS java17
 
 WORKDIR app
 RUN apk update && \
@@ -30,7 +30,7 @@ COPY build/libs/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
-FROM alpine:3.19 AS cxgo8
+FROM alpine:3.21 AS cxgo8
 
 WORKDIR app
 RUN apk update && \
