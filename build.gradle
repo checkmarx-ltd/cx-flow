@@ -62,7 +62,7 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.35'
+ext['tomcat.version'] = '10.1.40'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.5.13'
 ext['spring-core.version'] = '6.1.14'
