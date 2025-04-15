@@ -8,7 +8,7 @@ import com.checkmarx.flow.dto.*;
 import com.checkmarx.flow.dto.ScanRequest.Product;
 import com.checkmarx.flow.dto.ScanRequest.ScanRequestBuilder;
 import com.checkmarx.flow.dto.azure.AdoDetailsRequest;
-import com.checkmarx.flow.dto.azure.PullEvent;
+import com.checkmarx.flow.dto.azure.PRCreatedEvent;
 import com.checkmarx.flow.dto.azure.Repository;
 import com.checkmarx.flow.dto.azure.Resource;
 import com.checkmarx.flow.exception.InvalidTokenException;
@@ -52,7 +52,7 @@ public class TfsController extends AdoControllerBase {
     @PostMapping(value = {"/{product}/tfs/pull", "/tfs/pull", "/{product}/tfs/push", "/tfs/push"})
     public ResponseEntity<EventResponse> pullPushRequest(
             HttpServletRequest httpRequest,
-            @RequestBody PullEvent body,
+            @RequestBody PRCreatedEvent body,
             @RequestHeader(value = AUTHORIZATION) String auth,
             @PathVariable(value = "product", required = false) String product,
             ControllerRequest controllerRequest,
