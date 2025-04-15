@@ -80,7 +80,10 @@ public class ThresholdsSteps {
     private final ScmConfigOverrider scmConfigOverrider;
     private final ScaProperties scaProperties;
     private final ShardSessionTracker sessionTracker;
+    private final ConfigurationOverrider configOverrider;
     private final CxClient cxService;
+    private final FlowService flowService;
+
 
     private ScanResults scanResultsToInject;
     private ResultsService resultsService;
@@ -90,7 +93,7 @@ public class ThresholdsSteps {
 
     public ThresholdsSteps(IntegrationTestContext testContext, CxService cxClientMock, RestTemplate restTemplateMock, FlowProperties flowProperties, ADOProperties adoProperties,
                            CxProperties cxProperties, GitHubProperties gitHubProperties, ThresholdValidator thresholdValidator,
-                           EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties, ShardSessionTracker sessionTracker, CxClient cxService) {
+                           EmailService emailService, GitHubAppAuthService gitHubAppAuthService, ScmConfigOverrider scmConfigOverrider, ScaProperties scaProperties, ShardSessionTracker sessionTracker, CxClient cxService,ConfigurationOverrider configOverrider, FlowService flowService) {
 
         this.cxClientMock = cxClientMock;
         this.restTemplateMock = restTemplateMock;
@@ -110,6 +113,8 @@ public class ThresholdsSteps {
         this.thresholdValidator = thresholdValidator;
         this.emailService = emailService;
         this.scmConfigOverrider = scmConfigOverrider;
+        this.configOverrider=configOverrider;
+        this.flowService=flowService;
     }
 
     @Before("@ThresholdsFeature")
@@ -358,8 +363,7 @@ public class ThresholdsSteps {
                 flowProperties,
                 cxScannerService,
                 scmConfigOverrider,
-                thresholdValidator
-                );
+                thresholdValidator);
         
         return new ResultsService(
                 cxScannerService,
