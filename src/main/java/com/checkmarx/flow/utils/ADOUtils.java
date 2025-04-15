@@ -3,6 +3,8 @@ package com.checkmarx.flow.utils;
 import org.springframework.http.HttpHeaders;
 
 import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ADOUtils {
 
@@ -22,6 +24,17 @@ public class ADOUtils {
         httpHeaders.set("Authorization", "Basic ".concat(encoding));
         httpHeaders.set("Accept", "application/json");
         return httpHeaders;
+    }
+
+    public static String extractRegex(String regexPattern,String errorMessage,String inputText){
+        Pattern pattern= Pattern.compile(regexPattern);
+        Matcher matcher= pattern.matcher(inputText);
+        if(matcher.find()){
+            return matcher.group(1);
+        }
+        else{
+            throw new IllegalStateException(errorMessage);
+        }
     }
 
 }

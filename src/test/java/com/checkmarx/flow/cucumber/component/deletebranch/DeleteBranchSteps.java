@@ -71,6 +71,8 @@ public class DeleteBranchSteps {
     private final ScmConfigOverrider scmConfigOverrider;
     private final BugTrackerEventTrigger bugTrackerEventTrigger;
     private final GitAuthUrlGenerator gitAuthUrlGenerator;
+    private  final ADOCommentService adoCommentServiceMock;
+    private  final ADOConfigService adoConfigService;
 
     private final ADOService adoServiceMock;
     private final ResultsService resultsServiceMock;
@@ -88,7 +90,7 @@ public class DeleteBranchSteps {
                              GitHubAppAuthService gitHubAppAuthService, CxProperties cxProperties, GitHubProperties gitHubProperties, FilterFactory filterFactory,
                              ConfigurationOverrider configOverrider, ADOProperties adoProperties, EmailService emailService,
                              BugTrackerEventTrigger bugTrackerEventTrigger, ScmConfigOverrider scmConfigOverrider,
-                             GitAuthUrlGenerator gitAuthUrlGenerator) {
+                             GitAuthUrlGenerator gitAuthUrlGenerator, ADOConfigService adoConfigService, ADOCommentService adoCommentService) {
         this.gitHubAppAuthService = gitHubAppAuthService;
 
         this.filterFactory = filterFactory;
@@ -102,7 +104,9 @@ public class DeleteBranchSteps {
         this.emailService = emailService;
         this.bugTrackerEventTrigger = bugTrackerEventTrigger;
 
+        this.adoCommentServiceMock=mock(ADOCommentService.class);
         this.adoServiceMock = mock(ADOService.class);
+        this.adoConfigService=new ADOConfigService(adoProperties,configOverrider,adoServiceMock);
         this.resultsServiceMock = mock(ResultsService.class);
         this.cxClientMock = mock(CxService.class);
         CxScannerService  cxScannerService = new CxScannerService(cxProperties, null, flowProperties,cxClientMock, null);
@@ -112,6 +116,7 @@ public class DeleteBranchSteps {
                                                                         null));
         this.scmConfigOverrider = scmConfigOverrider;
         this.gitAuthUrlGenerator = gitAuthUrlGenerator;
+
     }
 
     private void initGitHubProperties() {
@@ -153,7 +158,6 @@ public class DeleteBranchSteps {
         when(cxClientMock.getTeamId(anyString())).thenReturn(TEAM);
         when(cxClientMock.getScanIdOfExistingScanIfExists(anyInt())).thenReturn(SCAN_ID_EXISTING_SCAN_NOT_EXIST);
         when(cxClientMock.getReportContentByScanId(anyInt(), any())).thenReturn(new ScanResults());
-
         when(adoServiceMock.getCxConfigOverride(any(), anyString())).thenReturn(cxConfig);
         when(resultsServiceMock.publishCombinedResults(any(), any())).thenReturn(null);
     }
@@ -367,10 +371,11 @@ public class DeleteBranchSteps {
                 flowServiceSpy,
                 helperService,
                 filterFactory,
-                configOverrider,
-                adoServiceMock,
+                adoCommentServiceMock,
+                adoConfigService,
                 scmConfigOverrider,
-                gitAuthUrlGenerator));
+                gitAuthUrlGenerator
+                ));
     }
 
     private void initProjectNameGeneratorSpy(ProjectNameGenerator projectNameGenerator) {
