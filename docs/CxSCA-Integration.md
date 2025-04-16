@@ -157,6 +157,10 @@ Jira ticket example:
   name: violates-policy
   jira-field-name: Violates Policy
   jira-field-type: single-select
+- type: sca-results
+  name: cvss-score
+  jira-field-name: cvss-score
+  jira-field-type: label
 ```
 
 ## <a name="filters">Filters</a>
