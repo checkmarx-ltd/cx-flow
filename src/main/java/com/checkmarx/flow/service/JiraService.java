@@ -636,7 +636,7 @@ public class JiraService {
                                 log.debug("outdated: {}", issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated());
                                 value = String.valueOf(issue.getScaDetails().get(0).getVulnerabilityPackage().isOutdated()).toUpperCase();
                                 break;
-                            case "cvss":
+                            case "cvss-score":
                                 log.debug("cvss-score: {}", issue.getScaDetails().get(0).getFinding().getScore());
                                 value = String.valueOf(issue.getScaDetails().get(0).getFinding().getScore()).toUpperCase();
                                 break;
