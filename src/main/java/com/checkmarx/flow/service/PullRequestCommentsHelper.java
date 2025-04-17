@@ -25,7 +25,6 @@ public class PullRequestCommentsHelper {
 
     private static final String ZERO_SAST_VULNERABILITY_COMMENT ="No SAST Vulnerability Found!!";
     private static final String ZERO_SCA_VULNERABILITY_COMMENT ="No SCA Vulnerability Found!!";
-    private static final String RESCAN_MESSAGE="Rescan initiated";
     public static boolean isCheckMarxComment(RepoComment comment) {
         String currentComment = comment.getComment();
         return currentComment.contains(COMMENT_TYPE_SAST_FINDINGS_2) && currentComment.contains(COMMENT_TYPE_SAST_FINDINGS_1) ||
@@ -121,7 +120,7 @@ public class PullRequestCommentsHelper {
     }
 
     enum CommentType {
-        SCAN_STARTED(Arrays.asList(RESCAN_MESSAGE,COMMENT_TYPE_SAST_SCAN_STARTED)),
+        SCAN_STARTED(Arrays.asList(COMMENT_TYPE_SAST_SCAN_STARTED)),
         SAST_FINDINGS(Arrays.asList(COMMENT_TYPE_SAST_FINDINGS_1, COMMENT_TYPE_SAST_FINDINGS_2,ZERO_SAST_VULNERABILITY_COMMENT)),
         SCA(Arrays.asList(COMMENT_TYPE_SCA_FINDINGS,ZERO_SCA_VULNERABILITY_COMMENT)),
         SCA_AND_SAST(Arrays.asList(COMMENT_TYPE_SAST_FINDINGS_1, COMMENT_TYPE_SAST_FINDINGS_2, COMMENT_TYPE_SCA_FINDINGS ,ZERO_SAST_VULNERABILITY_COMMENT,ZERO_SCA_VULNERABILITY_COMMENT)),
