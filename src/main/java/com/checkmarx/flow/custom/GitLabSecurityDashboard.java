@@ -107,24 +107,26 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         for (Package p : packages) map.put(p.getId(), p);
         for (Finding finding:findings){
             // for each finding, get the associated package list.
-            // for each object of the associated list, check the occurences of locations
+            // for each object of the associated list, check the occurrences of locations
             // if multiple locations exist, construct multiple objects.
             // if only single location exist, construct single object
             Package indPackage = map.get(finding.getPackageId());
-            for(String loc : indPackage.getLocations()) {
-                vulns.add(Vulnerability.builder()
-                        .category("dependency_scanning")
-                        .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
-                        .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
-                        .message(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
-                        .description(finding.getDescription())
-                        .severity(String.valueOf(finding.getSeverity()))
-                        .confidence(String.valueOf(finding.getSeverity()))
-                        .solution(finding.getFixResolutionText())
-                        .location(Location.builder().file(loc).dependency(Dependency.builder().pkg(Name.builder().dependencyname(finding.getPackageId()).build()).version(finding.getPackageId().split("-")[finding.getPackageId().split("-").length-1]).build()).build())
-                        .identifiers(getScaIdentifiers(results.getScaResults(),finding))
-                        .scanner(scanner)
-                        .build());
+            if(indPackage!=null){
+                for(String loc : indPackage.getLocations()) {
+                    vulns.add(Vulnerability.builder()
+                            .category("dependency_scanning")
+                            .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
+                            .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                            .message(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                            .description(finding.getDescription())
+                            .severity(String.valueOf(finding.getSeverity()))
+                            .confidence(String.valueOf(finding.getSeverity()))
+                            .solution(finding.getFixResolutionText())
+                            .location(Location.builder().file(loc).dependency(Dependency.builder().pkg(Name.builder().dependencyname(finding.getPackageId()).build()).version(finding.getPackageId().split("-")[finding.getPackageId().split("-").length-1]).build()).build())
+                            .identifiers(getScaIdentifiers(results.getScaResults(),finding))
+                            .scanner(scanner)
+                            .build());
+                }
             }
 
         }
@@ -150,46 +152,48 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         for (Package p : packages) map.put(p.getId(), p);
         for (Finding finding:findings){
             // for each finding, get the associated package list.
-            // for each object of the associated list, check the occurences of locations
+            // for each object of the associated list, check the occurrences of locations
             // if multiple locations exist, construct multiple objects.
             // if only single location exist, construct single object
             Package indPackage = map.get(finding.getPackageId());
-            com.checkmarx.flow.gitdashboardnewver.SCA.DependencyFile objDependencyFile =new com.checkmarx.flow.gitdashboardnewver.SCA.DependencyFile();
+            if(indPackage!=null){
+                com.checkmarx.flow.gitdashboardnewver.SCA.DependencyFile objDependencyFile =new com.checkmarx.flow.gitdashboardnewver.SCA.DependencyFile();
 
-            objDependencyFile.setPath(indPackage.getPackageRepository());
-            objDependencyFile.setPackageManager(indPackage.getName());
+                objDependencyFile.setPath(indPackage.getPackageRepository());
+                objDependencyFile.setPackageManager(indPackage.getName());
 
 
-            for(String loc : indPackage.getLocations()) {
-                vulns.add(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.builder()
-                        .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
-                        .category("dependency_scanning")
-                        .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
-                        .message(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
-                        .description(finding.getDescription())
-                        .cve(finding.getCveName())
-                        .severity(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.Severity.valueOf(String.valueOf(finding.getSeverity())))
-                        .confidence(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.Confidence.valueOf(String.valueOf(finding.getSeverity())))
-                        .solution(finding.getFixResolutionText())
-                        .scanner(scanner)
-                        .identifiers(getScaIdentifiersNewVer(results.getScaResults(),finding))
-                        .links(getLinksSCANewVer(finding))
-                        .tracking(com.checkmarx.flow.gitdashboardnewver.SCA.Tracking.builder()
-                                .lstItems(getItemsSca(finding.getCveName()))
-                                .build())
-                        .flags(getSCAFlagsNewVer(finding))
-                        .location(com.checkmarx.flow.gitdashboardnewver.SCA.LocationSCA.builder().file(loc)
-                                .dependency(com.checkmarx.flow.gitdashboardnewver.SCA.Dependency.builder()
-                                        .dependencyPath(findDependencyPath(indPackage.getDependencyPaths()))
-                                        .iid(123)
-                                        .direct(indPackage.isIsDirectDependency())
-                                        ._package(com.checkmarx.flow.gitdashboardnewver.SCA.Package.builder().name(finding.getPackageId()).build())
-                                        .version(finding.getPackageId().split("-")[finding.getPackageId().
-                                                split("-").length-1]).build()).build())
-                        .build());
-                objDependencyFile.setDependencies(findDependencyPath(indPackage.getDependencyPaths()));
+                for(String loc : indPackage.getLocations()) {
+                    vulns.add(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.builder()
+                            .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
+                            .category("dependency_scanning")
+                            .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                            .message(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                            .description(finding.getDescription())
+                            .cve(finding.getCveName())
+                            .severity(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.Severity.valueOf(String.valueOf(finding.getSeverity())))
+                            .confidence(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.Confidence.valueOf(String.valueOf(finding.getSeverity())))
+                            .solution(finding.getFixResolutionText())
+                            .scanner(scanner)
+                            .identifiers(getScaIdentifiersNewVer(results.getScaResults(),finding))
+                            .links(getLinksSCANewVer(finding))
+                            .tracking(com.checkmarx.flow.gitdashboardnewver.SCA.Tracking.builder()
+                                    .lstItems(getItemsSca(finding.getCveName()))
+                                    .build())
+                            .flags(getSCAFlagsNewVer(finding))
+                            .location(com.checkmarx.flow.gitdashboardnewver.SCA.LocationSCA.builder().file(loc)
+                                    .dependency(com.checkmarx.flow.gitdashboardnewver.SCA.Dependency.builder()
+                                            .dependencyPath(findDependencyPath(indPackage.getDependencyPaths()))
+                                            .iid(123)
+                                            .direct(indPackage.isIsDirectDependency())
+                                            ._package(com.checkmarx.flow.gitdashboardnewver.SCA.Package.builder().name(finding.getPackageId()).build())
+                                            .version(finding.getPackageId().split("-")[finding.getPackageId().
+                                                    split("-").length-1]).build()).build())
+                            .build());
+                    objDependencyFile.setDependencies(findDependencyPath(indPackage.getDependencyPaths()));
+                }
+                dependencyFilesLst.add(objDependencyFile);
             }
-            dependencyFilesLst.add(objDependencyFile);
         }
         SecurityDashboardNewVerSCA report  = SecurityDashboardNewVerSCA.builder()
                 .dependencyFiles(dependencyFilesLst)
@@ -224,43 +228,44 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         for (Package p : packages) map.put(p.getId(), p);
         for (Finding finding:findings){
             // for each finding, get the associated package list.
-            // for each object of the associated list, check the occurences of locations
+            // for each object of the associated list, check the occurrences of locations
             // if multiple locations exist, construct multiple objects.
             // if only single location exist, construct single object
             Package indPackage = map.get(finding.getPackageId());
 
+            if(indPackage!=null){
+                for(String loc : indPackage.getLocations()) {
+                    vulns.add(com.checkmarx.flow.gitlabdashboardfifteen.sca.Vulnerability.builder()
+                            .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
+                            // .category("dependency_scanning")
+                            .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                            // .message(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                            .description(finding.getDescription())
+                            // .cve(finding.getCveName())
+                            .severity(com.checkmarx.flow.gitlabdashboardfifteen.sca.Vulnerability.Severity.valueOf(String.valueOf(finding.getSeverity())))
+                            //   .confidence(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.Confidence.valueOf(String.valueOf(finding.getSeverity())))
+                            .solution(finding.getFixResolutionText())
 
-            for(String loc : indPackage.getLocations()) {
-                vulns.add(com.checkmarx.flow.gitlabdashboardfifteen.sca.Vulnerability.builder()
-                        .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
-                       // .category("dependency_scanning")
-                        .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
-                       // .message(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
-                        .description(finding.getDescription())
-                       // .cve(finding.getCveName())
-                        .severity(com.checkmarx.flow.gitlabdashboardfifteen.sca.Vulnerability.Severity.valueOf(String.valueOf(finding.getSeverity())))
-                     //   .confidence(com.checkmarx.flow.gitdashboardnewver.SCA.Vulnerability.Confidence.valueOf(String.valueOf(finding.getSeverity())))
-                        .solution(finding.getFixResolutionText())
+                            //   .scanner(scanner)
+                            .identifiers(getScaIdentifiersNewVerFifteen(results.getScaResults(),finding))
+                            .links(getLinksSCANewVerFifteen(finding))
+                            .tracking(com.checkmarx.flow.gitlabdashboardfifteen.sca.Tracking.builder()
+                                    .lstItems(getItemsScaFifteen(finding.getCveName()))
+                                    .build())
 
-                     //   .scanner(scanner)
-                        .identifiers(getScaIdentifiersNewVerFifteen(results.getScaResults(),finding))
-                        .links(getLinksSCANewVerFifteen(finding))
-                        .tracking(com.checkmarx.flow.gitlabdashboardfifteen.sca.Tracking.builder()
-                        .lstItems(getItemsScaFifteen(finding.getCveName()))
-                                .build())
-
-                        .flags(getSCAFlagsNewVerFifteen(finding))
-                        .location(com.checkmarx.flow.gitlabdashboardfifteen.sca.Location.builder().file(loc)
-                                .dependency(com.checkmarx.flow.gitlabdashboardfifteen.sca.Dependency.builder()
-                                        .dependencyPath(findDependencyPathFifteen(indPackage.getDependencyPaths()))
-                                        .iid(123.0)
-                                        .direct(indPackage.isIsDirectDependency())
-                                        ._package(com.checkmarx.flow.gitlabdashboardfifteen.sca.Package.builder().name(finding.getPackageId()).build())
-                                        .version(finding.getPackageId().split("-")[finding.getPackageId().
-                                                split("-").length-1]).build()).build())
-                        .build());
+                            .flags(getSCAFlagsNewVerFifteen(finding))
+                            .location(com.checkmarx.flow.gitlabdashboardfifteen.sca.Location.builder().file(loc)
+                                    .dependency(com.checkmarx.flow.gitlabdashboardfifteen.sca.Dependency.builder()
+                                            .dependencyPath(findDependencyPathFifteen(indPackage.getDependencyPaths()))
+                                            .iid(123.0)
+                                            .direct(indPackage.isIsDirectDependency())
+                                            ._package(com.checkmarx.flow.gitlabdashboardfifteen.sca.Package.builder().name(finding.getPackageId()).build())
+                                            .version(finding.getPackageId().split("-")[finding.getPackageId().
+                                                    split("-").length-1]).build()).build())
+                            .build());
+                }
+                dependencyFilesLst.add(DependencyFile.builder().dependencies(findObjectDependencyFifteen(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
             }
-            dependencyFilesLst.add(DependencyFile.builder().dependencies(findObjectDependencyFifteen(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
         }
         SCADashboard report  = SCADashboard.builder()
                 .dependencyFiles(dependencyFilesLst)
@@ -302,30 +307,32 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
         for (Package p : packages) map.put(p.getId(), p);
         for (Finding finding:findings){
             Package indPackage = map.get(finding.getPackageId());
-            for(String loc : indPackage.getLocations()) {
-                vulns.add(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Vulnerability.builder()
-                        .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
-                        .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
-                        .description(finding.getDescription())
-                        .severity(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Vulnerability.Severity.valueOf(String.valueOf(finding.getSeverity()).toUpperCase()))
-                        .solution(finding.getFixResolutionText())
-                        .identifiers(getScaIdentifiersGitLabDashBoard(results.getScaResults(),finding))
-                        .links(getLinksSCAGitlabDashboard(finding))
-                        .tracking(Tracking.builder()
-                                .lstItems(getItemsScaGitLabDashBoard(finding.getCveName()))
-                                .build())
-                        .flags(getSCAFlagsGitLabDashboard(finding))
-                        .location(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Location.builder().file(loc)
-                                .dependency(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Dependency.builder()
-                                        .dependencyPath(findDependencyPathGitLabDashBoard(indPackage.getDependencyPaths()))
-                                        .iid(123.0)
-                                        .direct(indPackage.isIsDirectDependency())
-                                        ._package(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Package.builder().name(finding.getPackageId()).build())
-                                        .version(finding.getPackageId().split("-")[finding.getPackageId().
-                                                split("-").length-1]).build()).build())
-                        .build());
+            if(indPackage!=null){
+                for(String loc : indPackage.getLocations()) {
+                    vulns.add(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Vulnerability.builder()
+                            .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
+                            .name(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()))
+                            .description(finding.getDescription())
+                            .severity(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Vulnerability.Severity.valueOf(String.valueOf(finding.getSeverity()).toUpperCase()))
+                            .solution(finding.getFixResolutionText())
+                            .identifiers(getScaIdentifiersGitLabDashBoard(results.getScaResults(),finding))
+                            .links(getLinksSCAGitlabDashboard(finding))
+                            .tracking(Tracking.builder()
+                                    .lstItems(getItemsScaGitLabDashBoard(finding.getCveName()))
+                                    .build())
+                            .flags(getSCAFlagsGitLabDashboard(finding))
+                            .location(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Location.builder().file(loc)
+                                    .dependency(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Dependency.builder()
+                                            .dependencyPath(findDependencyPathGitLabDashBoard(indPackage.getDependencyPaths()))
+                                            .iid(123.0)
+                                            .direct(indPackage.isIsDirectDependency())
+                                            ._package(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.Package.builder().name(finding.getPackageId()).build())
+                                            .version(finding.getPackageId().split("-")[finding.getPackageId().
+                                                    split("-").length-1]).build()).build())
+                            .build());
+                }
+                dependencyFilesLst.add(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.DependencyFile.builder().dependencies(findObjectDependencyGitLabDashBoard(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
             }
-            dependencyFilesLst.add(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.DependencyFile.builder().dependencies(findObjectDependencyGitLabDashBoard(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
         }
         SCASecurityDashboard report  = SCASecurityDashboard.builder()
                 .dependencyFiles(dependencyFilesLst)
