@@ -127,6 +127,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .scanner(scanner)
                             .build());
                 }
+            }else{
+                log.warn("package null for id:{} and name :{}",indPackage.getId(),indPackage.getName());
             }
 
         }
@@ -193,6 +195,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                     objDependencyFile.setDependencies(findDependencyPath(indPackage.getDependencyPaths()));
                 }
                 dependencyFilesLst.add(objDependencyFile);
+            }else{
+                log.warn("package null for id:{} and name :{}",indPackage.getId(),indPackage.getName());
             }
         }
         SecurityDashboardNewVerSCA report  = SecurityDashboardNewVerSCA.builder()
@@ -265,6 +269,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .build());
                 }
                 dependencyFilesLst.add(DependencyFile.builder().dependencies(findObjectDependencyFifteen(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
+            }else{
+                log.warn("package null for id:{} and name :{}",indPackage.getId(),indPackage.getName());
             }
         }
         SCADashboard report  = SCADashboard.builder()
@@ -332,6 +338,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .build());
                 }
                 dependencyFilesLst.add(com.checkmarx.flow.gitdashboardnewverfifteen.SCA.DependencyFile.builder().dependencies(findObjectDependencyGitLabDashBoard(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
+            }else{
+                log.warn("package null for id:{} and name :{}",indPackage.getId(),indPackage.getName());
             }
         }
         SCASecurityDashboard report  = SCASecurityDashboard.builder()
