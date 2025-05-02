@@ -201,7 +201,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                             .build())
                     .properties(Properties.builder()
                             .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
-                            .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
+                            .securitySeverity(properties.getSecuritySeverityMap().get(StringUtils.capitalize(i.getSeverity().toLowerCase())) != null ? properties.getSecuritySeverityMap().get(StringUtils.capitalize(i.getSeverity().toLowerCase())) : DEFAULT_SEVERITY)
                             .build())
                     .build()).collect(Collectors.toList());
         }else{
@@ -221,7 +221,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                             .build())
                     .properties(Properties.builder()
                             .tags(Arrays.asList("security", "external/cwe/cwe-".concat(i.getCwe())))
-                            .securitySeverity(properties.getSecuritySeverityMap().get(i.getSeverity()) != null ? properties.getSecuritySeverityMap().get(i.getSeverity()) : DEFAULT_SEVERITY)
+                            .securitySeverity(properties.getSecuritySeverityMap().get(StringUtils.capitalize(i.getSeverity().toLowerCase())) != null ? properties.getSecuritySeverityMap().get(StringUtils.capitalize(i.getSeverity().toLowerCase())) : DEFAULT_SEVERITY)
                             .build())
                     .build()).collect(Collectors.toList());
 
@@ -318,7 +318,7 @@ public class SarifIssueTracker extends ImmutableIssueTracker {
                     // Build collection of the results -> locations
                     sastScanresultList.add(
                             Result.builder()
-                                    .level(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()) : DEFAULT_LEVEL)
+                                    .level(properties.getSeverityMap().get(StringUtils.capitalize(issue.getSeverity().toLowerCase())) != null ? properties.getSeverityMap().get(StringUtils.capitalize(issue.getSeverity().toLowerCase())) : DEFAULT_LEVEL)
                                     .locations(locations)
                                     .codeFlows(codeFlows)
                                     .message(Message.builder()

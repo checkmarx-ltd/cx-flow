@@ -58,9 +58,9 @@ public class SarifProperties {
     @PostConstruct
     private void loadSeverityMap(){
         severityMap.put("High", "error");
-        severityMap.put("Medium", "error");
-        severityMap.put("Low", "warning");
-        severityMap.put("Information", "note");
+        severityMap.put("Medium", "warning");
+        severityMap.put("Low", "note");
+        severityMap.put("Information", "none");
     }
 
     @PostConstruct
