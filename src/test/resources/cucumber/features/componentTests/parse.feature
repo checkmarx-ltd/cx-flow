@@ -76,9 +76,9 @@ Feature: Parsing SAST results
 
   Scenario: Filtering findings from SAST scan results using simple filters
     Given input containing 3 findings with different severities: Medium, High, Critical
-    When parsing the input with severity filter: High, Critical
+    When parsing the input with severity filter: HIGH, Critical
     Then CxFlow report is generated with 2 issues
-    And issue severities are: High, Critical
+    And issue severities are: HIGH, CRITICAL
 
   Scenario: Parsing SAST findings with customized severity
   By default, finding severity is the same as the severity of its vulnerability type.
@@ -87,9 +87,9 @@ Feature: Parsing SAST results
     Given input has one vulnerability type with "Low" severity
     And input has one finding with this vulnerability type
     And user has overridden the severity of this specific finding with the "High" value
-    When parsing the input with severity filter: High
+    When parsing the input with severity filter: HIGH
     Then CxFlow report is generated with 1 issue
-    And the issue severity is High
+    And the issue severity is HIGH
 
   Scenario: Verify that generated reports match corresponding reference reports
     Given reference CxFlow reports are available for specific inputs
