@@ -821,7 +821,7 @@ public class HTMLHelper {
             }
         }
         CxScanSummary product = results.getProjectScanSummary();
-        if(results.getProjectScanSummary()!=null){
+        if(product !=null){
             appendAll(body, "<details><summary>Click to see project summary details</summary>", CRLF, CRLF);
             appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_PROJECT_SUMMARY_HEADER), CRLF);
             setScannerTotalVulnerabilities(body, product, request);
