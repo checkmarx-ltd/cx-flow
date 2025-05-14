@@ -2,15 +2,15 @@
 
 The following applications are required:
 
-| Software         | Version                                            | Notes                                                                                                                                                                                                                                             |
-|------------------|----------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Java Runtime** | 17                                                 | build exist for Java 17. CxFlow can run anywhere with Java 17 Runtime available. If user is using higher versions of JAVA they should append **Djava.locale.providers=COMPAT,CLDR** in JVM arguments in order to avoid **DateTimeParseException** |
-| **CxSAST**       | 9.4, 9.5, 9.6, 9.7                                 | CxFlow uses Checkmarx's REST APIs, available for version 9.4 and higher                                                                                                                                                                           |
-| **Jira**         | 6.4, 7.x, 8.x, 9.x                                 | Jira Cloud and Software have been tested                                                                                                                                                                                                          |
-| **GitHub**       | Cloud and Enterprise supported versions            | Both WebHook and Issue integration                                                                                                                                                                                                                |
-| **GitLab**       | Cloud, Community and Enterprise supported versions | Both WebHook and Issue integration                                                                                                                                                                                                                |
-| **BitBucket**    | Cloud, Server (version 7.2 to 8.13 )               | WebHook                                                                                                                                                                                                                                           |
-| **Azure DevOps** | Cloud, Server 2019, TFS Server 2018                | Both WebHook and WorkItem integration                                                                                                                                                                                                             |
+| Software         | Version                                            | Notes                                                                            |
+|------------------|----------------------------------------------------|----------------------------------------------------------------------------------|
+| **Java Runtime** | 17                                                 | build exist for Java 17. CxFlow can run anywhere with Java 17 Runtime available. |
+| **CxSAST**       | 9.5, 9.6, 9.7                                      | CxFlow uses Checkmarx's REST APIs, available for version 9.4 and higher          |
+| **Jira**         | 6.4, 7.x, 8.x, 9.x                                 | Jira Cloud and Software have been tested                                         |
+| **GitHub**       | Cloud and Enterprise supported versions            | Both WebHook and Issue integration                                               |
+| **GitLab**       | Cloud, Community and Enterprise supported versions | Both WebHook and Issue integration                                               |
+| **BitBucket**    | Cloud, Server (version 7.2 to 8.13 )               | WebHook                                                                          |
+| **Azure DevOps** | Cloud, Server 2019, TFS Server 2018                | Both WebHook and WorkItem integration                                            |
 
 ## Additional Requirements
 * The server requirements depend on your use case. The minimum requirements are: 2 core, 4GB RAM and 20GB disk space
