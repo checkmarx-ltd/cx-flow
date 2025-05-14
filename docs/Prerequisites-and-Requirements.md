@@ -5,7 +5,7 @@ The following applications are required:
 | Software         | Version                                            | Notes                                                                            |
 |------------------|----------------------------------------------------|----------------------------------------------------------------------------------|
 | **Java Runtime** | 17                                                 | build exist for Java 17. CxFlow can run anywhere with Java 17 Runtime available. |
-| **CxSAST**       | 9.5, 9.6, 9.7                                      | CxFlow uses Checkmarx's REST APIs, available for version 9.4 and higher          |
+| **CxSAST**       | 9.5, 9.6, 9.7                                      | CxFlow uses Checkmarx's REST APIs, available for version 9.5 and higher          |
 | **Jira**         | 6.4, 7.x, 8.x, 9.x                                 | Jira Cloud and Software have been tested                                         |
 | **GitHub**       | Cloud and Enterprise supported versions            | Both WebHook and Issue integration                                               |
 | **GitLab**       | Cloud, Community and Enterprise supported versions | Both WebHook and Issue integration                                               |
