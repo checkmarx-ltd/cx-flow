@@ -746,14 +746,7 @@ public class HTMLHelper {
         CxScanSummary product = results.getProjectScanSummary();
         if (properties.isCxSummary()) {
             setScannerSummaryHeader(results, body);
-            if(results.getProjectScanSummary()!=null){
-                setScannerTotalVulnerabilities(body, product, request);
-                appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_BRANCH_SUMMARY_HEADER), CRLF);
-                setScannerTotalVulnerabilities(body, summary, request);
-            }else{
-                setScannerTotalVulnerabilities(body, summary, request);
-            }
-
+            setScannerTotalVulnerabilities(body, summary, request);
         }
         if (properties.isCxTableSummary() && !request.getProduct().equals(ScanRequest.Product.CXOSA)) {
             if (!ScanUtils.empty(properties.getCxSummaryHeader())) {
@@ -827,6 +820,13 @@ public class HTMLHelper {
                 appendAll(body, "</details>", CRLF, CRLF);
             }
         }
+        CxScanSummary product = results.getProjectScanSummary();
+        if(product !=null){
+            appendAll(body, "<details><summary>Click to see project summary details</summary>", CRLF, CRLF);
+            appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_PROJECT_SUMMARY_HEADER), CRLF);
+            setScannerTotalVulnerabilities(body, product, request);
+            appendAll(body, "</details>", CRLF, CRLF);
+        }
     }
 
     private static void setScannerLogoHeader(ScanRequest request, ScanResults results, StringBuilder body) {
@@ -842,7 +842,7 @@ public class HTMLHelper {
             appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.AST_SUMMARY_HEADER), CRLF);
         } else {
             if(results.getProjectScanSummary()!=null){
-                appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_PROJECT_SUMMARY_HEADER), CRLF);
+                appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_BRANCH_SUMMARY_HEADER), CRLF);
             }else {
                 appendAll(body, MarkDownHelper.getMdHeaderType(3, MarkDownHelper.SAST_SUMMARY_HEADER), CRLF);
             }
