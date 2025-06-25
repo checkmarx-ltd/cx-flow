@@ -146,11 +146,22 @@ public class SCAScanner extends AbstractASTScanner {
                     scanParams.setSourceDir(scaClonedFolderPath);
                 }
             }
-            if(scanRequest.getExcludeFiles() != null) {
-                scanParams.getScaConfig().setExcludeFiles(scanRequest.getExcludeFiles());
-            } else if(scaProperties.getExcludeFiles() != null){
-                List<String> excludeFiles = new ArrayList<String>(Arrays.asList(scaProperties.getExcludeFiles().split(",")));
-                log.debug("Exclude Files list contains : {}", excludeFiles);
+            List<String> excludeFiles = null;
+            /* if both sca and sast is enabled at this stage according to flow sast exclude file has done its job.
+                change value of exclude files from properties and set empty list for sast.
+             */
+            if (scaProperties.getExcludeFiles() != null) {
+                excludeFiles = Arrays.asList(scaProperties.getExcludeFiles().split(","));
+                log.debug("Exclude Files list from scaProperties: {}", excludeFiles);
+            }else if (cxProperties.getExcludeFiles() != null) {
+                excludeFiles = List.of("");
+                log.debug("Exclude Files list from cxProperties (overriding others): {}", excludeFiles);
+            } else if (scanRequest.getExcludeFiles() != null) { // This case is for CLI parameter exclude-files
+                excludeFiles = scanRequest.getExcludeFiles();
+                log.debug("Exclude Files list from scanRequest: {}", excludeFiles);
+            }
+
+            if (excludeFiles != null) {
                 scanParams.getScaConfig().setExcludeFiles(excludeFiles);
             }
         } catch (CheckmarxException e) {
