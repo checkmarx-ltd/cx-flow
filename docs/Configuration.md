@@ -706,7 +706,7 @@ checkmarx
   ...
 post-action-postback-id: 123456
 ```
-For more details on postback mode, Please refer to [CxSAST Version 9.0](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSAST-Version-9.0#postback) chapter
+For more details on postback mode, Please refer to [CxSAST Version 9.X](https://github.com/checkmarx-ltd/cx-flow/wiki/CxSAST-Version-9.X#postback) chapter
 
 ### <a name="override">Override project settings</a>
 The configuration can be set to override project settings with Cxflow configuration when triggering new scan for SAST project, or to avoid project setting update if property set to 'false'.
