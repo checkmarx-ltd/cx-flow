@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 @TestComponent
@@ -85,6 +86,11 @@ public class JiraTestUtils implements IJiraTestUtils {
     @Override
     public Set<Issue> geAllIssuesInProject(String projectKey) {
         List<Issue> issues = new ArrayList<>();
+        try {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         SearchResult searchResult = search(getSearchAllProjectJql(projectKey), issues.size());
         searchResult.getIssues().forEach(issues::add);
         while (issues.size() < searchResult.getTotal()) {
@@ -201,7 +207,7 @@ Line #222:
     @Override
     public String getIssueRecommendedFixLink(String projectKey) {
         Issue issue = getFirstIssue(projectKey);
-        return  Objects.requireNonNull(issue.getDescription()).split(System.lineSeparator())[20];
+        return  Objects.requireNonNull(issue.getDescription()).split(System.lineSeparator())[19];
     }
 
     @Override
@@ -436,6 +442,11 @@ Line #222:
     }
 
     public SearchResult searchForAllIssues(String projectKey) {
+        try {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return search(getSearchAllProjectJql(projectKey));
     }
 

@@ -136,7 +136,7 @@ public class RunPublishProcessSteps {
         issueUpdateVulnerabilityType = jiraUtils.getIssueVulnerability(jiraProperties.getProject());
         issueUpdateFilename = jiraUtils.getIssueFilename(jiraProperties.getProject());
         Assert.assertTrue("Issue priority before update is incorrect",assertIssuePriority(ISSUE_PRIORITY_BEFORE_UPDATE));
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(4);
     }
 
     @Given("SAST results contain 1 finding, with the same vulnerability type and filename")
@@ -146,7 +146,7 @@ public class RunPublishProcessSteps {
 
     @When("publishing same issue with different parameters")
     public void publishIssueForUpdate() throws IOException, ExitThrowable, InterruptedException {
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.SECONDS.sleep(4);
         ScanRequest request = getScanRequestWithDefaults();
         File file = getFileFromResourcePath("cucumber/data/sample-sast-results/1-finding-updated.xml");
         innerPublishRequest(request, file);
