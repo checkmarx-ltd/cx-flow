@@ -251,7 +251,7 @@ public class JiraService {
                             );
         }
 
-        log.debug("jql query: {}", jql);
+        log.info("jql query: {}", jql);
         HashSet<String> fields = new HashSet<>();
         Collections.addAll(fields, "key", "project", "issuetype", "summary", LABEL_FIELD_TYPE, "created", "updated", "status");
 
@@ -264,6 +264,7 @@ public class JiraService {
         for (int startAt = 0; startAt < totalResultsCount; startAt += maxJqlResultsPerPage) {
             searchResults = searchClient.searchJql(jql, maxJqlResultsPerPage, startAt, fields).claim();
             searchResults.getIssues().forEach(issues::add);
+            log.info("search results :{}",searchResults.getIssues());
             totalResultsCount = Integer.min(searchResults.getTotal(), MAX_RESULTS_ALLOWED);
         }
         return issues;
@@ -1415,6 +1416,7 @@ public class JiraService {
     private Map<String, Issue> getJiraIssueMap(List<Issue> issues) {
         Map<String, Issue> jiraMap = new HashMap<>();
         for (Issue issue : issues) {
+            log.info("issue summary:{}",issue.getSummary());
             jiraMap.put(issue.getSummary(), issue);
         }
         return jiraMap;
@@ -1770,7 +1772,6 @@ public class JiraService {
             String issueCurrentKey = xIssue.getKey();
             try {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
-                log.info("current issue:{}", currentIssue);
                 log.info("issue current key:{}",issueCurrentKey);
                 log.info("jira map:{}", jiraMap);
                 //codeBashingService.addCodebashingUrlToIssue(currentIssue);
