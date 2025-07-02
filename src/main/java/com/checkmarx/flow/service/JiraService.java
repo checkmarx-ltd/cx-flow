@@ -1770,6 +1770,7 @@ public class JiraService {
             String issueCurrentKey = xIssue.getKey();
             try {
                 ScanResults.XIssue currentIssue = xIssue.getValue();
+                log.info("current issue:{}",String.valueOf(currentIssue));
                 //codeBashingService.addCodebashingUrlToIssue(currentIssue);
 
                 /*Issue already exists -> update and comment*/
