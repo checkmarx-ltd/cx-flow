@@ -63,10 +63,20 @@ public class JiraTestUtils implements IJiraTestUtils {
     }
 
     private SearchResult search(String jql) {
+        try {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return  client.getSearchClient().searchJql(jql).claim();
     }
 
     private SearchResult search(String jql, int startAtIndex) {
+        try {
+            TimeUnit.SECONDS.sleep(4);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return  client.getSearchClient().searchJql(jql, null, startAtIndex, null).claim();
     }
 
