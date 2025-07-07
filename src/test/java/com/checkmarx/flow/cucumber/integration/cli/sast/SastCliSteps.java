@@ -219,8 +219,7 @@ public class SastCliSteps {
                 () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
                 actual -> actual == expectedIssuesNumber,
                 MAX_RETRIES,
-                RETRY_INTERVAL_MS,
-                "Expected 1 open and 1 closed issue not found in time"
+                RETRY_INTERVAL_MS
         );
         Assert.assertEquals(expectedIssuesNumber, actualOfJiraIssues);
     }

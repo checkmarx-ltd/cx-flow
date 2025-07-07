@@ -6,7 +6,7 @@ import java.util.function.Predicate;
 public class RetryUtils {
 
     public static <T> T waitUntil(Supplier<T> supplier, Predicate<T> condition,
-                                  int maxRetries, long retryIntervalMs, String failureMessage) {
+                                  int maxRetries, long retryIntervalMs) {
         int retries = 0;
         T result;
 
@@ -26,6 +26,6 @@ public class RetryUtils {
         }
 
         result = supplier.get();
-        throw new AssertionError(failureMessage + " | Final value: " + result);
+        return result;
     }
 }

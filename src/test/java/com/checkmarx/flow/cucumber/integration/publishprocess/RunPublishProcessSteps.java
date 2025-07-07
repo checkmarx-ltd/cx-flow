@@ -199,15 +199,15 @@ public class RunPublishProcessSteps {
         ScanRequest request = getScanRequestWithDefaults();
         File file = getFileFromResourcePath("cucumber/data/sample-sast-results/1-finding-closed.xml");
         innerPublishRequest(request,file);
-        TimeUnit.SECONDS.sleep(4);
     }
 
 
     @When("there are two existing issues")
-    public void publishTwoIssues() throws IOException, ExitThrowable {
+    public void publishTwoIssues() throws IOException, ExitThrowable, InterruptedException {
         ScanRequest request = getScanRequestWithDefaults();
         File findingsFile = getFileFromResourcePath("cucumber/data/sample-sast-results/2-findings-different-vuln-type-different-files.xml");
         innerPublishRequest(request, findingsFile);
+        TimeUnit.SECONDS.sleep(4);
     }
 
     @When("SAST result contains only one of the findings")
@@ -238,8 +238,7 @@ public class RunPublishProcessSteps {
                 () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
                 actual -> actual== wantedNumOfIssues,
                 MAX_RETRIES,
-                RETRY_INTERVAL_MS,
-                "Wrong number of issues in Jira"
+                RETRY_INTERVAL_MS
         );
         Assert.assertEquals("JIRA should contain exactly one issue", wantedNumOfIssues, actualNumOfIssues);
     }
@@ -278,8 +277,7 @@ public class RunPublishProcessSteps {
                 () -> jiraUtils.getIssueStatus(jiraProperties.getProject()),
                 status -> jiraProperties.getClosedStatus().contains(status),
                 MAX_RETRIES,
-                RETRY_INTERVAL_MS,
-                "Issue is not in closed status within retry limit"
+                RETRY_INTERVAL_MS
         );
 
         Assert.assertTrue("Issue is not in closed status", jiraProperties.getClosedStatus().contains(actualStatus));
@@ -305,8 +303,7 @@ public class RunPublishProcessSteps {
                 () -> jiraUtils.getIssuesPerSeverity(jiraProperties.getProject()),
                 actual -> allSeveritiesMatch(actual, expectedMap, filters),
                 MAX_RETRIES,
-                RETRY_INTERVAL_MS,
-                "Mismatch in Jira issue counts by severity"
+                RETRY_INTERVAL_MS
         );
         for (Filter filter : filters) {
             Filter.Severity severity = Filter.Severity.valueOf(filter.getValue().toUpperCase());
@@ -338,8 +335,7 @@ public class RunPublishProcessSteps {
                 () -> jiraUtils.getIssuesByStatus(jiraProperties.getProject()),
                 map -> getClosedIssues(map) == 1 && getOpenIssues(map) == 1,
                 MAX_RETRIES,
-                RETRY_INTERVAL_MS,
-                "Expected 1 open and 1 closed issue not found in time"
+                RETRY_INTERVAL_MS
         );
 
         int closed = getClosedIssues(issuesPerStatus);
@@ -374,8 +370,7 @@ public class RunPublishProcessSteps {
                 () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
                 actual -> actual == wantedNumOfIssues,
                 MAX_RETRIES,
-                RETRY_INTERVAL_MS,
-                "Wrong number of issues in Jira"
+                RETRY_INTERVAL_MS
         );
         Assert.assertEquals("Wrong number of issues in JIRA", wantedNumOfIssues,  actualNumOfIssues);
     }

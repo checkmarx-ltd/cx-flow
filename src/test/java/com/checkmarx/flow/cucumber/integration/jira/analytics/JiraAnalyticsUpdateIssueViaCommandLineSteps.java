@@ -42,8 +42,9 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
     }
 
     @When("updating a new Jira issue via the command line")
-    public void closeNewIssueViaCommandLine() throws IOException, ExitThrowable {
+    public void closeNewIssueViaCommandLine() throws IOException, ExitThrowable, InterruptedException {
         sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(CLOSE_FINDING_PATH));
+        TimeUnit.SECONDS.sleep(4);
     }
 
     @Then("a matching ticket updating data should be recorded in the analytics json file")

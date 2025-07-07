@@ -170,8 +170,7 @@ public class ScaCliSteps {
                 () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
                 actual -> actual == expectedIssueCount ,
                 MAX_RETRIES,
-                RETRY_INTERVAL_MS,
-                "Expected 1 open and 1 closed issue not found in time"
+                RETRY_INTERVAL_MS
         );
         log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssueCount, actualIssueCount);
         if (expectedIssueCount == AT_LEAST_ONE) {
