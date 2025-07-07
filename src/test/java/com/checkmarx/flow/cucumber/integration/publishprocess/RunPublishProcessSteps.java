@@ -13,6 +13,7 @@ import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.checkmarx.sdk.dto.filtering.FilterConfiguration;
+import com.checkmarx.utils.RetryUtils;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -40,6 +41,8 @@ public class RunPublishProcessSteps {
     private static final String SAME_VULNERABILITIES_FILENAME_TEMPLATE = "cucumber/data/sample-sast-results/%d-findings-same-vuln-type-same-file.xml";
     private static final String ISSUE_PRIORITY_BEFORE_UPDATE = "High";
     private static final String ISSUE_PRIORITY_AFTER_UPDATE = "Medium";
+    private static final int MAX_RETRIES = 5;
+    private static final int RETRY_INTERVAL_MS = 1000;
 
     @Autowired
     SastScanner sastScanner;
@@ -131,6 +134,7 @@ public class RunPublishProcessSteps {
         ScanRequest request = getScanRequestWithDefaults();
         File file = getFileFromResourcePath("cucumber/data/sample-sast-results/1-finding-create-for-update.xml");
         innerPublishRequest(request, file);
+        TimeUnit.SECONDS.sleep(4);
         updateTime = jiraUtils.getIssueUpdatedTime(jiraProperties.getProject());
         issueId = jiraUtils.getFirstIssueId(jiraProperties.getProject());
         issueUpdateVulnerabilityType = jiraUtils.getIssueVulnerability(jiraProperties.getProject());
@@ -164,13 +168,14 @@ public class RunPublishProcessSteps {
 
 
     @When("publishing results to JIRA")
-    public void publishResults() throws ExitThrowable, IOException {
+    public void publishResults() throws ExitThrowable, IOException, InterruptedException {
         ScanRequest request = getScanRequestWithDefaults();
         if (needFilter) {
             request.setFilter(FilterConfiguration.fromSimpleFilters(filters));
         }
         File file = getFileForPublish();
         innerPublishRequest(request, file);
+        TimeUnit.SECONDS.sleep(4);
     }
 
     private void innerPublishRequest(ScanRequest request, File file) throws ExitThrowable {
@@ -190,10 +195,11 @@ public class RunPublishProcessSteps {
     }
 
     @When("all issue's findings are false-positive")
-    public void closeIssie() throws IOException, ExitThrowable {
+    public void closeIssie() throws IOException, ExitThrowable, InterruptedException {
         ScanRequest request = getScanRequestWithDefaults();
         File file = getFileFromResourcePath("cucumber/data/sample-sast-results/1-finding-closed.xml");
         innerPublishRequest(request,file);
+        TimeUnit.SECONDS.sleep(4);
     }
 
 
@@ -227,7 +233,15 @@ public class RunPublishProcessSteps {
 
     @Then("JIRA still contains 1 issue")
     public void validateJirahasOneIssue() {
-        Assert.assertEquals("JIRA should contain exactly one issue", 1, jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()));
+        int wantedNumOfIssues=1;
+        int actualNumOfIssues = RetryUtils.waitUntil(
+                () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
+                actual -> actual== wantedNumOfIssues,
+                MAX_RETRIES,
+                RETRY_INTERVAL_MS,
+                "Wrong number of issues in Jira"
+        );
+        Assert.assertEquals("JIRA should contain exactly one issue", wantedNumOfIssues, actualNumOfIssues);
     }
 
     @Then("issue ID hasn't changed")
@@ -260,7 +274,15 @@ public class RunPublishProcessSteps {
 
     @Then("the issue should be closed")
     public void assertIssueIsClosed() {
-        Assert.assertTrue("Issue is not in closed status", jiraProperties.getClosedStatus().contains(jiraUtils.getIssueStatus(jiraProperties.getProject())));
+        String actualStatus = RetryUtils.waitUntil(
+                () -> jiraUtils.getIssueStatus(jiraProperties.getProject()),
+                status -> jiraProperties.getClosedStatus().contains(status),
+                MAX_RETRIES,
+                RETRY_INTERVAL_MS,
+                "Issue is not in closed status within retry limit"
+        );
+
+        Assert.assertTrue("Issue is not in closed status", jiraProperties.getClosedStatus().contains(actualStatus));
     }
 
     @Then("original issues is updated both with 'last updated' value and with new body content")
@@ -272,30 +294,54 @@ public class RunPublishProcessSteps {
     @Then("verify results contains {int}, {int}, {int}, {int} for severities {}")
     public void verifyNumOfIssuesForSeverities(int high, int medium, int low, int info, String severities) {
         List<Filter> filters = createFiltersFromString(severities, Filter.Type.SEVERITY);
-        Map<Filter.Severity, Integer> actualJira = jiraUtils.getIssuesPerSeverity(jiraProperties.getProject());
-        for (Filter filter: filters) {
+        Map<Filter.Severity, Integer> expectedMap = Map.of(
+                Filter.Severity.HIGH, high,
+                Filter.Severity.MEDIUM, medium,
+                Filter.Severity.LOW, low,
+                Filter.Severity.INFO, info
+        );
+
+        Map<Filter.Severity, Integer> actualMap = RetryUtils.waitUntil(
+                () -> jiraUtils.getIssuesPerSeverity(jiraProperties.getProject()),
+                actual -> allSeveritiesMatch(actual, expectedMap, filters),
+                MAX_RETRIES,
+                RETRY_INTERVAL_MS,
+                "Mismatch in Jira issue counts by severity"
+        );
+        for (Filter filter : filters) {
             Filter.Severity severity = Filter.Severity.valueOf(filter.getValue().toUpperCase());
-            switch (severity) {
-                case HIGH:
-                    Assert.assertEquals("HIGH issues does not match", (int) actualJira.get(Filter.Severity.HIGH), high);
-                    break;
-                case MEDIUM:
-                    Assert.assertEquals("Medium issues does not match", (int) actualJira.get(Filter.Severity.MEDIUM), medium);
-                    break;
-                case LOW:
-                    Assert.assertEquals("Medium issues does not match", (int) actualJira.get(Filter.Severity.LOW), low);
-                    break;
-                case INFO:
-                    Assert.assertEquals("Medium issues does not match", (int) actualJira.get(Filter.Severity.INFO), info);
-                    break;
+            int expected = expectedMap.get(severity);
+            int actual = actualMap.getOrDefault(severity, 0);
+
+            Assert.assertEquals(severity + " severity count mismatch", expected, actual);
+        }
+    }
+
+    private boolean allSeveritiesMatch(Map<Filter.Severity, Integer> actual,
+                                       Map<Filter.Severity, Integer> expected,
+                                       List<Filter> filters) {
+        for (Filter filter : filters) {
+            Filter.Severity severity = Filter.Severity.valueOf(filter.getValue().toUpperCase());
+            int expectedCount = expected.getOrDefault(severity, 0);
+            int actualCount = actual.getOrDefault(severity, 0);
+            if (expectedCount != actualCount) {
+                return false;
             }
         }
+        return true;
     }
 
 
     @Then("there should be one closed and one open issue")
     public void assertOneClosedAndOneOpenIssue() {
-        Map<String, Integer> issuesPerStatus = jiraUtils.getIssuesByStatus(jiraProperties.getProject());
+        Map<String, Integer> issuesPerStatus = RetryUtils.waitUntil(
+                () -> jiraUtils.getIssuesByStatus(jiraProperties.getProject()),
+                map -> getClosedIssues(map) == 1 && getOpenIssues(map) == 1,
+                MAX_RETRIES,
+                RETRY_INTERVAL_MS,
+                "Expected 1 open and 1 closed issue not found in time"
+        );
+
         int closed = getClosedIssues(issuesPerStatus);
         int open  = getOpenIssues(issuesPerStatus);
         Assert.assertEquals("Closed issues number is incorrect", 1, closed);
@@ -324,7 +370,13 @@ public class RunPublishProcessSteps {
 
     @Then("verify {int} new issues got created")
     public void verifyNumberOfIssues(int wantedNumOfIssues) {
-        int actualNumOfIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
+        int actualNumOfIssues = RetryUtils.waitUntil(
+                () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
+                actual -> actual == wantedNumOfIssues,
+                MAX_RETRIES,
+                RETRY_INTERVAL_MS,
+                "Wrong number of issues in Jira"
+        );
         Assert.assertEquals("Wrong number of issues in JIRA", wantedNumOfIssues,  actualNumOfIssues);
     }
 

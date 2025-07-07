@@ -63,20 +63,10 @@ public class JiraTestUtils implements IJiraTestUtils {
     }
 
     private SearchResult search(String jql) {
-        try {
-            TimeUnit.SECONDS.sleep(4);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         return  client.getSearchClient().searchJql(jql).claim();
     }
 
     private SearchResult search(String jql, int startAtIndex) {
-        try {
-            TimeUnit.SECONDS.sleep(4);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         return  client.getSearchClient().searchJql(jql, null, startAtIndex, null).claim();
     }
 
@@ -96,11 +86,6 @@ public class JiraTestUtils implements IJiraTestUtils {
     @Override
     public Set<Issue> geAllIssuesInProject(String projectKey) {
         List<Issue> issues = new ArrayList<>();
-        try {
-            TimeUnit.SECONDS.sleep(4);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         SearchResult searchResult = search(getSearchAllProjectJql(projectKey), issues.size());
         searchResult.getIssues().forEach(issues::add);
         while (issues.size() < searchResult.getTotal()) {
@@ -452,11 +437,6 @@ Line #222:
     }
 
     public SearchResult searchForAllIssues(String projectKey) {
-        try {
-            TimeUnit.SECONDS.sleep(4);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         return search(getSearchAllProjectJql(projectKey));
     }
 

@@ -13,6 +13,7 @@ import com.checkmarx.sdk.config.CxProperties;
 import com.checkmarx.sdk.config.ScaProperties;
 import com.checkmarx.sdk.exception.CheckmarxException;
 import com.checkmarx.sdk.service.scanner.CxClient;
+import com.checkmarx.utils.RetryUtils;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.PendingException;
@@ -39,6 +40,8 @@ public class SastCliSteps {
     private static final String NONE__BUG_TRACKER_TEST_PROJECT_NAME =  "Test-bugTracker-None";
     private static final String PROJECT_NAME_ARG =  "--cx-project=" + NONE__BUG_TRACKER_TEST_PROJECT_NAME;
     private static final String JIRA_PROJECT = "CIT";
+    private static final int MAX_RETRIES = 5;
+    private static final int RETRY_INTERVAL_MS = 1000;
 
     private final FlowProperties flowProperties;
     private final JiraProperties jiraProperties;
@@ -212,8 +215,13 @@ public class SastCliSteps {
             default:
                 throw new PendingException("Number of issues parameter " + numberOfIssues + " isn't supported");
         }
-
-        int actualOfJiraIssues = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
+        int actualOfJiraIssues = RetryUtils.waitUntil(
+                () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
+                actual -> actual == expectedIssuesNumber,
+                MAX_RETRIES,
+                RETRY_INTERVAL_MS,
+                "Expected 1 open and 1 closed issue not found in time"
+        );
         Assert.assertEquals(expectedIssuesNumber, actualOfJiraIssues);
     }
 
