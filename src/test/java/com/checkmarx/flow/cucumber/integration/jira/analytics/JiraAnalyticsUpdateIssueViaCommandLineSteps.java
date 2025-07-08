@@ -13,6 +13,7 @@ import org.junit.Assert;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCommandLineCommonSteps {
 
@@ -41,12 +42,14 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
     }
 
     @When("updating a new Jira issue via the command line")
-    public void closeNewIssueViaCommandLine() throws IOException, ExitThrowable {
+    public void closeNewIssueViaCommandLine() throws IOException, ExitThrowable, InterruptedException {
         sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(CLOSE_FINDING_PATH));
+        TimeUnit.SECONDS.sleep(4);
     }
 
     @Then("a matching ticket updating data should be recorded in the analytics json file")
-    public void validateAnalyticsJsonFile() throws CheckmarxException {
+    public void validateAnalyticsJsonFile() throws CheckmarxException, InterruptedException {
+        TimeUnit.SECONDS.sleep(4);
         JiraTicketsReport jiraTicketsReport = (JiraTicketsReport) jsonLoggerTestUtils.getReportNode(JiraTicketsReport.OPERATION, JiraTicketsReport.class);
         HashMap<String, List<String>> jiraTickets = jiraTicketsReport.getJiraTickets();
 

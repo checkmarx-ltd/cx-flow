@@ -10,6 +10,7 @@ import com.checkmarx.flow.exception.ExitThrowable;
 import com.checkmarx.jira.IJiraTestUtils;
 import com.checkmarx.jira.JiraTestUtils;
 import com.checkmarx.sdk.config.ScaProperties;
+import com.checkmarx.utils.RetryUtils;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.PendingException;
@@ -48,6 +49,8 @@ public class ScaCliSteps {
     private static final String DIRECTORY_TO_SCAN = "input-code-for-sca";
     private static final String NO_FILTERS = "none";
     private static final int AT_LEAST_ONE = Integer.MAX_VALUE;
+    private static final int MAX_RETRIES = 5;
+    private static final int RETRY_INTERVAL_MS = 1000;
 
     private final FlowProperties flowProperties;
     private final JiraProperties jiraProperties;
@@ -163,8 +166,12 @@ public class ScaCliSteps {
     @Then("bug tracker contains {} issues")
     public void validateBugTrackerIssues(String description) {
         int expectedIssueCount = getExpectedIssueCount(description);
-        int actualIssueCount = jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject());
-
+        int actualIssueCount = RetryUtils.waitUntil(
+                () -> jiraUtils.getNumberOfIssuesInProject(jiraProperties.getProject()),
+                actual -> actual == expectedIssueCount ,
+                MAX_RETRIES,
+                RETRY_INTERVAL_MS
+        );
         log.info("comparing expected number of issues: {}, to actual bug tracker issues; {}", expectedIssueCount, actualIssueCount);
         if (expectedIssueCount == AT_LEAST_ONE) {
             Assert.assertTrue("Expected at least one issue in bug tracker.", actualIssueCount >= 0);

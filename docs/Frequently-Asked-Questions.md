@@ -41,31 +41,31 @@ No. CxFlow is a tool developed interdependently from the Checkmarx product line 
 ## <a name="integrations">Q: What Integrations does CxFlow support?</a>
 The table below lists all the supported integrations, features and states the recommended versions.
 
-| Software/Services | Features | CxFlow Version |
-|-------------------|----------|----------------|
-| **Jira** | Issue Tracking | >= 1.0.0 |
-|      | Custom Bug Types |        |
-|      | Custom Transitions in Workflows |        |
-|      | Custom Fields                   |        |
-| **GitHub** | WebHooks | >= 1.2.0 |
-|        | Pull Requests Scanning and Decorating |       |
-|        | Push Events |        |
-|        | Native Issues Tracker |               |
-| **GitLab** | WebHooks | >= 1.2.0 |
-|        | Merge Requests Scanning and Decorating |       |
-|        | Push Events |        |
-|        | Native Issues Tracker |               |
-| **Azure DevOps** | WebHooks | >= 1.3.0 |
-|        | Merge Requests |       |
-|        | Push Events |        |
-|        | Pipelines |               |
-|        | Work Items |               |
-| **BitBucket** | WebHooks | >= 1.4.3 |
-|               | Post Webhooks (plugin) | >= 3.14.18 |
-|               | Merge Requests Scanning |         |
-|               | Pull Events |          |
-|               | Issue Tracker |         |
-| **Rally** | Issue Tracking | >= 1.5.3 |
+| Software/Services | Features                               | CxFlow Version |
+|-------------------|----------------------------------------|----------------|
+| **Jira**          | Issue Tracking                         | >= 1.0.0       |
+|                   | Custom Bug Types                       |                |
+|                   | Custom Transitions in Workflows        |                |
+|                   | Custom Fields                          |                |
+| **GitHub**        | WebHooks                               | >= 1.2.0       |
+|                   | Pull Requests Scanning and Decorating  |                |
+|                   | Push Events                            |                |
+|                   | Native Issues Tracker                  |                |
+| **GitLab**        | WebHooks                               | >= 1.2.0       |
+|                   | Merge Requests Scanning and Decorating |                |
+|                   | Push Events                            |                |
+|                   | Native Issues Tracker                  |                |
+| **Azure DevOps**  | WebHooks                               | >= 1.3.0       |
+|                   | Merge Requests                         |                |
+|                   | Push Events                            |                |
+|                   | Pipelines                              |                |
+|                   | Work Items                             |                |
+| **BitBucket**     | WebHooks                               | >= 1.4.3       |
+|                   | Post Webhooks (plugin)                 | >= 3.14.18     |
+|                   | Merge Requests Scanning                |                |
+|                   | Pull Events                            |                |
+|                   | Issue Tracker                          |                |
+| **Rally**         | Issue Tracking                         | >= 1.5.3       |
 
 ## <a name="requirements">Q: What are the requirements for CxFlow?</a>
 Refer to [Pre-Requisites and Requirements](https://github.com/checkmarx-ltd/cx-flow/wiki/Prerequisites-and-Requirements) 
@@ -117,4 +117,4 @@ Please exclude files which contains windows reserved keyword or folder with wind
 All work items in search bar or run a query in ADO to find all work items.
 
 ## <a name="mergeomment">Why does the CXFlow GitLab MR scan comment reflect the repository creator instead of the MR creator?</a>
-If the scan comment is reflecting the repository creator, this is because the token being used is associated with the person or account that initially created the repository. You can find the solution and steps to resolve this issue in the [CXFlow GitLab MR Scan Comment Issue](cxflow_gitlab_scan_issue.md) document.
+If the scan comment is reflecting the repository creator, this is because the token being used is associated with the person or account that initially created the repository. You can find the solution and steps to resolve this issue in the [CXFlow GitLab MR Scan Comment Issue]((https://github.com/checkmarx-ltd/cx-flow/wiki/Troubleshooting#mrissue)) document.
