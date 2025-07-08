@@ -650,7 +650,7 @@ For more details on break build, please refer to [Thresholds and policies](https
 | `isBranchedIncremental`                | false                 | No                                  | Yes     | Yes               | If this option is true Cx-flow will do incremental scan for first time created branched project.                                                                                                                                                                                                                                                                                                                                                                                        |
 | `cancelInpregressScan`                 | false                 | No                                  | Yes     | Yes               | If a scan timeout occurs and the user requests to cancel the in-progress scan, set this boolean variable to true.                                                                                                                                                                                                                                                                                                                                                                       |
 | `token `                               |                       | No                                  | Yes     | Yes               | The user can pass a token instead of using a username and password. Note: The default token is valid for 24 hours. Either provide a new token before the 24-hour period expires or update the token's lifetime from the SAST backend table.                                                                                                                                                                                                                                             |
-| `enableTokenLogin `                    | false                 | No                                  | Yes     | Yes               | After enabling this parameter, CXFlow will communicate with the SAST API using a token instead of a username and password. It is mandatory to pass the token once this parameter is enabled.                                                                                                                                                                                                                                                                                            |
+| `enableTokenLogin `                    | false                 | No                                  | Yes     | Yes               | After enabling this parameter, cx-flow will communicate with the SAST API using a token instead of a username and password. It is mandatory to pass the token once this parameter is enabled.                                                                                                                                                                                                                                                                                           |
 
 No* = Default is applied
 
@@ -1000,14 +1000,14 @@ sarif:
  enableFullURIPath: false
 ```
 
-| Configuration          | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-|------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `hassnippet`        | false     | In Checkmarx CX-Flow, when the hasSnippet flag is set to true, the tool displays relevant code snippets under the "Region" section of the UI. These snippets provide a portion of the code where potential vulnerabilities are detected, giving developers context to better understand the issue. This feature helps in identifying the exact location of security concerns, streamlining the remediation process by offering precise, actionable insights directly within the code. |
-| `enableTextNHelpSame`        | false     | In Checkmarx CX-Flow, when the enableTextNHelpSame flag is set to true, sarif report will have same value in help and text under rules section.                                                                                                                                                                                                                                                                                                                                       |
-| `enableOriginalUriBaseIds`        | false     | In Checkmarx CX-Flow, when the enableOriginalUriBaseIds flag is set to true, Sarif report will have modules details scanned in project.                                                                                                                                                                                                                                                                                                                                               |
-| `srcRootPath`        | %SRCROOT% | In Checkmarx CX-Flow, when the srcRootPath has value, It will display same root path in report.                                                                                                                                                                                                                                                                                                                                                                                       |
-| `sourceNodefound`        | false     | In Checkmarx CX-Flow, if the source node is not found at node 1, it will search for the next lowest node, alternatively node 1, if this boolean variable is set to true.                                                                                                                                                                                                                                                                                                              |
-| `enableFullURIPath`        | true      | If the artifact location's URI contains module and if this boolean variable is set to false, the module will be excluded from the URI.                                                                                                                                                                                                                                                                                                                                                 |
+| Configuration              | Default   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|----------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `hassnippet`               | false     | In Checkmarx CX-Flow, when the hasSnippet flag is set to true, the tool displays relevant code snippets under the "Region" section of the UI. These snippets provide a portion of the code where potential vulnerabilities are detected, giving developers context to better understand the issue. This feature helps in identifying the exact location of security concerns, streamlining the remediation process by offering precise, actionable insights directly within the code. |
+| `enableTextNHelpSame`      | false     | In Checkmarx CX-Flow, when the enableTextNHelpSame flag is set to true, sarif report will have same value in help and text under rules section.                                                                                                                                                                                                                                                                                                                                       |
+| `enableOriginalUriBaseIds` | false     | In Checkmarx CX-Flow, when the enableOriginalUriBaseIds flag is set to true, Sarif report will have modules details scanned in project.                                                                                                                                                                                                                                                                                                                                               |
+| `srcRootPath`              | %SRCROOT% | In Checkmarx CX-Flow, when the srcRootPath has value, It will display same root path in report.                                                                                                                                                                                                                                                                                                                                                                                       |
+| `sourceNodefound`          | false     | In Checkmarx CX-Flow, if the source node is not found at node 1, it will search for the next lowest node, alternatively node 1, if this boolean variable is set to true.                                                                                                                                                                                                                                                                                                              |
+| `enableFullURIPath`        | true      | If the artifact location's URI contains module and if this boolean variable is set to false, the module will be excluded from the URI.                                                                                                                                                                                                                                                                                                                                                |
 
 **Note**: Command line parameter for snippet is `--sarif.hassnippet=true`
 
@@ -1136,19 +1136,29 @@ To avoid storing the decryption password in the YAML configuration, invoke CxFlo
 
 ```bash
 $ java -jar cx-flow-<version>.jar \
-    --jasypt.encryptor.password=passphrase \
+    --jasypt.encryptor.password=SomeStrongEncryptionKey \
     --jasypt.encryptor.algorithm=PBEWITHHMACSHA512ANDAES_256
+    --jasypt.encryptor.iv-generator-classname=org.jasypt.iv.RandomIvGenerator
 ```
 
 If desired, the password can also be specified in the YAML configuration file:
 
+Algorithm PBEWITHHMACSHA512ANDAES_256 Configuration
 ```yaml
 jasypt:
   encryptor:
-    password: passphrase
+    password: SomeStrongEncryptionKey
     algorithm: PBEWITHHMACSHA512ANDAES_256
+    iv-generator-classname: org.jasypt.iv.RandomIvGenerator
 ```
-
+Algorithm PBEWithMD5AndDES Configuration
+```yaml
+jasypt:
+  encryptor:
+    password: SomeStrongEncryptionKey
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator
+```
 **NOTE**: Choose the appropriate algorithm for your deployment. This is a sample.
 
 Environment variables can be leveraged for injecting the required jasypt cli values specified above:
@@ -1159,19 +1169,13 @@ JASYPT_ENCRYPTOR.ALGORITHM=PBEWITHHMACSHA512ANDAES_256
 ```
 
 To create encrypted text, use the following command line to produce a base-64 encoded string:
+* Download jasypt jar (jasypt-1.9.3.jar) from maven Repository
 
 ```bash
-$ java -cp cx-flow-<version>.jar \
-    -Dloader.main=org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI \
-    org.springframework.boot.loader.PropertiesLauncher \
-    ivGeneratorClassName=org.jasypt.iv.RandomIvGenerator \
-    input="stuff to encrypt goes here" \
-    password=passphrase \
-    algorithm=PBEWITHHMACSHA512ANDAES_256
-    
+java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input="CheckMarxPassword" password="PASSKEY" algorithm=PBEWITHHMACSHA512ANDAES_256
 ```
 Encrypted values can be assigned to fields in the YAML configuration file using the format **ENC(\<base-64 encoded ciphertext\>)**.  Example:
-```
+```yaml
 jira:
    token: ENC(r2Q0H31voNvp4NWHQ3bSkNzxmguHnHe/fuA+JiJ6DeOt8Fbzcslm6Hlly78dm6RONSaL8lGywG5atPC0xzyCsA==)
 ```
@@ -1329,77 +1333,50 @@ gitlab:
 --github.issueslabel.medium="Medium,Not critical" --github.issueslabel.low="ignore" --github.issueslabel.high="high,must fix" #assigns 2 labels, high and must fix" --github.issueslabel.info="very low"
 ```
 
-
-
-### <a name="jasypt">Jasypt </a>
-```yaml
-jasypt:
-  encryptor:
-    password: key
-    algorithm: PBEWithMD5AndDES
-    iv-generator-classname: org.jasypt.iv.NoIvGenerator
-    isBase64: false
-```
-
-| Configuration          | Default | Description                                                                  |
-|------------------------|---------|------------------------------------------------------------------------------|
-| `isBase64`        | false   | If isBase64 is true user can pass base64 encryption password key to cx-flow. |
-
-### User can generate encrypted password by using below command.
-
-* Download jasypt jar (jasypt-1.9.3.jar) from maven 
-
-```
-java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input="CheckMarxPassword" password="PASSKEY" algorithm=PBEWithMD5AndDES
-```
-
-
-
-* [Interactive Cx-flow](#intrcxflw)
 ## <a name="intrcxflw">Interactive Cx-flow</a>
 
 - Interactive Cx-flow functionality currently available only for GitHub.
-## Supported Commands
+### Supported Commands
 
-### 1. Check Scan Status
+#### 1. Check Scan Status
 To get the status of the current scan, post the following comment:
 ```
 @CxFlow status scanID
 ```
 - Replace `scanID` with the actual scan ID you want to query.
-- CXFlow will respond with the current status of the scan (e.g., in-progress, completed, failed).
+- cx-flow will respond with the current status of the scan (e.g., in-progress, completed, failed).
 
-### 2. Initiate a New Scan
+#### 2. Initiate a New Scan
 To perform a rescan, post the following comment:
 ```
 @CxFlow rescan
 ```
 - This will trigger a new scan for the project and return updates on the scan process.
 
-### 3. Cancel a Running Scan
+#### 3. Cancel a Running Scan
 To cancel a currently running scan, post the following comment:
 ```
 @CxFlow cancel scanID
 ```
 - Replace `scanID` with the ID of the scan you want to cancel.
-- CXFlow will attempt to cancel the scan and provide a confirmation.
+- cx-flow will attempt to cancel the scan and provide a confirmation.
 
 ---
 
-## Configuration
+### Configuration
 
-To enable this interaction with CXFlow, make sure to configure your environment as follows:
+To enable this interaction with cx-flow, make sure to configure your environment as follows:
 
-### 1. Creating a Specific User for Comments
-- If you want CXFlow to post comments as a specific user (e.g., a bot account like `CxFlow Bot`), create this user in your bug tracking tool and provide the necessary permissions to read and write comments.
-- Generate an access token for this user (e.g., GitHub Personal Access Token) and include it in the CXFlow configuration YML file to authenticate the user.
+#### 1. Creating a Specific User for Comments
+- If you want cx-flow to post comments as a specific user (e.g., a bot account like `CxFlow Bot`), create this user in your bug tracking tool and provide the necessary permissions to read and write comments.
+- Generate an access token for this user (e.g., GitHub Personal Access Token) and include it in the cx-flow configuration YML file to authenticate the user.
 
-### 2. Webhook Configuration
+#### 2. Webhook Configuration
 - This feature works in **webhook mode**. Ensure that your webhook is configured correctly and that the user or bot account has permissions to add comments.
 - Make sure the webhook can handle comment events and that it is allowed to post comments.
 
-### 3. Enabling Comment Features in CXFlow Configuration (YML)
-- In the `github` section of the CXFlow YML configuration file, set the `enableAddComment` parameter to `true` to allow CXFlow to add comments on issues or pull requests:
+#### 3. Enabling Comment Features in cx-flow Configuration (YAML)
+- In the `github` section of the cx-flow YML configuration file, set the `enableAddComment` parameter to `true` to allow cx-flow to add comments on issues or pull requests:
     ```yaml
     github:
       enableAddComment: true
@@ -1412,5 +1389,5 @@ To enable this interaction with CXFlow, make sure to configure your environment 
 
 ---
 
-By following these steps, CXFlow will be able to respond to `@CxFlow` comment queries and perform the specified scan actions directly from your bug tracker.
+By following these steps, cx-flow will be able to respond to `@CxFlow` comment queries and perform the specified scan actions directly from your bug tracker.
 
