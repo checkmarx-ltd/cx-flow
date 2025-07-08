@@ -97,7 +97,8 @@ public class RunPublishProcessSteps {
     }
 
     @Before("@PublishProcessing")
-    public void cleanJiraProject() throws IOException {
+    public void cleanJiraProject() throws IOException, InterruptedException {
+        TimeUnit.SECONDS.sleep(2);
         jiraUtils.ensureProjectExists(jiraProperties.getProject());
         //jiraUtils.ensureIssueTypeExists(jiraProperties.getIssueType());
         jiraUtils.cleanProject(jiraProperties.getProject());
