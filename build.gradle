@@ -62,10 +62,10 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.41'
+ext['tomcat.version'] = '10.1.42'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.5.13'
-ext['spring-core.version'] = '6.1.20'
+ext['spring-core.version'] = '6.1.21'
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
