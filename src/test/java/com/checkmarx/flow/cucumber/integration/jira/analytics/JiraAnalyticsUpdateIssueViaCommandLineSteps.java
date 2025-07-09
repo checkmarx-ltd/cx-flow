@@ -23,7 +23,7 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
     private static final String JIRA_CLOSED_STATE = "closed";
 
     @Before("@Jira_Analytics_Update_Issue_Command_Line")
-    public void init() throws IOException, ExitThrowable {
+    public void init() throws IOException, ExitThrowable, InterruptedException {
         cxProperties.setOffline(true);
         jiraProperties.setUrl(JIRA_URL);
         jiraService.init();
@@ -33,6 +33,7 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
         bugTracker = getBasicBugTrackerToJira();
         flowProperties.setBugTracker(bugTracker.getType().name());
         sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(OPEN_FINDING_PATH));
+        TimeUnit.SECONDS.sleep(4);
     }
 
     @After("@Jira_Analytics_Update_Issue_Command_Line")
@@ -43,6 +44,7 @@ public class JiraAnalyticsUpdateIssueViaCommandLineSteps extends JiraAnalyticsCo
 
     @When("updating a new Jira issue via the command line")
     public void closeNewIssueViaCommandLine() throws IOException, ExitThrowable, InterruptedException {
+        TimeUnit.SECONDS.sleep(4);
         sastScanner.cxParseResults(getBasicScanRequest(), getFileFromResourcePath(CLOSE_FINDING_PATH));
         TimeUnit.SECONDS.sleep(4);
     }
