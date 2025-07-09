@@ -5,7 +5,7 @@ buildscript {
         CxSBSDK = "0.6.28"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
-        springBootVersion = '3.2.11'
+        springBootVersion = '3.3.12'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
@@ -62,10 +62,10 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.40'
+ext['tomcat.version'] = '10.1.41'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.5.13'
-ext['spring-core.version'] = '6.1.14'
+ext['spring-core.version'] = '6.1.20'
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -139,7 +139,7 @@ dependencies {
     implementation ("org.apache.ivy:ivy:2.5.2")
     implementation ("org.apache.commons:commons-lang3:3.12.0")
     implementation('org.apache.commons:commons-collections4:4.4')
-    implementation ('org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'){
+    implementation ('org.eclipse.jgit:org.eclipse.jgit:6.10.1.202505221210-r'){
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
     }
     implementation group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
