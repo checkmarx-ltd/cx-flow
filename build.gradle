@@ -62,7 +62,7 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.42'
+ext['tomcat.version'] = '10.1.43'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.5.13'
 ext['spring-core.version'] = '6.1.21'
@@ -137,7 +137,7 @@ dependencies {
 
     }
     implementation ("org.apache.ivy:ivy:2.5.2")
-    implementation ("org.apache.commons:commons-lang3:3.12.0")
+    implementation ("org.apache.commons:commons-lang3:3.18.0")
     implementation('org.apache.commons:commons-collections4:4.4')
     implementation ('org.eclipse.jgit:org.eclipse.jgit:6.10.1.202505221210-r'){
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
