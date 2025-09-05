@@ -1094,11 +1094,11 @@ public class JiraService {
             log.info("Using Api-Token/Password");
             String credentials = String.format("%s:%s", jiraProperties.getUsername(), jiraProperties.getToken());
             String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
-            httpHeaders.set(HttpHeaders.AUTHORIZATION, "Basic " + encodedCredentials);
+            httpHeaders.setBasicAuth(encodedCredentials);
         }
         else {
             log.info("Using Personal Access Token");
-            httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer " + jiraProperties.getToken());
+            httpHeaders.setBearerAuth(jiraProperties.getToken());
         }
         return httpHeaders;
     }

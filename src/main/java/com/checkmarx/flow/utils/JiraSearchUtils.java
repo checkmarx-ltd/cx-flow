@@ -7,6 +7,7 @@ import com.checkmarx.flow.dto.jira.Fields;
 import com.checkmarx.flow.dto.jira.JiraIssue;
 import com.checkmarx.flow.dto.jira.JiraSearchRequest;
 import com.checkmarx.flow.dto.jira.JiraSearchResponse;
+import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -55,10 +57,10 @@ public class JiraSearchUtils {
         if(jiraProperties.getTokenType()==null || jiraProperties.getTokenType().name().equalsIgnoreCase("API") || jiraProperties.getTokenType().name().equalsIgnoreCase("PASSWORD")){
             String credentials = String.format("%s:%s", jiraProperties.getUsername(), jiraProperties.getToken());
             String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
-            httpHeaders.set(HttpHeaders.AUTHORIZATION, "Basic " + encodedCredentials);
+            httpHeaders.setBasicAuth(encodedCredentials);
         }
         else {
-            httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer " + jiraProperties.getToken());
+            httpHeaders.setBearerAuth(jiraProperties.getToken());
         }
         return httpHeaders;
     }
@@ -183,26 +185,30 @@ public class JiraSearchUtils {
      */
     private JiraSearchResponse performGetSearch(String baseUrl,
                                                 String jql, List<String> fields, String nextPageToken,HttpHeaders authHeaders) {
+        try {
+            String getUrl = String.format(ENHANCED_SEARCH_JQL,baseUrl);
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(getUrl)
+                    .queryParam("jql", jql)
+                    .queryParam("fields", String.join(",", fields))
+                    .queryParam("maxResults", jiraProperties.getMaxJqlResults());
 
-        String getUrl = String.format(ENHANCED_SEARCH_JQL,baseUrl);
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(getUrl)
-                .queryParam("jql", jql)
-                .queryParam("fields", String.join(",", fields))
-                .queryParam("maxResults", jiraProperties.getMaxJqlResults());
+            if (StringUtils.isNotEmpty(nextPageToken)) {
+                uriBuilder.queryParam("nextPageToken", nextPageToken);
+            }
 
-        if (StringUtils.isNotEmpty(nextPageToken)) {
-            uriBuilder.queryParam("nextPageToken", nextPageToken);
+            String url = uriBuilder.build().toUriString();
+            HttpEntity<?> entity = new HttpEntity<>(authHeaders);
+
+            log.debug("GET Request URL: {}", url);
+
+            ResponseEntity<JiraSearchResponse> response =
+                    restTemplate.exchange(url, HttpMethod.GET, entity, JiraSearchResponse.class);
+
+            return response.getBody();
+
+        } catch (HttpClientErrorException e) {
+            throw new JiraClientRunTimeException("Error occurred during GET request to Jira: " + e.getMessage());
         }
-
-        String url = uriBuilder.build().toUriString();
-        HttpEntity<?> entity = new HttpEntity<>(authHeaders);
-
-        log.debug("GET Request URL: {}", url);
-
-        ResponseEntity<JiraSearchResponse> response =
-                restTemplate.exchange(url, HttpMethod.GET, entity, JiraSearchResponse.class);
-
-        return response.getBody();
     }
 
     /**
@@ -217,22 +223,26 @@ public class JiraSearchUtils {
 
     private JiraSearchResponse performPostSearch( String baseUrl,
                                                  String jql, List<String> fields, String nextPageToken,HttpHeaders authHeaders) {
+        try {
+            String url = String.format(ENHANCED_SEARCH_JQL,baseUrl);
 
-        String url = String.format(ENHANCED_SEARCH_JQL,baseUrl);
+            JiraSearchRequest request = new JiraSearchRequest();
+            request.setJql(jql);
+            request.setFields(fields);
+            request.setMaxResults(jiraProperties.getMaxJqlResults());
+            if (StringUtils.isNotEmpty(nextPageToken)) {
+                request.setNextPageToken(nextPageToken);
+            }
 
-        JiraSearchRequest request = new JiraSearchRequest();
-        request.setJql(jql);
-        request.setFields(fields);
-        request.setMaxResults(jiraProperties.getMaxJqlResults());
-        if (StringUtils.isNotEmpty(nextPageToken)) {
-            request.setNextPageToken(nextPageToken);
+            HttpEntity<JiraSearchRequest> entity = new HttpEntity<>(request, authHeaders);
+
+            log.debug("POST Request URL: {}, Body JQL={}, nextPageToken={}", url, jql, nextPageToken);
+
+            return restTemplate.postForObject(url, entity, JiraSearchResponse.class);
+        } catch (HttpClientErrorException e) {
+            throw new JiraClientRunTimeException("Error occurred during GET request to Jira: " + e.getMessage());
         }
 
-        HttpEntity<JiraSearchRequest> entity = new HttpEntity<>(request, authHeaders);
-
-        log.debug("POST Request URL: {}, Body JQL={}, nextPageToken={}", url, jql, nextPageToken);
-
-        return restTemplate.postForObject(url, entity, JiraSearchResponse.class);
     }
 
     /**
@@ -386,7 +396,7 @@ public class JiraSearchUtils {
     //only used for testing purposes
     public String convertAdfToMarkdown(Object adfObject) {
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.valueToTree(adfObject); // convert Object → JsonNode
+        JsonNode root = mapper.valueToTree(adfObject);
         StringBuilder sb = new StringBuilder();
 
         // Handle root node with type "doc"
@@ -398,7 +408,6 @@ public class JiraSearchUtils {
                 }
             }
         } else if (root.has("doc") && root.get("doc").has("content")) {
-            // Fallback for previous structure
             JsonNode content = root.get("doc").get("content");
             if (content.isArray()) {
                 for (JsonNode node : content) {
@@ -408,7 +417,7 @@ public class JiraSearchUtils {
         }
         return sb.toString().trim();
     }
-
+    //helper function to process each node based on its type
     private void processNode(JsonNode node, StringBuilder sb) {
         String type = node.get("type").asText();
 
@@ -451,7 +460,7 @@ public class JiraSearchUtils {
                 break;
         }
     }
-
+    //helper function to handle text and hardBreak nodes
     private void handleContent(JsonNode child, StringBuilder sb) {
         String type = child.get("type").asText();
         if ("text".equals(type)) {
