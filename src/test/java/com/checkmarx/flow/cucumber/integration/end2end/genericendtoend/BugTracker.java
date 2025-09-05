@@ -16,6 +16,7 @@ import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestC
 import com.checkmarx.flow.config.GitLabProperties;
 import com.checkmarx.flow.config.JiraProperties;
 
+import com.checkmarx.flow.utils.JiraSearchUtils;
 import com.checkmarx.sdk.config.CxGoProperties;
 import com.checkmarx.sdk.config.CxProperties;
 import io.atlassian.util.concurrent.Promise;
@@ -32,11 +33,13 @@ enum BugTracker {
         private JiraRestClient client;
         private SearchRestClient searchClient;
         private String jqlQuery;
+        private JiraSearchUtils jiraSearchUtils;
 
 
         @Override
         void init(GenericEndToEndSteps genericEndToEndSteps) {
             jiraProperties = genericEndToEndSteps.jiraProperties;
+            jiraSearchUtils = genericEndToEndSteps.jiraSearchUtils;
             CustomAsynchronousJiraRestClientFactory factory = new CustomAsynchronousJiraRestClientFactory();
             URI jiraURI;
             try {
@@ -49,6 +52,7 @@ enum BugTracker {
             client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(),
                     jiraProperties.getToken(), jiraProperties.getHttpTimeout());
             searchClient = client.getSearchClient();
+
         }
 
         @Override
@@ -67,21 +71,22 @@ enum BugTracker {
             SearchResult result = null;
             boolean found = false;
             for (int retries = 0; retries < NUMBER_OF_RETRIES; retries++) {
-                Promise<SearchResult> temp = searchClient.searchJql(jqlQuery, 10, 0, fields);
+                //Promise<SearchResult> temp = searchClient.searchJql(jqlQuery, 10, 0, fields);
+                SearchResult tempResult = jiraSearchUtils.performJiraSearchResult(jqlQuery, new ArrayList<>(fields));
                 try {
                     TimeUnit.SECONDS.sleep(RETRY_TIMEOUT_IN_SECONDS);
                     log.info("checking for issues in jira project '{}' starting attempt {}", jiraProperties.getProject(), retries + 1);
                 } catch (Exception e) {
                     log.warn("error in jira verifyIssueCreated loop: {}", e.getMessage());
                 }
-                try {
-                    result = temp.get(500, TimeUnit.MILLISECONDS);
-                } catch (Exception e) {
-                    log.info("failed attempt {}", retries + 1);
-                }
+//                try {
+//                    result = temp.get(500, TimeUnit.MILLISECONDS);
+//                } catch (Exception e) {
+//                    log.info("failed attempt {}", retries + 1);
+//                }
 
-                if (result != null && result.getTotal() > 0) {
-                    log.info("Found {} issues in jira project", result.getTotal());
+                if (tempResult != null && tempResult.getTotal() > 0) {
+                    log.info("Found {} issues in jira project", tempResult.getTotal());
                     found = true;
                     break;
                 }
@@ -100,11 +105,12 @@ enum BugTracker {
                 Set<String> fields = new HashSet<>();
                 fields.addAll(
                         Arrays.asList("key", "project", "issuetype", "summary", "labels", "created", "updated", "status"));
-                Promise<SearchResult> temp = searchClient.searchJql(jqlQuery, 10, 0, fields);
-                SearchResult result = temp.get(500, TimeUnit.MILLISECONDS);
+                //Promise<SearchResult> temp = searchClient.searchJql(jqlQuery, 10, 0, fields);
+                //SearchResult result = temp.get(500, TimeUnit.MILLISECONDS);
+                SearchResult tempResult = jiraSearchUtils.performJiraSearchResult(jqlQuery, new ArrayList<>(fields));
 
                 boolean isfound = false;
-                for (Issue currentIssue : result.getIssues()) {
+                for (Issue currentIssue : tempResult.getIssues()) {
                     isfound = true;
                     client.getIssueClient().deleteIssue(currentIssue.getKey(), false);
                 }

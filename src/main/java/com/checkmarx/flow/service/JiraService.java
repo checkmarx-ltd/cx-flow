@@ -15,12 +15,14 @@ import com.checkmarx.flow.constants.SCATicketingConstants;
 import com.checkmarx.flow.dto.BugTracker;
 import com.checkmarx.flow.dto.ScanDetails;
 import com.checkmarx.flow.dto.ScanRequest;
+import com.checkmarx.flow.dto.jira.JiraIssue;
 import com.checkmarx.flow.dto.report.JiraTicketsReport;
 import com.checkmarx.flow.exception.JiraClientException;
 import com.checkmarx.flow.exception.JiraClientRunTimeException;
 import com.checkmarx.flow.exception.MachinaRuntimeException;
 import com.checkmarx.flow.jira9X.IssueFields;
 import com.checkmarx.flow.utils.HTMLHelper;
+import com.checkmarx.flow.utils.JiraSearchUtils;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.ScanResults;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -87,6 +89,7 @@ public class JiraService {
     private MetadataRestClient metaClient;
 
     private final RestTemplate restTemplate;
+    private final JiraSearchUtils jiraSearchUtils;
     private URI jiraURI;
     private Map<String, ScanResults.XIssue> nonPublishedScanResultsMap = new HashMap<>();
     private List<String> currentNewIssuesList = new ArrayList<>();
@@ -98,13 +101,14 @@ public class JiraService {
     }
 
     public JiraService(JiraProperties jiraProperties, FlowProperties flowProperties,
-                       HelperService helperService,@Qualifier("SSLRestTemplate") RestTemplate restTemplate) {
+                       HelperService helperService, @Qualifier("SSLRestTemplate") RestTemplate restTemplate, JiraSearchUtils jiraSearchUtils) {
         this.jiraProperties = jiraProperties;
         this.flowProperties = flowProperties;
         parentUrl = jiraProperties.getParentUrl();
         grandParentUrl = jiraProperties.getGrandParentUrl();
         this.helperService = helperService;
         this.restTemplate = restTemplate;
+        this.jiraSearchUtils = jiraSearchUtils;
     }
 
     private static void validateFieldRequestParams(String jiraProject, String issueType) {
@@ -255,16 +259,23 @@ public class JiraService {
         HashSet<String> fields = new HashSet<>();
         Collections.addAll(fields, "key", "project", "issuetype", "summary", LABEL_FIELD_TYPE, "created", "updated", "status");
 
-
-        SearchResult searchResults;
-        int totalResultsCount = MAX_RESULTS_ALLOWED;
-        SearchRestClient searchClient = this.client.getSearchClient();
-        //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50), don't allow less than 10.
-        int maxJqlResultsPerPage = Integer.max(10, jiraProperties.getMaxJqlResults());
-        for (int startAt = 0; startAt < totalResultsCount; startAt += maxJqlResultsPerPage) {
-            searchResults = searchClient.searchJql(jql, maxJqlResultsPerPage, startAt, fields).claim();
-            searchResults.getIssues().forEach(issues::add);
-            totalResultsCount = Integer.min(searchResults.getTotal(), MAX_RESULTS_ALLOWED);
+        //perform enhanced search using rest template when using JIRA cloud else use old search method
+        if(jiraProperties.getDeployType().equalsIgnoreCase("cloud")){
+            List<com.checkmarx.flow.dto.jira.JiraIssue> jiraIssues = jiraSearchUtils.performJiraSearch(jql, fields.stream().toList());
+            for (com.checkmarx.flow.dto.jira.JiraIssue dto : jiraIssues) {
+                issues.add(jiraSearchUtils.mapJiraIssueToIssue(dto));
+            }
+        }else{
+            SearchResult searchResults;
+            int totalResultsCount = MAX_RESULTS_ALLOWED;
+            SearchRestClient searchClient = this.client.getSearchClient();
+            //Retrieve JQL results through pagination (jira.max-jql-results per page -> default 50), don't allow less than 10.
+            int maxJqlResultsPerPage = Integer.max(10, jiraProperties.getMaxJqlResults());
+            for (int startAt = 0; startAt < totalResultsCount; startAt += maxJqlResultsPerPage) {
+                searchResults = searchClient.searchJql(jql, maxJqlResultsPerPage, startAt, fields).claim();
+                searchResults.getIssues().forEach(issues::add);
+                totalResultsCount = Integer.min(searchResults.getTotal(), MAX_RESULTS_ALLOWED);
+            }
         }
         return issues;
     }

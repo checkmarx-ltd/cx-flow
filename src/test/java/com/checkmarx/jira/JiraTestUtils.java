@@ -7,6 +7,7 @@ import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.internal.async.CustomAsynchronousJiraRestClientFactory;
 import com.checkmarx.flow.config.JiraProperties;
+import com.checkmarx.flow.utils.JiraSearchUtils;
 import com.checkmarx.flow.utils.ScanUtils;
 import com.checkmarx.sdk.dto.sast.Filter;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.TestComponent;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -26,7 +28,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @TestComponent
@@ -41,6 +44,8 @@ public class JiraTestUtils implements IJiraTestUtils {
 
     @Autowired
     private JiraProperties jiraProperties;
+    @Autowired
+    private JiraSearchUtils jiraSearchUtils;
 
     @PostConstruct
     public void initClient() {
@@ -53,7 +58,6 @@ public class JiraTestUtils implements IJiraTestUtils {
                 log.error("Error constructing URI for JIRA", e);
             }
             this.client = factory.createWithBasicHttpAuthenticationCustom(jiraURI, jiraProperties.getUsername(), jiraProperties.getToken(), jiraProperties.getHttpTimeout());
-
         }
     }
 
@@ -63,7 +67,7 @@ public class JiraTestUtils implements IJiraTestUtils {
     }
 
     private SearchResult search(String jql) {
-        return  client.getSearchClient().searchJql(jql).claim();
+        return  jiraSearchUtils.performJiraSearchResult(jql,List.of("*all"));
     }
 
     private SearchResult search(String jql, int startAtIndex) {
@@ -86,12 +90,12 @@ public class JiraTestUtils implements IJiraTestUtils {
     @Override
     public Set<Issue> geAllIssuesInProject(String projectKey) {
         List<Issue> issues = new ArrayList<>();
-        SearchResult searchResult = search(getSearchAllProjectJql(projectKey), issues.size());
+        SearchResult searchResult = search(getSearchAllProjectJql(projectKey));
         searchResult.getIssues().forEach(issues::add);
-        while (issues.size() < searchResult.getTotal()) {
-            searchResult = search(getSearchAllProjectJql(projectKey), issues.size());
-            searchResult.getIssues().forEach(issues::add);
-        }
+//        while (issues.size() < searchResult.getTotal()) {
+//            searchResult = search(getSearchAllProjectJql(projectKey), issues.size());
+//            searchResult.getIssues().forEach(issues::add);
+//        }
         Set<Issue> result = new HashSet<>(issues);
         log.info("found {} issues in project '{}'", issues.size(), projectKey);
         return result;
@@ -128,7 +132,7 @@ public class JiraTestUtils implements IJiraTestUtils {
     }
 
     private String getIssueSeverity(String issueDescription) {
-        return getIssueBodyPart(issueDescription,"Severity:");
+        return getFieldValueFromDescription(issueDescription,"Severity");
     }
 
     @Override
@@ -195,14 +199,29 @@ Line #222:
     @Override
     public String getIssueVulnerabilityStatus(String projectKey) {
         Issue issue = getFirstIssue(projectKey);
-        String statusLine = issue.getDescription().split(System.lineSeparator())[13];
-        return statusLine;
+        //String statusLine = issue.getDescription().split(System.lineSeparator())[13];
+        return getFieldValueFromDescription(issue.getDescription(),"Status");
     }
 
     @Override
     public String getIssueRecommendedFixLink(String projectKey) {
         Issue issue = getFirstIssue(projectKey);
-        return  Objects.requireNonNull(issue.getDescription()).split(System.lineSeparator())[20];
+        Pattern pattern = Pattern.compile("^.*\\[Recommended Fix\\]\\([^)]+\\).*$", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(issue.getDescription());
+        if (matcher.find()) {
+            return matcher.group().trim();
+        }
+        return null;
+    }
+
+    private String getFieldValueFromDescription(String description, String fieldName) {
+        String regex = String.format("\\*{0,2}\\s*%s:\\s*\\*{0,2}\\s*(.+)", Pattern.quote(fieldName));
+        Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(description);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
     }
 
     @Override
