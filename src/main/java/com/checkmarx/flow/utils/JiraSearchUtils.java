@@ -40,7 +40,7 @@ public class JiraSearchUtils {
     private final JiraProperties jiraProperties;
     private final RestTemplate restTemplate;
 
-    public JiraSearchUtils(JiraProperties jiraProperties,@Qualifier("SSLRestTemplate")RestTemplate restTemplate) {
+    public JiraSearchUtils(JiraProperties jiraProperties,@Qualifier("flowRestTemplate")RestTemplate restTemplate) {
         this.jiraProperties = jiraProperties;
         this.restTemplate = restTemplate;
     }
