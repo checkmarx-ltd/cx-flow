@@ -62,7 +62,7 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.43'
+ext['tomcat.version'] = '10.1.44'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.5.13'
 ext['spring-core.version'] = '6.1.21'
@@ -100,7 +100,10 @@ dependencies {
     implementation ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    implementation ('org.springframework.boot:spring-boot-starter-mail')
+    implementation ('org.springframework.boot:spring-boot-starter-mail'){
+        exclude group:'org.eclipse.angus', module:'angus-mail'
+    }
+    implementation("org.eclipse.angus:jakarta.mail:2.0.4")
     implementation ('org.springframework.boot:spring-boot-starter-thymeleaf'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.thymeleaf', module: 'thymeleaf-spring5'
@@ -143,7 +146,7 @@ dependencies {
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
     }
     implementation group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
-    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.78'
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.79'
     implementation('com.auth0:java-jwt:4.3.0')
     // implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     implementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
@@ -198,13 +201,13 @@ dependencies {
     }
 
 
-    compile("software.amazon.awssdk:dynamodb:2.22.0"){
+    compile("software.amazon.awssdk:dynamodb:2.22.13"){
         exclude group: 'io.netty', module: 'netty-common'
         exclude group: 'io.netty', module: 'netty-handler'
     }
-    compile("software.amazon.awssdk:regions:2.22.0")
-    compile("software.amazon.awssdk:auth:2.22.0")
-    compile("software.amazon.awssdk:sts:2.22.0"){
+    compile("software.amazon.awssdk:regions:2.22.13")
+    compile("software.amazon.awssdk:auth:2.22.13")
+    compile("software.amazon.awssdk:sts:2.22.13"){
         exclude group: 'io.netty', module: 'netty-common'
         exclude group: 'io.netty', module: 'netty-handler'
     }
