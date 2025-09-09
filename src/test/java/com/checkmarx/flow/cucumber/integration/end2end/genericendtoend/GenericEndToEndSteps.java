@@ -4,6 +4,7 @@ import com.checkmarx.flow.CxFlowApplication;
 import com.checkmarx.flow.config.*;
 import com.checkmarx.flow.cucumber.common.utils.TestUtils;
 
+import com.checkmarx.flow.utils.JiraSearchUtils;
 import com.checkmarx.sdk.config.ScaProperties;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
@@ -48,6 +49,7 @@ public class GenericEndToEndSteps {
      * bug-trackers
      */
     @Autowired JiraProperties jiraProperties;
+    @Autowired JiraSearchUtils jiraSearchUtils;
 
     private Repository repository;
     private BugTracker bugTracker;
