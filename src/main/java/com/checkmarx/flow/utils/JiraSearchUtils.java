@@ -240,7 +240,7 @@ public class JiraSearchUtils {
 
             return restTemplate.postForObject(url, entity, JiraSearchResponse.class);
         } catch (HttpClientErrorException e) {
-            throw new JiraClientRunTimeException("Error occurred during GET request to Jira: " + e.getMessage());
+            throw new JiraClientRunTimeException("Error occurred during POST request to Jira: " + e.getMessage(),e);
         }
 
     }
@@ -395,27 +395,31 @@ public class JiraSearchUtils {
     // function to convert ADF (Atlassian Document Format) to Markdown
     //only used for testing purposes
     public String convertAdfToMarkdown(Object adfObject) {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.valueToTree(adfObject);
-        StringBuilder sb = new StringBuilder();
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.valueToTree(adfObject);
+            StringBuilder sb = new StringBuilder();
 
-        // Handle root node with type "doc"
-        if (root.has("type") && "doc".equals(root.get("type").asText()) && root.has("content")) {
-            JsonNode content = root.get("content");
-            if (content.isArray()) {
-                for (JsonNode node : content) {
-                    processNode(node, sb);
+            // Handle root node with type "doc"
+            if (root.has("type") && "doc".equals(root.get("type").asText()) && root.has("content")) {
+                JsonNode content = root.get("content");
+                if (content.isArray()) {
+                    for (JsonNode node : content) {
+                        processNode(node, sb);
+                    }
+                }
+            } else if (root.has("doc") && root.get("doc").has("content")) {
+                JsonNode content = root.get("doc").get("content");
+                if (content.isArray()) {
+                    for (JsonNode node : content) {
+                        processNode(node, sb);
+                    }
                 }
             }
-        } else if (root.has("doc") && root.get("doc").has("content")) {
-            JsonNode content = root.get("doc").get("content");
-            if (content.isArray()) {
-                for (JsonNode node : content) {
-                    processNode(node, sb);
-                }
-            }
+            return sb.toString().trim();
+        } catch (Exception e) {
+            return null;
         }
-        return sb.toString().trim();
     }
     //helper function to process each node based on its type
     private void processNode(JsonNode node, StringBuilder sb) {

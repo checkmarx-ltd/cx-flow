@@ -260,10 +260,13 @@ public class JiraService {
         Collections.addAll(fields, "key", "project", "issuetype", "summary", LABEL_FIELD_TYPE, "created", "updated", "status");
 
         //perform enhanced search using rest template when using JIRA cloud else use old search method
-        if(jiraProperties.getDeployType().equalsIgnoreCase("cloud")){
+        if((StringUtils.isEmpty(jiraProperties.getDeployType()) || jiraProperties.getDeployType().equalsIgnoreCase("cloud"))){
             List<com.checkmarx.flow.dto.jira.JiraIssue> jiraIssues = jiraSearchUtils.performJiraSearch(jql, fields.stream().toList());
-            for (com.checkmarx.flow.dto.jira.JiraIssue dto : jiraIssues) {
-                issues.add(jiraSearchUtils.mapJiraIssueToIssue(dto));
+            if(jiraIssues!=null && !jiraIssues.isEmpty()) {
+                log.debug("JIRA search returned {} issues", jiraIssues.size());
+                for (com.checkmarx.flow.dto.jira.JiraIssue dto : jiraIssues) {
+                    issues.add(jiraSearchUtils.mapJiraIssueToIssue(dto));
+                }
             }
         }else{
             SearchResult searchResults;
