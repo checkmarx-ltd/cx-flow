@@ -593,9 +593,9 @@ orbs:
 workflows:
   version: 2
 
-  cx-kpi-shipper:
-    jobs:
-      - checkmarx/circleci-kpi-shipper
+#  cx-kpi-shipper:
+#    jobs:
+#      - checkmarx/circleci-kpi-shipper
 
   build_deploy:
     jobs:

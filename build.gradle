@@ -204,15 +204,22 @@ dependencies {
     compile("software.amazon.awssdk:dynamodb:2.22.13"){
         exclude group: 'io.netty', module: 'netty-common'
         exclude group: 'io.netty', module: 'netty-handler'
+        exclude group: 'io.netty', module: 'netty-codec2-http'
+        exclude group: 'io.netty', module: 'netty-codec-http'
+
     }
     compile("software.amazon.awssdk:regions:2.22.13")
     compile("software.amazon.awssdk:auth:2.22.13")
     compile("software.amazon.awssdk:sts:2.22.13"){
         exclude group: 'io.netty', module: 'netty-common'
         exclude group: 'io.netty', module: 'netty-handler'
+        exclude group: 'io.netty', module: 'netty-codec2-http'
+        exclude group: 'io.netty', module: 'netty-codec-http'
     }
     compile "io.netty:netty-common:4.1.118.Final"
     compile "io.netty:netty-handler:4.1.118.Final"
+    compile "io.netty:netty-codec-http:4.1.124.Final"
+    compile "io.netty:netty-codec2-http:4.1.124.Final"
 
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
