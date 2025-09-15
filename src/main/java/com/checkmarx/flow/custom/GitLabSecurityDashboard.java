@@ -27,6 +27,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -591,8 +592,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .name(issue.getVulnerability())
                             .message(String.format(ISSUE_FORMAT, issue.getVulnerability(), issue.getFilename(), k))
                             .description(issue.getVulnerability())
-                            .severity(issue.getSeverity())
-                            .confidence(issue.getSeverity())
+                            .severity(StringUtils.capitalize(issue.getSeverity().toLowerCase()))
+                            .confidence(StringUtils.capitalize(issue.getSeverity().toLowerCase()))
                             .solution(issue.getLink())
                             .scanner(scanner)
                             .identifiers(getIdentifiers(issue))
@@ -632,8 +633,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .message(String.format(ISSUE_FORMAT, issue.getVulnerability(), issue.getFilename(), k))
                             .description(issue.getDescription())
                             .cve(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
-                            .severity(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Severity.valueOf(issue.getSeverity()))
-                            .confidence(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Confidence.valueOf(issue.getSeverity()))//Need To add as per Enum
+                            .severity(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Severity.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))
+                            .confidence(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Confidence.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))//Need To add as per Enum
                             .solution(issue.getLink())
                             .scanner(scanner)//__1 wala scanner use karenge
                             .identifiers(getIdentifiersNewVer(issue,k))//Identifiers seems correct but need to add Link and Description flags
@@ -694,8 +695,8 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                            // .message(String.format(ISSUE_FORMAT, issue.getVulnerability(), issue.getFilename(), k))
                             .description(issue.getDescription())
                            //.cve(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
-                            .severity(com.checkmarx.flow.gitlabdashboardfifteen.sast.Vulnerability.Severity.valueOf(issue.getSeverity()))
-                           // .confidence(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Confidence.valueOf(issue.getSeverity()))//Need To add as per Enum
+                            .severity(com.checkmarx.flow.gitlabdashboardfifteen.sast.Vulnerability.Severity.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))
+                           // .confidence(com.checkmarx.flow.gitdashboardnewver.Vulnerability.Confidence.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))//Need To add as per Enum
                             .solution(issue.getLink())
                            //.scanner(scanner)//__1 wala scanner use karenge
                             .identifiers(getIdentifiersNewVerFifteen(issue,k))//Identifiers seems correct but need to add Link and Description flags
@@ -757,7 +758,7 @@ public class GitLabSecurityDashboard extends ImmutableIssueTracker {
                             .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
                             .name(issue.getVulnerability())
                             .description(issue.getDescription())
-                            .severity(com.checkmarx.flow.gitdashboardnewverfifteen.SAST.Vulnerability.Severity.valueOf(issue.getSeverity()))
+                            .severity(com.checkmarx.flow.gitdashboardnewverfifteen.SAST.Vulnerability.Severity.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))
                             .solution(issue.getLink())
                             .identifiers(getIdentifiersGitLabDashBoard(issue,k))//Identifiers seems correct but need to add Link and Description flags
                             .links(getLinksGitLabDashBoard(issue))//New Added
