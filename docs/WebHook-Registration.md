@@ -29,11 +29,12 @@ WebHooks can be registered at the namespace level (Organization in GitHub, Group
 * Available options for Events are same as WebHook registration mentioned above (Push, Pull, Delete Branch)
 * Ensure to download/save the Private key generated for the App
 * You must convert the key to PKCS8 formatted PEM using: ```openssl pkcs8 -topk8 -inform PEM -outform PEM -in private.pem -out private8.pem -nocrypt```
-* To make use of the GitHub App, you must add app-id and app-key-file to your configuration
+* To make use of the GitHub App, you must add app-id and app-key-file to your configuration. When webhook is on repositories and not on Github apps you must add the installation-id.
 * The base headers are ```application/vnd.github.machine-man-preview+json, application/vnd.github.v3+json``` to update them use the app-header config under the github block
 ```
 github:
   app-id: XXXXX #This ID will be found in your GitHub App configuration settings
+  installation-id: XXXXX #This ID will be found in your GitHub App settings under the section "Install App"
   app-key-file: /path/to/keyfile.pem
   app-headers: application/vnd.github.v3+json #Optional
   webhook-token: XXXX #Preconfigured WebHook Secret as defined in the GitHub App.

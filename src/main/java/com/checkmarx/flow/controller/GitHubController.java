@@ -211,8 +211,9 @@ public class GitHubController extends WebhookController {
             String gitAuthUrl;
             log.info("Using url: {}", gitUrl);
 
-            if(event.getInstallation() != null && event.getInstallation().getId() != null){
-                installationId = event.getInstallation().getId();
+            installationId = getGitHubApplicationInstallationId(event);
+
+            if( installationId != null ){
                 token = gitHubAppAuthService.getInstallationToken(installationId);
                 token = FlowConstants.GITHUB_APP_CLONE_USER.concat(":").concat(token);
             }
@@ -369,8 +370,9 @@ public class GitHubController extends WebhookController {
             String gitAuthUrl;
             log.info("Using url: {}", gitUrl);
 
-            if(event.getInstallation() != null && event.getInstallation().getId() != null){
-                installationId = event.getInstallation().getId();
+            installationId = getGitHubApplicationInstallationId(event);
+
+            if( installationId != null ){
                 token = gitHubAppAuthService.getInstallationToken(installationId);
                 token = FlowConstants.GITHUB_APP_CLONE_USER.concat(":").concat(token);
             }
@@ -491,6 +493,7 @@ public class GitHubController extends WebhookController {
         log.info("Processing GitHub DELETE Branch request");
         DeleteEvent event;
         ObjectMapper mapper = new ObjectMapper();
+        Integer installationId = null;
 
         try {
             event = mapper.readValue(body, DeleteEvent.class);
@@ -552,9 +555,11 @@ public class GitHubController extends WebhookController {
         request = configOverrider.overrideScanRequestProperties(cxConfig, request);
 
         //Check if an installation Id is provided and store it for later use
-        if(event.getInstallation() != null && event.getInstallation().getId() != null){
+        installationId = getGitHubApplicationInstallationId(event);
+
+        if( installationId != null ){
             request.putAdditionalMetadata(
-                    FlowConstants.GITHUB_APP_INSTALLATION_ID, event.getInstallation().getId().toString()
+                    FlowConstants.GITHUB_APP_INSTALLATION_ID, installationId.toString()
             );
         }
         //deletes a project which is not in the middle of a scan, otherwise it will not be deleted
@@ -612,4 +617,23 @@ public class GitHubController extends WebhookController {
             hmac.init(secret);
         }
     }
+
+    private Integer getGitHubApplicationInstallationId(EventCommon event) {
+        Integer installationId = null;
+        log.info("Processing GitHub Application installation ID");
+
+        // Set the installationId variable from properties or event
+        if ( properties.getInstallationId() != null ) {
+            installationId = properties.getInstallationId();
+            log.debug("Using InstallationId from properties: {}", installationId);
+        } else if ( event.getInstallation() != null && event.getInstallation().getId() != null) {
+            installationId = event.getInstallation().getId();
+            log.debug("Using InstallationId from event: {}", installationId);
+        }else {
+            log.warn("InstallationId not found in properties and event data. Using null installationId.");
+        }
+
+        return installationId;
+    }
+
 }

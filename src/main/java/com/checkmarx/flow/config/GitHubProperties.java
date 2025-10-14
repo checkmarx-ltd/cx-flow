@@ -23,6 +23,9 @@ public class GitHubProperties extends RepoProperties {
     private String appId;
     @Getter
     @Setter
+    private Integer installationId;
+    @Getter
+    @Setter
     private String appKeyFile;
     @Getter
     @Setter

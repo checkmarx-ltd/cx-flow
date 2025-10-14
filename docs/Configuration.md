@@ -166,6 +166,8 @@ checkmarx:
 github:
   webhook-token: XXXXX
   token: XXXXX
+  app-id: XXXXX
+  installation-id: XXXXX
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
@@ -889,6 +891,8 @@ All the repository configurations have common elements such as:
 github:
   webhook-token: xxxx
   token: xxxx
+  app-id: xxxx
+  installation-id: xxxx
   url: https://github.com
   api-url: https://api.github.com/repos/
   false-positive-label: false-positive
@@ -910,6 +914,9 @@ github:
 |------------------------------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `webhook-token`              |                | Token used as a shared secret when calling the CxFlow WebHook WebService.  It authenticates users for the request. GitHub signs the request with this value, and the signature is validated on the receiving end. |
 | `token`                      |                | The API token with access to the repository, with at least Read only access to the code, the ability to add comments to pull requests, and the ability to create GitHub Issues.                                   |
+| `app-id`                     |                | The application ID of the GitHub application. see [GitHub App WebHook](./WebHook-Registration.md#L26)                                                                                                             |
+| `installation-id`            |                | The installation ID of the Github application. see [GitHub App WebHook](./WebHook-Registration.md#L26)                                                                                                            |
+| `app-key-file`               |                | The application private key file of the Github application. see [GitHub App WebHook](./WebHook-Registration.md#L26)                                                                                               |
 | `url`                        |                | Main repo url for GitHub                                                                                                                                                                                          |
 | `api-url`                    |                | The API endpoint for GitHub, which is a different context or potentially FQDN than the main repo url.                                                                                                             |
 | `false-positive-label`       | false-positive | A label that can be defined within the GitHub Issue feedback that is used to ignore issues                                                                                                                        |
