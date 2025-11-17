@@ -171,8 +171,6 @@ public class GitLabDashboardV14 implements GitLabDashboardStrategy {
                     objDependencyFile.setDependencies(findDependencyPath(indPackage.getDependencyPaths()));
                 }
                 dependencyFilesLst.add(objDependencyFile);
-            }else{
-                log.warn("package null for id:{} and name :{}",indPackage.getId(),indPackage.getName());
             }
         }
         SecurityDashboardNewVerSCA report  = SecurityDashboardNewVerSCA.builder()

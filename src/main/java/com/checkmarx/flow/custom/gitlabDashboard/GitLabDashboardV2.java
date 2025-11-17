@@ -102,8 +102,6 @@ public class GitLabDashboardV2 implements GitLabDashboardStrategy {
                             .scanner(scanner)
                             .build());
                 }
-            }else{
-                log.warn("package null for id:{} and name :{}",indPackage.getId(),indPackage.getName());
             }
 
         }

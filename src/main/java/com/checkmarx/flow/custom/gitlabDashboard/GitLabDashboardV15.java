@@ -309,8 +309,6 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                             .build());
                 }
                 dependencyFilesLst.add(DependencyFile.builder().dependencies(findObjectDependencyGitLabDashBoard(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
-            }else{
-                log.warn("package null for id:{} and name :{}",indPackage.getId(),indPackage.getName());
             }
         }
 
