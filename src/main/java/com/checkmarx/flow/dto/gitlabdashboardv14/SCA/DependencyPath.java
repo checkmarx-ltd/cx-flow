@@ -32,9 +32,8 @@ import lombok.Setter;
 public class DependencyPath {
 
     @JsonProperty("iid")
-    @Builder.Default
     @JsonPropertyDescription("ID that is unique in the scope of a parent object, and specific to the resource type.")
-    private int iid=123;
+    private int iid;
 
 
     @JsonProperty("name")

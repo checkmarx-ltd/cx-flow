@@ -162,7 +162,6 @@ public class GitLabDashboardV14 implements GitLabDashboardStrategy {
                             .location(LocationSCA.builder().file(loc)
                                     .dependency(Dependency.builder()
                                             .dependencyPath(findDependencyPath(indPackage.getDependencyPaths()))
-                                            .iid(123)
                                             .direct(indPackage.isIsDirectDependency())
                                             ._package(com.checkmarx.flow.dto.gitlabdashboardv14.SCA.Package.builder().name(finding.getPackageId()).build())
                                             .version(finding.getPackageId().split("-")[finding.getPackageId().
@@ -171,6 +170,8 @@ public class GitLabDashboardV14 implements GitLabDashboardStrategy {
                     objDependencyFile.setDependencies(findDependencyPath(indPackage.getDependencyPaths()));
                 }
                 dependencyFilesLst.add(objDependencyFile);
+            }else{
+                log.warn("Package not found for the finding: {}", finding.getPackageId());
             }
         }
         SecurityDashboardNewVerSCA report  = SecurityDashboardNewVerSCA.builder()

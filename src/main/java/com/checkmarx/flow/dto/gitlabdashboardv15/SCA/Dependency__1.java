@@ -51,8 +51,7 @@ public class Dependency__1 {
      */
     @JsonProperty("iid")
     @JsonPropertyDescription("ID that identifies the dependency in the scope of a dependency file.")
-    @Builder.Default
-    private Double iid=123.0;
+    private Double iid;
     /**
      * Tells whether this is a direct, top-level dependency of the scanned project.
      *

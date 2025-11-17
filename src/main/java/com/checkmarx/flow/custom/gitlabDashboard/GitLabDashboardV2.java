@@ -102,6 +102,8 @@ public class GitLabDashboardV2 implements GitLabDashboardStrategy {
                             .scanner(scanner)
                             .build());
                 }
+            }else{
+               log.warn("Package not found for the finding: {}", finding.getPackageId());
             }
 
         }

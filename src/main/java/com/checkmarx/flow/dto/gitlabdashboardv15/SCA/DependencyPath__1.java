@@ -26,8 +26,7 @@ public class DependencyPath__1 {
      */
     @JsonProperty("iid")
     @JsonPropertyDescription("ID that is unique in the scope of a parent object, and specific to the resource type.")
-    @Builder.Default
-    private Double iid=123.0;
+    private Double iid;
 
 
     /**

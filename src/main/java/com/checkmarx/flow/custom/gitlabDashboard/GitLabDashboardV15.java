@@ -301,7 +301,6 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                             .location(com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Location.builder().file(loc)
                                     .dependency(Dependency.builder()
                                             .dependencyPath(findDependencyPathGitLabDashBoard(indPackage.getDependencyPaths()))
-                                            .iid(123.0)
                                             .direct(indPackage.isIsDirectDependency())
                                             ._package(com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Package.builder().name(finding.getPackageId()).build())
                                             .version(finding.getPackageId().split("-")[finding.getPackageId().
@@ -309,6 +308,8 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                             .build());
                 }
                 dependencyFilesLst.add(DependencyFile.builder().dependencies(findObjectDependencyGitLabDashBoard(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
+            }else{
+                log.warn("Package not found for the finding: {}", finding.getPackageId());
             }
         }
 
@@ -518,7 +519,6 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                 Dependency__1.builder()
                         ._package(Package__1.builder().name(k.getName()).build())
                         .version(k.getVersion())
-                        .iid(123.0)
                         .direct(k.isIsDirectDependency())
                         .dependencyPath(findeachDependencyPathGitlabDashBoard(k.getDependencyPaths()))
                         .build()));
