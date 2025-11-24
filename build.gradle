@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
     ext {
-        CxSBSDK = "0.6.30"
+        CxSBSDK = "0.6.31"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
         springBootVersion = '3.3.13'
@@ -62,9 +62,9 @@ configurations {
     all*.exclude module: 'wss-agent-api'
 }
 
-ext['tomcat.version'] = '10.1.44'
+ext['tomcat.version'] = '10.1.47'
 ext['groovy.version'] = '4.0.15'
-ext['logback-classic.version'] = '1.5.13'
+ext['logback-classic.version'] = '1.5.19'
 ext['spring-core.version'] = '6.1.21'
 
 dependencies {
@@ -173,7 +173,7 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.24")
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
-    implementation('ch.qos.logback:logback-classic:1.5.13'){
+    implementation('ch.qos.logback:logback-classic:1.5.19'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -183,7 +183,7 @@ dependencies {
     implementation("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    implementation('ch.qos.logback:logback-core:1.5.13')
+    implementation('ch.qos.logback:logback-core:1.5.19')
     implementation('net.logstash.logback:logstash-logback-encoder:7.3')
     implementation("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     implementation("org.jasypt:jasypt:1.9.3")
@@ -206,6 +206,7 @@ dependencies {
         exclude group: 'io.netty', module: 'netty-handler'
         exclude group: 'io.netty', module: 'netty-codec2-http'
         exclude group: 'io.netty', module: 'netty-codec-http'
+        exclude group: 'io.netty', module: 'netty-codec'
 
     }
     compile("software.amazon.awssdk:regions:2.22.13")
@@ -215,11 +216,13 @@ dependencies {
         exclude group: 'io.netty', module: 'netty-handler'
         exclude group: 'io.netty', module: 'netty-codec-http2'
         exclude group: 'io.netty', module: 'netty-codec-http'
+        exclude group: 'io.netty', module: 'netty-codec'
     }
-    compile "io.netty:netty-common:4.1.118.Final"
-    compile "io.netty:netty-handler:4.1.118.Final"
-    compile "io.netty:netty-codec-http:4.1.124.Final"
-    compile "io.netty:netty-codec-http2:4.1.124.Final"
+    compile "io.netty:netty-common:4.1.125.Final"
+    compile "io.netty:netty-handler:4.1.125.Final"
+    compile "io.netty:netty-codec-http:4.1.125.Final"
+    compile "io.netty:netty-codec-http2:4.1.125.Final"
+    compile "io.netty:netty-codec:4.1.125.Final"
 
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
