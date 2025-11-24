@@ -36,7 +36,7 @@ public class MarkDownHelper {
 
     private static final String GITHUB_USER_PREFIX = "https://user-images.githubusercontent.com/23239410/";
     //private static final String CHECKMARX_LOGO_URL = GITHUB_USER_PREFIX + "92153465-ff743900-ee2c-11ea-9c8d-8141e38feb41.png";
-    private static final String CHECKMARX_LOGO_URL = "https://raw.githubusercontent.com/wiki/checkmarx-ltd/cx-flow/Images/cxLogo.PNG";
+    private static final String CHECKMARX_LOGO_URL = "https://camo.githubusercontent.com/e7f389442c71891df7e5606ce5bde55dbd7d8a004e115f3587123cfe09f49387/68747470733a2f2f63646e2e6173742e636865636b6d6172782e6e65742f696e746567726174696f6e732f6c6f676f2f436865636b6d6172782e706e67";
     private static final String CRITICAL_ICON = "https://i.imgur.com/DGKOtBX.png";
     private static final String HIGH_ICON = GITHUB_USER_PREFIX + "92157087-97285600-ee32-11ea-988f-0aca12c4c126.png";
     private static final String MEDIUM_ICON = GITHUB_USER_PREFIX + "92157093-98598300-ee32-11ea-83d7-af52251a011b.png";
