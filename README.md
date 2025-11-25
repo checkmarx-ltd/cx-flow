@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/Checkmarx/ci-cd-integrations/main/.images/PluginBanner.jpg">
+<img src="https://raw.githubusercontent.com/Checkmarx/ci-cd-integrations/main/.images/PluginBanner.jpg" alt="checkmarx-logo">
 <br />
 <div align="center">
 
