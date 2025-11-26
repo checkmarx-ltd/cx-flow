@@ -617,6 +617,12 @@ gitlab:
 
 Default Gitlab dashboard schema is 15.2.3.
 
+> Note: GitLab Dashboard supports both SAST and SCA. However, the Code-Flow feature is supported only for SAST findings. 
+> 
+> Code-Flow visualizes the execution flow within a file by showing the Source, Propagation, and Sink nodes.
+> 
+> In GitLab Dashboard, when multiple vulnerabilities are present in the same file, cx-flow aggregates their details and displays multiple nodes within a single Code-Flow representation.
+
 [[/Images/bug3.png|Screenshot of GitLab dashboard]]
 
 ## <a name="github">GitHub Issues</a>
