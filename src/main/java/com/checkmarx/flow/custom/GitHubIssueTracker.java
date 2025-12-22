@@ -769,7 +769,7 @@ public class GitHubIssueTracker implements IssueTracker {
             ).toString();
 
         } catch (URISyntaxException e) {
-            System.err.println("Error parsing URI: " + e.getMessage());
+            log.error("Error removing query parameter from URI: {}", uriString, e);
             return uriString;
         }
     }
