@@ -28,6 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -723,12 +726,51 @@ public class GitHubIssueTracker implements IssueTracker {
                 break;
             }
         }
+        if (uriWithSpecifiedRel != null) {
+            return removeQueryParameter(uriWithSpecifiedRel, "after");
+        }
 
-        return uriWithSpecifiedRel;
+        return null;
     }
 
     private static String extractTypeOfRelation(final String linkRelation) {
         int positionOfEquals = linkRelation.indexOf('=');
         return linkRelation.substring(positionOfEquals + 2, linkRelation.length() - 1).trim();
+    }
+    private static String removeQueryParameter(String uriString, String paramToRemove) {
+        try {
+            URI uri = new URI(uriString);
+            String query = uri.getQuery();
+            if (query == null || query.isEmpty()) {
+                return uriString;
+            }
+            Map<String, String> params = new HashMap<>();
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf("=");
+                String key = idx > 0 ? pair.substring(0, idx) : pair;
+                String value = idx > 0 && pair.length() > idx + 1 ? pair.substring(idx + 1) : null;
+
+                if (!key.equals(paramToRemove)) {
+                    params.put(key, value);
+                }
+            }
+
+            String newQuery = params.entrySet().stream()
+                    .map(entry -> entry.getKey() + (entry.getValue() != null ? "=" + entry.getValue() : ""))
+                    .collect(Collectors.joining("&"));
+
+            return new URI(
+                    uri.getScheme(),
+                    uri.getAuthority(),
+                    uri.getPath(),
+                    newQuery,
+                    uri.getFragment()
+            ).toString();
+
+        } catch (URISyntaxException e) {
+            System.err.println("Error parsing URI: " + e.getMessage());
+            return uriString;
+        }
     }
 }
