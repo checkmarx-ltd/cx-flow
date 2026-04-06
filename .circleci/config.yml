@@ -624,11 +624,11 @@ workflows:
           requires:
             - build
       - aws-cli-setup:
-          context: aws-oidc
+          context: AWS
           requires:
             - docker-build
       - deploy-cxflow:
-          context: aws-oidc
+          context: AWS
           cluster-name: eks-cxflow-ci
           chart: ./helm/cxflow
           namespace: cxflow-${CIRCLE_SHA1::7}
@@ -708,7 +708,7 @@ workflows:
             - CxGo-integration-tests
             # - CodeBashing-integration-tests
       - cleanup:
-          context: aws-oidc
+          context: AWS
           cluster-name: eks-cxflow-ci
           namespace: cxflow-${CIRCLE_SHA1::7}
           release-name: cxflow-${CIRCLE_SHA1::7}
