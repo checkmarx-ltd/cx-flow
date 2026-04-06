@@ -167,11 +167,13 @@ jobs:
     steps:
       - checkout
       - aws-cli/setup:
-          profile-name: example
+          role-arn: arn:aws:iam::983555762431:role/cx-flow-ci-circleci
+          aws-region: eu-west-1
       - run:
           name: delete kube config
           command: |
-            aws eks update-kubeconfig --name eks-cxflow-ci
+            aws sts get-caller-identity
+            aws eks update-kubeconfig --name eks-cxflow-ci --region eu-west-1
   deploy-cxflow:
     docker:
       - image: cimg/python:3.10
@@ -206,6 +208,7 @@ jobs:
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
+          aws-region: eu-west-1
           install-kubectl: false
       - kubernetes/install:
           kubectl-version: v1.23.0
