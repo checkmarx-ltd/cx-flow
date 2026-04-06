@@ -210,12 +210,16 @@ jobs:
         type: boolean
     steps:
       - checkout
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
+      - aws-cli/setup:
+          role-arn: arn:aws:iam::983555762431:role/cx-flow-ci-circleci
           aws-region: AWS_REGION
-          install-kubectl: false
       - kubernetes/install:
           kubectl-version: v1.23.0
+      - run:
+          name: Update kubeconfig
+          command: |
+            aws sts get-caller-identity
+            aws eks update-kubeconfig --name << parameters.cluster-name >> --region eu-west-1
       - run:
           name: Change appVersion
           command: |
@@ -506,12 +510,16 @@ jobs:
       version:
         type: string
     steps:
+      - aws-cli/setup:
+          role-arn: arn:aws:iam::983555762431:role/cx-flow-ci-circleci
+          aws-region: AWS_REGION
       - kubernetes/install:
           kubectl-version: v1.23.6
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: << parameters.cluster-name >>
-          aws-region: AWS_REGION
-          install-kubectl: false
+      - run:
+          name: Update kubeconfig
+          command: |
+            aws sts get-caller-identity
+            aws eks update-kubeconfig --name << parameters.cluster-name >> --region eu-west-1
       - helm/install-helm-client:
           version: << parameters.version >>
       - run:
@@ -575,12 +583,19 @@ jobs:
   clean-eks:
     docker:
       - image: cimg/python:3.10
+    environment:
+      AWS_REGION: eu-west-1
     steps:
+      - aws-cli/setup:
+          role-arn: arn:aws:iam::983555762431:role/cx-flow-ci-circleci
+          aws-region: AWS_REGION
       - kubernetes/install:
           kubectl-version: v1.23.6
-      - aws-eks/update-kubeconfig-with-authenticator:
-          cluster-name: eks-cxflow-ci
-          install-kubectl: false
+      - run:
+          name: Update kubeconfig
+          command: |
+            aws sts get-caller-identity
+            aws eks update-kubeconfig --name eks-cxflow-ci --region eu-west-1
       - run:
           name: Delete namespace
           command: |
@@ -737,4 +752,5 @@ workflows:
             branches:
               only: develop
     jobs:
-      - clean-eks
+      - clean-eks:
+          context: AWS
