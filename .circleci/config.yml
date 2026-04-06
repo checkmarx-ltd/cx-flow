@@ -164,11 +164,13 @@ jobs:
 
   aws-cli-setup:
     executor: aws-cli/default
+    environment:
+      AWS_REGION: eu-west-1
     steps:
       - checkout
       - aws-cli/setup:
           role-arn: arn:aws:iam::983555762431:role/cx-flow-ci-circleci
-          aws-region: eu-west-1
+          aws-region: AWS_REGION
       - run:
           name: delete kube config
           command: |
@@ -177,6 +179,8 @@ jobs:
   deploy-cxflow:
     docker:
       - image: cimg/python:3.10
+    environment:
+      AWS_REGION: eu-west-1
     parameters:
       cluster-name:
         description: |
@@ -208,7 +212,7 @@ jobs:
       - checkout
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
-          aws-region: eu-west-1
+          aws-region: AWS_REGION
           install-kubectl: false
       - kubernetes/install:
           kubectl-version: v1.23.0
@@ -490,6 +494,8 @@ jobs:
   cleanup:
     docker:
       - image: cimg/python:3.10
+    environment:
+      AWS_REGION: eu-west-1
     parameters:
       cluster-name:
         type: string
@@ -504,6 +510,7 @@ jobs:
           kubectl-version: v1.23.6
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
+          aws-region: AWS_REGION
           install-kubectl: false
       - helm/install-helm-client:
           version: << parameters.version >>
