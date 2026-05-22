@@ -7,13 +7,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: cx-public-ubuntu-x64
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@50fbc622fc4ef5163becd7fab6573eac35f8462e # v1.2.0
       # Additional steps to generate documentation in "docs" directory
       - name: Upload docs to Wiki
-        uses: checkmarx-ltd/github-wiki-publish-action@master
+        uses: checkmarx-ltd/github-wiki-publish-action@d030ca2734e17a8200619a97f3335d71a71dcca9 # master
         with:
           path: "docs"
         env:
