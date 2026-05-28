@@ -56,7 +56,7 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
     private void getSastGitLabResultsDashboard(ScanRequest request, ScanResults results) throws MachinaException {
         List<Vulnerability> vulns = new ArrayList<>();
         for(ScanResults.XIssue issue : results.getXIssues()) {
-            if(issue.getDetails() != null) {
+            if(issue.getDetails() != null && issue.getVulnerabilityStatus()!=null) {
                 issue.getDetails().forEach((k, v) -> {
                     Vulnerability vuln= Vulnerability.builder()
                             .id(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
