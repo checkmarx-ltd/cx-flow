@@ -72,14 +72,24 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
 
             String key = entry.getKey();
             Package vulnerablePackage = map.get(key);
-            StringBuilder messageBuilder = new StringBuilder();
             List<Finding> val = entry.getValue();
-            List<String> tags = new ArrayList<>();
             val.forEach(v -> {
                 vulnerablePackage.getLocations().forEach(k -> {
-                    messageBuilder.append("Package:").append(v.getPackageId()).append(",")
-                            .append("Description:").append(v.getDescription()).append(",")
-                            .append("Score:").append(v.getScore());
+                    StringBuilder messageBuilder = new StringBuilder();
+                    messageBuilder.append("Vulnerability: ").append(v.getId()).append("\n")
+                            .append("Package: ").append(v.getPackageId()).append("\n")
+                            .append("Severity: ").append(v.getSeverity())
+                            .append(" | CVSS Score: ").append(v.getScore()).append("\n")
+                            .append("Description: ").append(v.getDescription()).append("\n");
+                    if (v.getPublishDate() != null) {
+                        messageBuilder.append("Published: ").append(v.getPublishDate()).append("\n");
+                    }
+                    if (StringUtils.hasText(v.getFixResolutionText())) {
+                        messageBuilder.append("Recommended Fix: ").append(v.getFixResolutionText()).append("\n");
+                    }
+                    if (StringUtils.hasText(v.getCveName())) {
+                        messageBuilder.append("CVE Reference: https://nvd.nist.gov/vuln/detail/").append(v.getCveName());
+                    }
                     sonarIssues.add(Issue.builder().engineId(properties.getScaScannerName())
                             .ruleId(v.getId())
                             .severity(properties.getSeverityMap().get(v.getSeverity()) != null ? properties.getSeverityMap().get(v.getSeverity()) : DEFAULT_LEVEL)
@@ -87,8 +97,8 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
                             .primaryLocation(ILocation.builder()
                                     .filePath(k)
                                     .message(messageBuilder.toString())
-                                    .textRange(TextRange.builder().
-                                            startLine(1)
+                                    .textRange(TextRange.builder()
+                                            .startLine(1)
                                             .endLine(1).build()).build())
                             .build());
                 });
@@ -108,17 +118,31 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
                 issue -> {
                     issue.getDetails().forEach((k, v) -> {
                         if (!v.isFalsePositive()) {
+                            StringBuilder messageBuilder = new StringBuilder();
+                            messageBuilder.append(issue.getVulnerability()).append("\n");
+                            if (StringUtils.hasText(issue.getDescription())) {
+                                messageBuilder.append(issue.getDescription()).append("\n");
+                            }
+                            if (StringUtils.hasText(issue.getCwe())) {
+                                messageBuilder.append("CWE: ").append(issue.getCwe())
+                                        .append(" | https://cwe.mitre.org/data/definitions/")
+                                        .append(issue.getCwe()).append(".html");
+                            }
+
+                            String ruleId = StringUtils.hasText(issue.getCwe())
+                                    ? "CWE-" + issue.getCwe()
+                                    : issue.getVulnerability();
+
                             sonarIssues.add(Issue.builder().engineId(properties.getSastScannerName())
-                                    .ruleId(issue.getVulnerability())
+                                    .ruleId(ruleId)
                                     .severity(properties.getSeverityMap().get(issue.getSeverity()) != null ? properties.getSeverityMap().get(issue.getSeverity()) : DEFAULT_LEVEL)
                                     .type("VULNERABILITY")
                                     .primaryLocation(ILocation.builder()
                                             .filePath(issue.getFilename())
-                                            .message(StringUtils.isEmpty(issue.getDescription()) ? issue.getVulnerability() : issue.getDescription())
+                                            .message(messageBuilder.toString())
                                             .textRange(TextRange.builder()
                                                     .startLine(k < 1 ? 1 : k)
                                                     .endLine(k < 1 ? 1 : k).build()).build())
-                                    //
                                     .secondaryLocations(findSecondaryLocation(issue, v.getCodeSnippet()))
                                     .build());
 

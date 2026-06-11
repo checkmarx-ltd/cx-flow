@@ -16,7 +16,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
+import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 
@@ -47,8 +47,8 @@ public class FlowConfig {
     @Bean(name = "flowRestTemplate")
     public RestTemplate getRestTemplate() {
         RestTemplate restTemplate = new RestTemplateBuilder()
-                .setConnectTimeout(Duration.ofMillis(properties.getHttpConnectionTimeout()))
-                .setReadTimeout(Duration.ofMillis(properties.getHttpReadTimeout()))
+                .connectTimeout(Duration.ofMillis(properties.getHttpConnectionTimeout()))
+                .readTimeout(Duration.ofMillis(properties.getHttpReadTimeout()))
                 .build();
 
         restTemplate.getMessageConverters()
@@ -86,7 +86,9 @@ public class FlowConfig {
                 .build();
         HttpComponentsClientHttpRequestFactory customRequestFactory = new HttpComponentsClientHttpRequestFactory();
         customRequestFactory.setHttpClient(httpClient);
-        return builder.requestFactory(() -> customRequestFactory).build();
+        RestTemplate restTemplate = builder.build();
+        restTemplate.setRequestFactory(customRequestFactory);
+        return restTemplate;
     }
 
 

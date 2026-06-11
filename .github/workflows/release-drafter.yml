@@ -8,9 +8,9 @@ on:
 
 jobs:
   update_release_draft:
-    runs-on: ubuntu-latest
+    runs-on: cx-public-ubuntu-x64
     steps:
-      - uses: natalieb07/release-drafter@v5.12.1.6
+      - uses: natalieb07/release-drafter@2da8d50c9477fc4d5b2aad284658e42564dbc4f7 # v5.12.1.6
         with:
           # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
           config-name: release-drafter.yml

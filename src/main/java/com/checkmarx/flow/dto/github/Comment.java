@@ -1,7 +1,10 @@
 package com.checkmarx.flow.dto.github;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Comment {
 
 
@@ -38,8 +41,8 @@ public class Comment {
     @JsonProperty("reactions")
     Reactions reactions;
 
-    @JsonProperty("performed_via_github_app")
-    String performedViaGithubApp;
+    @JsonIgnore
+    Object performedViaGithubApp;
 
 
     public void setUrl(String url) {
@@ -119,10 +122,10 @@ public class Comment {
         return reactions;
     }
 
-    public void setPerformedViaGithubApp(String performedViaGithubApp) {
+    public void setPerformedViaGithubApp(Object performedViaGithubApp) {
         this.performedViaGithubApp = performedViaGithubApp;
     }
-    public String getPerformedViaGithubApp() {
+    public Object getPerformedViaGithubApp() {
         return performedViaGithubApp;
     }
 }

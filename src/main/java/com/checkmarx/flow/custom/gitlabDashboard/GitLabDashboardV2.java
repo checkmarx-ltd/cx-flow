@@ -38,7 +38,7 @@ public class GitLabDashboardV2 implements GitLabDashboardStrategy {
         List<Vulnerability> vulns = new ArrayList<>();
         Scanner scanner = Scanner.builder().id("Checkmarx-SAST").name("Checkmarx-SAST").build();
         for(ScanResults.XIssue issue : results.getXIssues()) {
-            if(issue.getDetails() != null) {
+            if(issue.getDetails() != null && issue.getVulnerabilityStatus()!=null) {
                 issue.getDetails().forEach((k, v) -> {
                     Vulnerability vuln = Vulnerability.builder()
                             .category("sast")
