@@ -3,6 +3,9 @@ name: Release
 on:
     workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
     # ──────────────────────────────────────────────────────────────────────────────
     # Build JAR + create GitHub release + push all Docker tags
@@ -97,13 +100,13 @@ jobs:
                   echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
             - name: Docker login (PAT)
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+              uses: step-security/docker-login-action@870af644803bf9f204aed474adbad2958fec048b # v4.1.0
               with:
                   username: ${{ secrets.DOCKER_USER }}
                   password: ${{ secrets.DOCKER_PAT }}
 
             - name: Login to reg.echohq.com (private base registry)
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+              uses: step-security/docker-login-action@870af644803bf9f204aed474adbad2958fec048b # v4.1.0
               with:
                   registry: reg.echohq.com
                   username: ${{ secrets.ECHOHQ_USER }}
@@ -111,7 +114,7 @@ jobs:
 
             - name: Build and push java17 image
               id: docker-java17
-              uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+              uses: step-security/docker-build-push-action@846549baaf047e867d038826129a64d81df0f704 # v7.1.0
               with:
                   context: .
                   target: java17
@@ -120,7 +123,7 @@ jobs:
 
             - name: Build and push java17-debian image
               id: docker-debian
-              uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+              uses: step-security/docker-build-push-action@846549baaf047e867d038826129a64d81df0f704 # v7.1.0
               with:
                   context: .
                   target: java17-debian
