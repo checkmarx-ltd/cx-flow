@@ -233,7 +233,7 @@ public class GitHubIssueTracker implements IssueTracker {
         log.info("Executing closeIssue GitHub API call");
         HttpEntity<String> httpEntity = new HttpEntity<>(getJSONCloseIssue().toString(), gitHubService.createAuthHeaders(request));
         try {
-            restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, Issue.class);
+            restTemplate.exchange(issue.getUrl(), HttpMethod.POST, httpEntity, com.checkmarx.flow.dto.github.Issue.class);
         } catch (HttpClientErrorException e) {
             log.error("Error occurred while closing Github issue. http error {} ", e.getStatusCode(), e);
             log.debug(ExceptionUtils.getStackTrace(e));
