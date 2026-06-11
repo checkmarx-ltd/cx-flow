@@ -3,6 +3,7 @@ package com.checkmarx.flow.dto.github.issue;
 import com.checkmarx.flow.dto.github.PullRequest;
 import com.checkmarx.flow.dto.github.Reactions;
 import com.checkmarx.flow.dto.github.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -99,8 +100,8 @@ public class Issue {
    @JsonProperty("timeline_url")
    String timelineUrl;
 
-   @JsonProperty("performed_via_github_app")
-   String performedViaGithubApp;
+   @JsonIgnore
+   Object performedViaGithubApp;
 
    @JsonProperty("state_reason")
    String stateReason;
@@ -309,10 +310,10 @@ public class Issue {
         return timelineUrl;
     }
     
-    public void setPerformedViaGithubApp(String performedViaGithubApp) {
+    public void setPerformedViaGithubApp(Object performedViaGithubApp) {
         this.performedViaGithubApp = performedViaGithubApp;
     }
-    public String getPerformedViaGithubApp() {
+    public Object getPerformedViaGithubApp() {
         return performedViaGithubApp;
     }
     

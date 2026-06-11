@@ -61,7 +61,7 @@ public class GitLabDashboardV14 implements GitLabDashboardStrategy {
         List<Vulnerability> vulns = new ArrayList<>();
         Scanner__1 scanner = Scanner__1.builder().id("checkmarx-sast").name("checkmarx-sast").build();
         for(ScanResults.XIssue issue : results.getXIssues()) {
-            if(issue.getDetails() != null) {
+            if(issue.getDetails() != null && issue.getVulnerabilityStatus()!=null) {
                 issue.getDetails().forEach((k, v) -> {
 
                     Vulnerability vuln= Vulnerability.builder()
@@ -72,12 +72,12 @@ public class GitLabDashboardV14 implements GitLabDashboardStrategy {
                             .description(issue.getDescription())
                             .cve(issue.getVulnerability().concat(":").concat(issue.getFilename()).concat(":").concat(k.toString()))
                             .severity(Vulnerability.Severity.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))
-                            .confidence(Vulnerability.Confidence.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))//Need To add as per Enum
+                            .confidence(Vulnerability.Confidence.valueOf(StringUtils.capitalize(issue.getSeverity().toLowerCase())))
                             .solution(issue.getLink())
-                            .scanner(scanner)//__1 wala scanner use karenge
-                            .identifiers(getIdentifiersNewVer(issue,k))//Identifiers seems correct but need to add Link and Description flags
-                            .links(getLinksNewVer(issue))//New Added
-                            //.details(issue.getDetails()) //Yet To Add
+                            .scanner(scanner)
+                            .identifiers(getIdentifiersNewVer(issue,k))
+                            .links(getLinksNewVer(issue))
+                            //.details(issue.getDetails())
                             .tracking(Tracking.builder()
                                     .lstItems(getItems(issue))
                                     .build())

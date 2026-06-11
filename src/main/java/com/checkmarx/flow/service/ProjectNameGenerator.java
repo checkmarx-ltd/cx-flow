@@ -36,29 +36,36 @@ public class ProjectNameGenerator {
         String namespace = request.getNamespace();
 
         log.debug("Determining project name for vulnerability scanner.");
-        String nameOverride = tryGetProjectNameFromScript(request);
-        if (StringUtils.isNotEmpty(nameOverride)) {
-            log.debug("Project name override is present. Using the override: {}.", nameOverride);
-            projectName = nameOverride;
-        } else if (cxProperties.isMultiTenant() && StringUtils.isNotEmpty(repoName)) {
-            projectName = repoName;
-            if (StringUtils.isNotEmpty(branch)) {
-                log.debug("Multi-tenant mode is enabled. Branch is specified. Using repo name and branch.");
-                projectName = projectName.concat("-").concat(branch);
-            } else {
-                log.debug("Multi-tenant mode is enabled. Branch is not specified. Using repo name only.");
-            }
+
+        // If project name is explicitly provided (e.g., via --cx-project flag), use it
+        if (StringUtils.isNotEmpty(request.getProject())) {
+            log.debug("Project name is explicitly provided: {}. Using it directly.", request.getProject());
+            projectName = request.getProject();
         } else {
-            if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(repoName) && StringUtils.isNotEmpty(branch)) {
-                log.debug("Namespace, repo name and branch are specified. Using them all.");
-                projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
-            } else if (StringUtils.isNotEmpty(request.getApplication())) {
-                log.debug("Using application name.");
-                projectName = request.getApplication();
+            String nameOverride = tryGetProjectNameFromScript(request);
+            if (StringUtils.isNotEmpty(nameOverride)) {
+                log.debug("Project name override is present. Using the override: {}.", nameOverride);
+                projectName = nameOverride;
+            } else if (cxProperties.isMultiTenant() && StringUtils.isNotEmpty(repoName)) {
+                projectName = repoName;
+                if (StringUtils.isNotEmpty(branch)) {
+                    log.debug("Multi-tenant mode is enabled. Branch is specified. Using repo name and branch.");
+                    projectName = projectName.concat("-").concat(branch);
+                } else {
+                    log.debug("Multi-tenant mode is enabled. Branch is not specified. Using repo name only.");
+                }
             } else {
-                final String message = "Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)";
-                log.error(message);
-                throw new MachinaRuntimeException(String.format("Unable to determine project name. %s", message));
+                if (StringUtils.isNotEmpty(namespace) && StringUtils.isNotEmpty(repoName) && StringUtils.isNotEmpty(branch)) {
+                    log.debug("Namespace, repo name and branch are specified. Using them all.");
+                    projectName = namespace.concat("-").concat(repoName).concat("-").concat(branch);
+                } else if (StringUtils.isNotEmpty(request.getApplication())) {
+                    log.debug("Using application name.");
+                    projectName = request.getApplication();
+                } else {
+                    final String message = "Namespace (--namespace)/RepoName(--repo-name)/Branch(--branch) OR Application (--app) must be provided if the Project is not provided (--cx-project)";
+                    log.error(message);
+                    throw new MachinaRuntimeException(String.format("Unable to determine project name. %s", message));
+                }
             }
         }
 
