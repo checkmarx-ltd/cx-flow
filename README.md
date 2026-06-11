@@ -2,7 +2,6 @@
 <br />
 <div align="center">
 
-![CircleCI](https://img.shields.io/circleci/build/github/checkmarx-ltd/cx-flow)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/checkmarx-ltd/cx-flow)
 ![Docker Pulls](https://img.shields.io/docker/pulls/checkmarx/cx-flow)
 
