@@ -1,128 +1,128 @@
 name: Release
 
 on:
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-    # ──────────────────────────────────────────────────────────────────────────────
-    # Build JAR + create GitHub release + push all Docker tags
-    # ──────────────────────────────────────────────────────────────────────────────
-    build-and-release:
-        name: Build and Release
-        runs-on: cx-public-ubuntu-x64
-        permissions:
-            contents: write
-        if: github.ref_name == 'master' || github.ref_name == 'develop'
-        steps:
-            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-              with:
-                  persist-credentials: false
+  # ──────────────────────────────────────────────────────────────────────────────
+  # Build JAR + create GitHub release + push all Docker tags
+  # ──────────────────────────────────────────────────────────────────────────────
+  build-and-release:
+    name: Build and Release
+    runs-on: cx-public-ubuntu-x64
+    permissions:
+      contents: write
+    if: github.ref_name == 'master' || github.ref_name == 'develop'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
 
-            - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
-              with:
-                  java-version: "17"
-                  distribution: "temurin"
+      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-            - name: Build fat JAR
-              env:
-                  JAVA_OPTS: -Xmx3200m
-              run: |
-                  ./gradlew clean build --no-build-cache --refresh-dependencies
-                  ./gradlew -b build.gradle --build-cache assemble
+      - name: Build fat JAR
+        env:
+          JAVA_OPTS: -Xmx3200m
+        run: |
+          ./gradlew clean build --no-build-cache --refresh-dependencies
+          ./gradlew -b build.gradle --build-cache assemble
 
-            - name: Get version from version.txt
-              id: version
-              run: |
-                  VERSION=$(cat version.txt | tr -d '[:space:]')
-                  echo "version=${VERSION}" >> $GITHUB_OUTPUT
+      - name: Get version from version.txt
+        id: version
+        run: |
+          VERSION=$(cat version.txt | tr -d '[:space:]')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-            - name: Determine release type
-              id: release-type
-              env:
-                  BRANCH: ${{ github.ref_name }}
-              run: |
-                  if [[ "$BRANCH" == "master" ]]; then
-                    echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
-                  else
-                    echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
-                  fi
+      - name: Determine release type
+        id: release-type
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [[ "$BRANCH" == "master" ]]; then
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
 
-            - name: Remove version.txt from release assets
-              run: rm -f build/libs/version.txt
+      - name: Remove version.txt from release assets
+        run: rm -f build/libs/version.txt
 
-            - name: Create GitHub release
-              id: github-release
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  VERSION: ${{ steps.version.outputs.version }}
-                  SHA: ${{ github.sha }}
-                  IS_PRERELEASE: ${{ steps.release-type.outputs.is_prerelease }}
-              run: |
-                  set -euo pipefail
-                  shopt -s nullglob
-                  ASSETS=(build/libs/*.jar)
-                  if [[ ${#ASSETS[@]} -eq 0 ]]; then
-                    echo "::error::No JAR files found in build/libs/" >&2
-                    exit 1
-                  fi
-                  PRERELEASE_FLAG=()
-                  [[ "$IS_PRERELEASE" == "true" ]] && PRERELEASE_FLAG=(--prerelease)
-                  gh release create "$VERSION" \
-                    --title "$VERSION" \
-                    --target "$SHA" \
-                    --generate-notes \
-                    "${PRERELEASE_FLAG[@]}" \
-                    "${ASSETS[@]}"
+      - name: Create GitHub release
+        id: github-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ github.sha }}
+          IS_PRERELEASE: ${{ steps.release-type.outputs.is_prerelease }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          ASSETS=(build/libs/*.jar)
+          if [[ ${#ASSETS[@]} -eq 0 ]]; then
+            echo "::error::No JAR files found in build/libs/" >&2
+            exit 1
+          fi
+          PRERELEASE_FLAG=()
+          [[ "$IS_PRERELEASE" == "true" ]] && PRERELEASE_FLAG=(--prerelease)
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --target "$SHA" \
+            --generate-notes \
+            "${PRERELEASE_FLAG[@]}" \
+            "${ASSETS[@]}"
 
-            - name: Generate Docker tags
-              id: docker-tags
-              env:
-                  SHA: ${{ github.sha }}
-                  VERSION: ${{ steps.version.outputs.version }}
-                  IS_PRERELEASE: ${{ steps.release-type.outputs.is_prerelease }}
-                  REPO: ${{ secrets.DOCKER_REPO }}
-                  REPO_DEBIAN: ${{ secrets.DOCKER_REPO_DEBIAN }}
-              run: |
-                  SHORT_SHA="${SHA:0:7}"
+      - name: Generate Docker tags
+        id: docker-tags
+        env:
+          SHA: ${{ github.sha }}
+          VERSION: ${{ steps.version.outputs.version }}
+          IS_PRERELEASE: ${{ steps.release-type.outputs.is_prerelease }}
+          REPO: ${{ secrets.DOCKER_REPO }}
+          REPO_DEBIAN: ${{ secrets.DOCKER_REPO_DEBIAN }}
+        run: |
+          SHORT_SHA="${SHA:0:7}"
 
-                  if [[ "$IS_PRERELEASE" == "true" ]]; then
-                    # develop: SHA tag only — no version or latest
-                    echo "tags_java17=${REPO}:${SHORT_SHA}" >> $GITHUB_OUTPUT
-                    echo "tags_debian=${REPO_DEBIAN}:${SHORT_SHA}" >> $GITHUB_OUTPUT
-                  else
-                    # master: full stable tag set
-                    echo "tags_java17=${REPO}:${VERSION}-17,${REPO}:${VERSION},${REPO}:latest" >> $GITHUB_OUTPUT
-                    echo "tags_debian=${REPO_DEBIAN}:${VERSION}-17,${REPO_DEBIAN}:${VERSION},${REPO_DEBIAN}:latest" >> $GITHUB_OUTPUT
-                  fi
-                  echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            # develop: SHA tag only — no version or latest
+            echo "tags_java17=${REPO}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "tags_debian=${REPO_DEBIAN}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+          else
+            # master: full stable tag set
+            echo "tags_java17=${REPO}:${VERSION}-17,${REPO}:${VERSION},${REPO}:latest" >> $GITHUB_OUTPUT
+            echo "tags_debian=${REPO_DEBIAN}:${VERSION}-17,${REPO_DEBIAN}:${VERSION},${REPO_DEBIAN}:latest" >> $GITHUB_OUTPUT
+          fi
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
-            - name: Docker login (PAT)
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-              with:
-                  username: ${{ secrets.DOCKER_USER }}
-                  password: ${{ secrets.DOCKER_PAT }}
+      - name: Docker login (PAT)
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PAT }}
 
-            - name: Login to reg.echohq.com (private base registry)
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-              with:
-                  registry: reg.echohq.com
-                  username: ${{ secrets.ECHOHQ_USER }}
-                  password: ${{ secrets.ECHOHQ_PAT }}
+      - name: Login to reg.echohq.com (private base registry)
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: reg.echohq.com
+          username: ${{ secrets.ECHOHQ_USER }}
+          password: ${{ secrets.ECHOHQ_PAT }}
 
-            - name: Build and push java17 image
-              id: docker-java17
-              uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
-              with:
-                  context: .
-                  target: java17
-                  push: true
-                  tags: ${{ steps.docker-tags.outputs.tags_java17 }}
+      - name: Build and push java17 image
+        id: docker-java17
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        with:
+          context: .
+          target: java17
+          push: true
+          tags: ${{ steps.docker-tags.outputs.tags_java17 }}
 
-            - name: Build and push java17-debian image
-              id: docker-debian
-              uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
-              with:
-                  context: .
-                  target: java17-debian
-                  push: true
-                  tags: ${{ steps.docker-tags.outputs.tags_debian }}
+      - name: Build and push java17-debian image
+        id: docker-debian
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        with:
+          context: .
+          target: java17-debian
+          push: true
+          tags: ${{ steps.docker-tags.outputs.tags_debian }}
