@@ -2,14 +2,14 @@ import org.gradle.api.tasks.testing.Test
 
 buildscript {
     ext {
-        CxSBSDK = "0.6.31"
+        CxSBSDK = "0.6.32"
         ConfigProviderVersion = '1.0.14'
         //cxVersion = "8.90.5"
-        springBootVersion = '3.3.13'
+        springBootVersion = '3.5.14'
         sonarqubeVersion = '2.8'
         atlassianVersion = "5.2.0"
         atlassianFugueVersion = "4.7.2"
-        jacksonVersion = "2.15.2"
+        jacksonVersion = "2.18.6"
         mainClassPath = 'com.checkmarx.flow.CxFlowApplication'
     }
     repositories {
@@ -30,7 +30,7 @@ buildscript {
 
 plugins {
     //id 'io.franzbecker.gradle-lombok' version '3.3.0'
-    id("io.freefair.lombok") version "8.4"
+    id("io.freefair.lombok") version "8.6"
 
     id "ua.eshepelyuk.ManifestClasspath" version "1.0.0"
 }
@@ -45,7 +45,7 @@ group = 'com.checkmarx'
 version = file('version.txt').text.trim()
 sourceCompatibility = 17
 def cucumberVersion = '5.7.0'
-def junitVersion = '5.7.0'
+def junitVersion = '5.12.2'
 
 repositories {
     mavenLocal()
@@ -56,16 +56,18 @@ repositories {
 }
 
 configurations {
-    compile.exclude group: "org.slf4j", module: "slf4j-simple"
-    compile.exclude group: "org.slf4j", module: "slf4j-log4j12"
+    all*.exclude group: "org.slf4j", module: "slf4j-simple"
+    all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
     all*.exclude module: 'cx-ws-fs-agent'
     all*.exclude module: 'wss-agent-api'
+    // Replaced by spring-jcl (provided by spring-core). Having the real
+    // commons-logging jar on the classpath triggers JCL discovery conflicts.
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
 }
 
-ext['tomcat.version'] = '10.1.47'
+ext['tomcat.version'] = '11.0.22'
 ext['groovy.version'] = '4.0.15'
-ext['logback-classic.version'] = '1.5.19'
-ext['spring-core.version'] = '6.1.21'
+ext['logback-classic.version'] = '1.5.25'
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -96,7 +98,6 @@ dependencies {
     implementation ('commons-io:commons-io:2.14.0')
     implementation ('org.json:json:20231013')
     implementation('org.yaml:snakeyaml:2.1')
-    implementation ('com.fasterxml.jackson.core:jackson-databind:2.15.2')
     implementation ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
@@ -118,7 +119,7 @@ dependencies {
     }
     implementation 'org.apache.ant:ant:1.10.14'
     implementation ("com.atlassian.jira:jira-rest-java-client-api:${atlassianVersion}")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.6")
     implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     implementation("com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}")
@@ -126,12 +127,12 @@ dependencies {
     implementation('org.codehaus.jettison:jettison:1.5.4')
 
     //implementation 'ognl:ognl:3.1.29'
-    implementation("org.thymeleaf:thymeleaf-spring5:3.1.2.RELEASE")
-    implementation("org.thymeleaf:thymeleaf:3.1.2.RELEASE")
+    implementation('org.thymeleaf:thymeleaf-spring6')
+    implementation('org.thymeleaf:thymeleaf')
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
     // implementation ('org.apache.httpcomponents:httpclient:4.5.14')
-    implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
+    implementation("org.apache.httpcomponents.client5:httpclient5")
 
     implementation ("org.codehaus.groovy:groovy-all:3.0.16") {
         exclude group: 'org.apache.ant', module: 'ant'
@@ -146,7 +147,7 @@ dependencies {
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15onj'
     }
     implementation group: 'com.google.guava', name: 'guava', version: '32.0.1-jre'
-    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.79'
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.80.2'
     implementation('com.auth0:java-jwt:4.3.0')
     // implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.4.0-b180830.0438'
     implementation group: 'javax.xml.ws', name: 'jaxws-api', version: '2.3.1'
@@ -168,12 +169,12 @@ dependencies {
     testImplementation( "org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
-    testImplementation("org.mockito:mockito-core:4.11.0")
+    testImplementation("org.mockito:mockito-core:5.14.2")
 
-    implementation("org.projectlombok:lombok:1.18.24")
-    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    implementation("org.projectlombok:lombok:1.18.34")
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
 
-    implementation('ch.qos.logback:logback-classic:1.5.19'){
+    implementation('ch.qos.logback:logback-classic:1.5.25'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
     implementation("ch.qos.logback.contrib:logback-json-classic:0.1.5"){
@@ -183,25 +184,24 @@ dependencies {
     implementation("ch.qos.logback.contrib:logback-jackson:0.1.5"){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
-    implementation('ch.qos.logback:logback-core:1.5.19')
+    implementation('ch.qos.logback:logback-core:1.5.25')
     implementation('net.logstash.logback:logstash-logback-encoder:7.3')
     implementation("com.checkmarx:cx-config-provider:${ConfigProviderVersion}")
     implementation("org.jasypt:jasypt:1.9.3")
     compileJava.dependsOn(processResources)
 
-    implementation('org.apache.logging.log4j:log4j-core:2.25.3')
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.25.3")
-    implementation("org.apache.logging.log4j:log4j-api:2.25.3")
+    implementation('org.apache.logging.log4j:log4j-core:2.25.4')
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.25.4")
+    implementation("org.apache.logging.log4j:log4j-api:2.25.4")
     implementation("javax.persistence:javax.persistence-api:2.2")
     implementation group:'org.apache.tomcat', name:'tomcat-juli', version:property('tomcat.version')
-    implementation group:'org.springframework', name:'spring-core', version:property('spring-core.version')
 
     implementation (group: 'com.sendgrid', name: 'sendgrid-java', version: '4.9.0'){
         exclude group: 'org.bouncycastle', module:'bcprov-jdk15on'
     }
 
 
-    compile("software.amazon.awssdk:dynamodb:2.22.13"){
+    implementation("software.amazon.awssdk:dynamodb:2.22.13"){
         exclude group: 'io.netty', module: 'netty-common'
         exclude group: 'io.netty', module: 'netty-handler'
         exclude group: 'io.netty', module: 'netty-codec2-http'
@@ -209,20 +209,20 @@ dependencies {
         exclude group: 'io.netty', module: 'netty-codec'
 
     }
-    compile("software.amazon.awssdk:regions:2.22.13")
-    compile("software.amazon.awssdk:auth:2.22.13")
-    compile("software.amazon.awssdk:sts:2.22.13"){
+    implementation("software.amazon.awssdk:regions:2.22.13")
+    implementation("software.amazon.awssdk:auth:2.22.13")
+    implementation("software.amazon.awssdk:sts:2.22.13"){
         exclude group: 'io.netty', module: 'netty-common'
         exclude group: 'io.netty', module: 'netty-handler'
         exclude group: 'io.netty', module: 'netty-codec-http2'
         exclude group: 'io.netty', module: 'netty-codec-http'
         exclude group: 'io.netty', module: 'netty-codec'
     }
-    compile "io.netty:netty-common:4.1.125.Final"
-    compile "io.netty:netty-handler:4.1.125.Final"
-    compile "io.netty:netty-codec-http:4.1.129.Final"
-    compile "io.netty:netty-codec-http2:4.1.125.Final"
-    compile "io.netty:netty-codec:4.1.125.Final"
+    implementation "io.netty:netty-common:4.1.125.Final"
+    implementation "io.netty:netty-handler:4.1.125.Final"
+    implementation "io.netty:netty-codec-http:4.1.133.Final"
+    implementation "io.netty:netty-codec-http2:4.1.133.Final"
+    implementation "io.netty:netty-codec:4.1.133.Final"
 
     compileOnly group: 'jakarta.servlet', name: 'jakarta.servlet-api', version: '6.0.0'
 
