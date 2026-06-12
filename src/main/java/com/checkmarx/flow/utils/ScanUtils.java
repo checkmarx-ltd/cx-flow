@@ -287,7 +287,7 @@ public class ScanUtils {
 
         String branch = request.getBranch();
         if(!ScanUtils.empty(request.getRepoUrl()) && !ScanUtils.empty(branch)) {
-            String repoUrl = request.getRepoUrl().replace(".git", "/");
+            String repoUrl = request.getRepoUrl().replaceFirst("\\.git/*$", "/");
             if(!(repoUrl.substring(repoUrl.length() - 1).equals("/"))){
                 repoUrl = repoUrl.concat("/");
             }
