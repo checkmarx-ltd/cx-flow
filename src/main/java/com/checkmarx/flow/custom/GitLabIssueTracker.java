@@ -337,12 +337,15 @@ public class GitLabIssueTracker implements IssueTracker {
         if (ScanUtils.empty(request.getRepoUrl())) {
             return null;
         }
-        String repoUrl = request.getRepoUrl().replace(".git", "/");
+        String repoUrl = request.getRepoUrl().replaceFirst("\\.git/*$", "/");
         if ( !ScanUtils.empty(repoUrl) && repoUrl.contains("gitlab-ci-token") && repoUrl.contains("@")) {
             repoUrl = repoUrl.substring(0, 8) + repoUrl.substring(repoUrl.indexOf('@') + 1);
         }
+        if (!repoUrl.endsWith("/")) {
+            repoUrl = repoUrl.concat("/");
+        }
         return (Optional.ofNullable(filename).isPresent())
-                ? String.format(String.format("%s/blob/%%s/%%s", repoUrl), request.getBranch(), filename)
+                ? String.format(String.format("%s-/blob/%%s/%%s", repoUrl), request.getBranch(), filename)
                 : null;
     }
 

@@ -68,6 +68,7 @@ configurations {
 ext['tomcat.version'] = '11.0.22'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.5.25'
+ext['spring-framework.version'] = '6.2.19'
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -219,7 +220,7 @@ dependencies {
         exclude group: 'io.netty', module: 'netty-codec'
     }
     implementation "io.netty:netty-common:4.1.125.Final"
-    implementation "io.netty:netty-handler:4.1.125.Final"
+    implementation "io.netty:netty-handler:4.1.135.Final"
     implementation "io.netty:netty-codec-http:4.1.133.Final"
     implementation "io.netty:netty-codec-http2:4.1.133.Final"
     implementation "io.netty:netty-codec:4.1.133.Final"
