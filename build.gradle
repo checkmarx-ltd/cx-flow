@@ -102,6 +102,8 @@ dependencies {
     implementation ('org.springframework.boot:spring-boot-starter-web-services'){
         exclude group: 'ch.qos.logback', module: 'logback-core'
     }
+    implementation('org.springframework.ws:spring-ws-core:4.1.4')
+    implementation('org.springframework.ws:spring-xml:4.1.4')
     implementation ('org.springframework.boot:spring-boot-starter-mail'){
         exclude group:'org.eclipse.angus', module:'angus-mail'
     }
