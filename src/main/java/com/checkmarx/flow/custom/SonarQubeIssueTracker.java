@@ -119,14 +119,16 @@ public class SonarQubeIssueTracker extends ImmutableIssueTracker {
                     issue.getDetails().forEach((k, v) -> {
                         if (!v.isFalsePositive()) {
                             StringBuilder messageBuilder = new StringBuilder();
+                            // PLUG-2874: front-load the CWE/MITRE link so it is never lost to
+                            // message truncation on findings with long descriptions (e.g. CWE-117 Log Forging).
+                            if (StringUtils.hasText(issue.getCwe())) {
+                                messageBuilder.append("CWE-").append(issue.getCwe()).append(": ")
+                                        .append("https://cwe.mitre.org/data/definitions/")
+                                        .append(issue.getCwe()).append(".html").append("\n");
+                            }
                             messageBuilder.append(issue.getVulnerability()).append("\n");
                             if (StringUtils.hasText(issue.getDescription())) {
-                                messageBuilder.append(issue.getDescription()).append("\n");
-                            }
-                            if (StringUtils.hasText(issue.getCwe())) {
-                                messageBuilder.append("CWE: ").append(issue.getCwe())
-                                        .append(" | https://cwe.mitre.org/data/definitions/")
-                                        .append(issue.getCwe()).append(".html");
+                                messageBuilder.append(issue.getDescription());
                             }
 
                             String ruleId = StringUtils.hasText(issue.getCwe())
