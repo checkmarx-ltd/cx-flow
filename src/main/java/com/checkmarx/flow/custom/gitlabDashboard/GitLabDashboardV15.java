@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitLabDashboardV15 implements GitLabDashboardStrategy {
     private static final String CHECKMARX = "Checkmarx";
-    private static final int MAX_CODE_FLOWS = 30;
     private final FlowProperties flowProperties;
     private static final SimpleDateFormat GITLAB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -130,11 +129,15 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
             }
         }
 
-        if (allFlows.isEmpty()) {
+        List<Item> flattenedList = allFlows.stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        if (flattenedList.isEmpty()) {
             return null;
         }
-        // one flow per CxSAST path (schema allows at most 30 flows)
-        return buildDetails(allFlows.subList(0, Math.min(allFlows.size(), MAX_CODE_FLOWS)));
+        // GitLab shows only the first code flow, so all paths go into one flow
+        return buildDetails(Collections.singletonList(flattenedList));
     }
 
 
