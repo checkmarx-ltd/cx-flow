@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitLabDashboardV15 implements GitLabDashboardStrategy {
     private static final String CHECKMARX = "Checkmarx";
+    private static final int MAX_CODE_FLOWS = 30;
     private final FlowProperties flowProperties;
     private static final SimpleDateFormat GITLAB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -112,10 +113,11 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
 
 
     private Details getDetailsGitLabDashBoard(ScanResults.XIssue issue) {
-        Object resultsObj = issue.getAdditionalDetails().get("results");
+        Object resultsObj = issue.getAdditionalDetails() == null ? null : issue.getAdditionalDetails().get("results");
 
+        // GitLab schema requires non-empty flows, so omit "details" when there is nothing to show
         if (!(resultsObj instanceof List)) {
-            return buildEmptyDetails();
+            return null;
         }
 
         List<Map<String, Object>> results = (List<Map<String, Object>>) resultsObj;
@@ -128,12 +130,11 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
             }
         }
 
-        List<Item> flattenedList = allFlows.stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-
-        List<List<Item>> finalItems = Collections.singletonList(flattenedList);
-        return buildDetails(finalItems);
+        if (allFlows.isEmpty()) {
+            return null;
+        }
+        // one flow per CxSAST path (schema allows at most 30 flows)
+        return buildDetails(allFlows.subList(0, Math.min(allFlows.size(), MAX_CODE_FLOWS)));
     }
 
 
@@ -149,7 +150,7 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
             return Collections.emptyList();
         }
 
-        Map<String, Item> flowItemMap = new HashMap<>();
+        Map<String, Item> flowItemMap = new LinkedHashMap<>();
 
         for (Map.Entry<String, Object> entry : result.entrySet()) {
             if (entry.getValue() instanceof Map) {
@@ -260,13 +261,6 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                 .build();
     }
 
-    /**
-     * Returns an empty Details object safely.
-     */
-    private Details buildEmptyDetails() {
-        return buildDetails(Collections.singletonList(Collections.emptyList()));
-    }
-
 
 
     private void getScaGitLabResultsDashboard(ScanRequest request, ScanResults results) throws MachinaException {
@@ -283,6 +277,12 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
         for (Finding finding:findings){
             Package indPackage = map.get(finding.getPackageId());
             if(indPackage!=null){
+                if (log.isDebugEnabled()) {
+                    List<com.checkmarx.sdk.dto.sca.report.DependencyPath> paths = indPackage.getDependencyPaths();
+                    log.debug("GitLab SCA dependency paths: package={}, direct={}, pathCount={}, firstPath={}",
+                            finding.getPackageId(), indPackage.isIsDirectDependency(), paths == null ? null : paths.size(),
+                            paths == null || paths.isEmpty() ? null : paths.get(0).stream().map(s -> s.getName() + "@" + s.getVersion()).collect(Collectors.joining(" -> ")));
+                }
                 for(String loc : indPackage.getLocations()) {
                     vulns.add(com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Vulnerability.builder()
                             .id(UUID.nameUUIDFromBytes(finding.getPackageId().concat("@").concat(loc).concat(":").concat(finding.getCveName()).getBytes()).toString())
@@ -303,15 +303,16 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                                             .dependencyPath(findDependencyPathGitLabDashBoard(indPackage.getDependencyPaths()))
                                             .direct(indPackage.isIsDirectDependency())
                                             ._package(com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Package.builder().name(finding.getPackageId()).build())
-                                            .version(finding.getPackageId().split("-")[finding.getPackageId().
-                                                    split("-").length-1]).build()).build())
+                                            .version(StringUtils.hasText(indPackage.getVersion()) ? indPackage.getVersion()
+                                                    : finding.getPackageId().split("-")[finding.getPackageId().split("-").length-1]).build()).build())
                             .build());
                 }
-                dependencyFilesLst.add(DependencyFile.builder().dependencies(findObjectDependencyGitLabDashBoard(packages)).path(indPackage.getPackageRepository()).packageManager(indPackage.getName()).build());
             }else{
                 log.warn("Package not found for the finding: {}", finding.getPackageId());
             }
         }
+
+        dependencyFilesLst.addAll(buildDependencyFiles(packages));
 
         SCASecurityDashboard report  = SCASecurityDashboard.builder()
                 .dependencyFiles(dependencyFilesLst)
@@ -342,29 +343,49 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
 
 
 
-    private String formatGitlabDate(String date) {
-        if (date == null) return null;
-        try {
-            Date parsedDate = GITLAB_DATE_FORMAT.parse(date);
-            return GITLAB_DATE_FORMAT.format(parsedDate);
-        } catch (ParseException e) {
-            log.error("Failed to parse date: {}", date, e);
-            return null;
+    /**
+     * One entry per manifest file listing each of its packages once (path = manifest, package_manager = ecosystem).
+     */
+    private static List<DependencyFile> buildDependencyFiles(List<com.checkmarx.sdk.dto.sca.report.Package> packages) {
+        Map<String, List<com.checkmarx.sdk.dto.sca.report.Package>> byManifest = new LinkedHashMap<>();
+        for (com.checkmarx.sdk.dto.sca.report.Package p : packages) {
+            if (p.getLocations() == null) continue;
+            for (String loc : p.getLocations()) {
+                byManifest.computeIfAbsent(loc, k -> new ArrayList<>()).add(p);
+            }
         }
+        List<DependencyFile> files = new ArrayList<>();
+        byManifest.forEach((manifest, pkgs) -> files.add(DependencyFile.builder()
+                .path(manifest)
+                .packageManager(String.valueOf(pkgs.get(0).getPackageRepository()).toLowerCase())
+                .dependencies(findObjectDependencyGitLabDashBoard(pkgs))
+                .build()));
+        return files;
     }
 
+    private String formatGitlabDate(String date) {
+        return formatGitlabDate(date, 0);
+    }
+
+    /**
+     * Scan start/end are required by the schema. The SCA summary can carry a default "0001-01-01" date (or none),
+     * so anything unparseable or before 2000 falls back to the current time.
+     */
     private String formatGitlabDate(String date, int minutes) {
-        if (date == null) return null;
+        Calendar cal = Calendar.getInstance();
         try {
-            Date parsedDate = GITLAB_DATE_FORMAT.parse(date);
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(parsedDate);
-            cal.add(Calendar.MINUTE, -minutes);
-            return GITLAB_DATE_FORMAT.format(cal.getTime());
+            if (date != null) {
+                Calendar parsed = Calendar.getInstance();
+                parsed.setTime(GITLAB_DATE_FORMAT.parse(date));
+                if (parsed.get(Calendar.YEAR) >= 2000) {
+                    cal = parsed;
+                }
+            }
         } catch (ParseException e) {
-            log.error("Failed to parse date: {}", date, e);
-            return null;
+            log.warn("Failed to parse date '{}', using current time", date);
         }
+        cal.add(Calendar.MINUTE, -minutes);
+        return GITLAB_DATE_FORMAT.format(cal.getTime());
     }
     private List<Identifier> getIdentifiersGitLabDashBoard(ScanResults.XIssue issue, Integer k){
         List<Identifier> identifiers = new ArrayList<>();
@@ -428,7 +449,8 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                     Flag.builder()
                             .type(Flag.Type.valueOf("FLAGGED_AS_LIKELY_FALSE_POSITIVE"))
                             .origin("Cx-flow sast")
-                            .description(issue.getDescription()).build());
+                            // schema requires minLength 1
+                            .description(StringUtils.hasText(issue.getDescription()) ? issue.getDescription() : "Flagged as likely false positive").build());
         }
         return flags;
     }
@@ -490,7 +512,7 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                     com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Flag.builder()
                             .type(com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Flag.Type.valueOf("FLAGGED_AS_LIKELY_FALSE_POSITIVE"))
                             .origin("SCA")
-                            .description(finding.getDescription()).build());
+                            .description(StringUtils.hasText(finding.getDescription()) ? finding.getDescription() : "Flagged as likely false positive").build());
         }
         return flags;
     }
