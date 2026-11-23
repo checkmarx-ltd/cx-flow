@@ -24,17 +24,65 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v6
         with:
           persist-credentials: false
+      - name: Set up JDK 17
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '17'
       - name: Download SCA Resolver
         run: |
           mkdir -p "$RUNNER_TEMP/scaresolver"
           wget -q https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-linux64.tar.gz -O "$RUNNER_TEMP/ScaResolver.tar.gz"
           tar -xzf "$RUNNER_TEMP/ScaResolver.tar.gz" -C "$RUNNER_TEMP/scaresolver"
           chmod +x "$RUNNER_TEMP/scaresolver/ScaResolver"
-      - name: Checkmarx One CLI Action
-        uses: checkmarx/ast-github-action@ef93013c95adc60160bc22060875e90800d3ecfc #v.2.3.19
-        with:
-          base_uri: ${{ secrets.AST_RND_SCANS_BASE_URI }}
-          cx_tenant: ${{ secrets.AST_RND_SCANS_TENANT }}
-          cx_client_id: ${{ secrets.AST_RND_SCANS_CLIENT_ID }}
-          cx_client_secret: ${{ secrets.AST_RND_SCANS_CLIENT_SECRET }}
-          additional_params: --tags sypher --sca-resolver "/github/runner_temp/scaresolver/ScaResolver" --threshold "sca-critical=1;sca-high=1;sca-medium=1;sca-low=1;sast-critical=1;sast-high=1;sast-medium=1;sast-low=1;iac-security-critical=1;iac-security-high=1;iac-security-medium=1;iac-security-low=1"
+      # SCA Resolver times out its Gradle probe while the wrapper downloads Gradle, then reports Gradle as unavailable.
+      - name: Warm up Gradle wrapper
+        run: ./gradlew --version
+      - name: Install Checkmarx One CLI
+        run: |
+          mkdir -p "$RUNNER_TEMP/cx"
+          wget -q https://github.com/Checkmarx/ast-cli/releases/download/2.3.19/ast-cli_2.3.19_linux_x64.tar.gz -O "$RUNNER_TEMP/cx.tar.gz"
+          tar -xzf "$RUNNER_TEMP/cx.tar.gz" -C "$RUNNER_TEMP/cx"
+          chmod +x "$RUNNER_TEMP/cx/cx"
+      - name: Checkmarx One Scan
+        env:
+          CX_BASE_URI: ${{ secrets.AST_RND_SCANS_BASE_URI }}
+          CX_TENANT: ${{ secrets.AST_RND_SCANS_TENANT }}
+          CX_CLIENT_ID: ${{ secrets.AST_RND_SCANS_CLIENT_ID }}
+          CX_CLIENT_SECRET: ${{ secrets.AST_RND_SCANS_CLIENT_SECRET }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PROJECT_NAME: ${{ github.repository }}
+          BRANCH: ${{ github.head_ref || github.ref }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          NAMESPACE: ${{ github.repository_owner }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          set +e
+          CX="$RUNNER_TEMP/cx/cx"
+          OUTPUT_FILE="$RUNNER_TEMP/cx-output.log"
+          "$CX" scan create --project-name "$PROJECT_NAME" -s . --branch "${BRANCH#refs/heads/}" --scan-info-format json --agent "Github Action" \
+            --tags sypher --sca-resolver "$RUNNER_TEMP/scaresolver/ScaResolver" \
+            --threshold "sca-critical=1;sca-high=1;sca-medium=1;sca-low=1;sast-critical=1;sast-high=1;sast-medium=1;sast-low=1;iac-security-critical=1;iac-security-high=1;iac-security-medium=1;iac-security-low=1" \
+            | tee -i "$OUTPUT_FILE"
+          exitCode=${PIPESTATUS[0]}
+          scanId=$(grep -oE '"ID":"[^"]+"' "$OUTPUT_FILE" | head -1 | cut -d'"' -f4)
+          if [ -n "$scanId" ] && [ -n "$PR_NUMBER" ]; then
+            "$CX" utils pr github --scan-id "$scanId" --namespace "$NAMESPACE" --repo-name "$REPO_NAME" --pr-number "$PR_NUMBER" --token "$GITHUB_TOKEN"
+          else
+            echo "PR decoration not created."
+          fi
+          if [ -n "$scanId" ]; then
+            "$CX" results show --scan-id "$scanId" --report-format markdown --output-path "$RUNNER_TEMP"
+            cat "$RUNNER_TEMP/cx_result.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$exitCode"
+      - name: Cancel Checkmarx One scan
+        if: cancelled()
+        env:
+          CX_BASE_URI: ${{ secrets.AST_RND_SCANS_BASE_URI }}
+          CX_TENANT: ${{ secrets.AST_RND_SCANS_TENANT }}
+          CX_CLIENT_ID: ${{ secrets.AST_RND_SCANS_CLIENT_ID }}
+          CX_CLIENT_SECRET: ${{ secrets.AST_RND_SCANS_CLIENT_SECRET }}
+        run: |
+          scanId=$(grep -oE '"ID":"[^"]+"' "$RUNNER_TEMP/cx-output.log" 2>/dev/null | head -1 | cut -d'"' -f4)
+          if [ -n "$scanId" ]; then "$RUNNER_TEMP/cx/cx" scan cancel --scan-id "$scanId"; fi
