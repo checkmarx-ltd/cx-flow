@@ -55,7 +55,7 @@ jobs:
           # SCA Resolver gives up on Gradle after ~60s, so download the Gradle wrapper distribution first.
           GRADLE_USER_HOME="$RUNNER_TEMP/gradle-home" ./gradlew --version
       - name: Checkmarx One CLI Action
-        uses: checkmarx/ast-github-action@7006afa846f6d23e3e9d351a001b9d8e59c3fb8c #v.2.3.19
+        uses: checkmarx/ast-github-action@58c998c5d78b3ecfa51e7cbde852d5565d5dea0b #v.2.3.19
         with:
           base_uri: ${{ secrets.AST_RND_SCANS_BASE_URI }}
           cx_tenant: ${{ secrets.AST_RND_SCANS_TENANT }}
