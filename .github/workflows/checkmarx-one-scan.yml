@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - feat/cx-one-scan # temporary, remove after the test
   schedule:
     - cron: '00 7 * * *' # Every day at 07:00
 
