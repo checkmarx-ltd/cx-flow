@@ -30,6 +30,30 @@ jobs:
           wget -q https://sca-downloads.s3.amazonaws.com/cli/latest/ScaResolver-linux64.tar.gz -O "$RUNNER_TEMP/ScaResolver.tar.gz"
           tar -xzf "$RUNNER_TEMP/ScaResolver.tar.gz" -C "$RUNNER_TEMP/scaresolver"
           chmod +x "$RUNNER_TEMP/scaresolver/ScaResolver"
+      - name: Set up JDK 17
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      # The action runs the resolver inside its own container, which has no libstdc++, Java or Gradle.
+      # $RUNNER_TEMP is mounted there as /github/runner_temp, so stage them there and launch the resolver through a wrapper.
+      - name: Prepare SCA Resolver dependencies
+        run: |
+          mkdir -p "$RUNNER_TEMP/scalibs" "$RUNNER_TEMP/gradle-home"
+          cp -L /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 "$RUNNER_TEMP/scalibs/"
+          cp -aL "$JAVA_HOME" "$RUNNER_TEMP/jdk"
+          cat > "$RUNNER_TEMP/scaresolver/run-resolver.sh" <<'EOF'
+          #!/bin/sh
+          D=/github/runner_temp
+          export LD_LIBRARY_PATH="$D/scalibs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          export JAVA_HOME="$D/jdk"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          export GRADLE_USER_HOME="$D/gradle-home"
+          exec "$D/scaresolver/ScaResolver" "$@"
+          EOF
+          chmod +x "$RUNNER_TEMP/scaresolver/run-resolver.sh"
+          # SCA Resolver gives up on Gradle after ~60s, so download the Gradle wrapper distribution first.
+          GRADLE_USER_HOME="$RUNNER_TEMP/gradle-home" ./gradlew --version
       - name: Checkmarx One CLI Action
         uses: checkmarx/ast-github-action@7006afa846f6d23e3e9d351a001b9d8e59c3fb8c #v.2.3.19
         with:
@@ -37,4 +61,4 @@ jobs:
           cx_tenant: ${{ secrets.AST_RND_SCANS_TENANT }}
           cx_client_id: ${{ secrets.AST_RND_SCANS_CLIENT_ID }}
           cx_client_secret: ${{ secrets.AST_RND_SCANS_CLIENT_SECRET }}
-          additional_params: --tags sypher --sca-resolver "/github/runner_temp/scaresolver/ScaResolver" --threshold "sca-critical=1;sca-high=1;sca-medium=1;sca-low=1;sast-critical=1;sast-high=1;sast-medium=1;sast-low=1;iac-security-critical=1;iac-security-high=1;iac-security-medium=1;iac-security-low=1"
+          additional_params: --tags sypher --sca-resolver "/github/runner_temp/scaresolver/run-resolver.sh" --threshold "sca-critical=1;sca-high=1;sca-medium=1;sca-low=1;sast-critical=1;sast-high=1;sast-medium=1;sast-low=1;iac-security-critical=1;iac-security-high=1;iac-security-medium=1;iac-security-low=1"
