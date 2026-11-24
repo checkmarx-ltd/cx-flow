@@ -65,7 +65,7 @@ configurations {
     all*.exclude group: 'commons-logging', module: 'commons-logging'
 }
 
-ext['tomcat.version'] = '11.0.27'
+ext['tomcat.version'] = '11.0.29'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.6.5'
 ext['logback.version'] = '1.6.5'
