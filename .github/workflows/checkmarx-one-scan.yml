@@ -40,7 +40,12 @@ jobs:
       - name: Prepare SCA Resolver dependencies
         run: |
           mkdir -p "$RUNNER_TEMP/scalibs" "$RUNNER_TEMP/gradle-home"
-          cp -L /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 "$RUNNER_TEMP/scalibs/"
+          # Stage libstdc++ and OpenSSL (the resolver needs both) together with their non-libc dependencies.
+          for lib in libstdc++.so.6 libgcc_s.so.1 libssl.so.3 libcrypto.so.3; do
+            src="/usr/lib/x86_64-linux-gnu/$lib"
+            cp -L "$src" "$RUNNER_TEMP/scalibs/"
+            ldd "$src" | awk '/=> \//{print $3}' | grep -vE '/(libc|libm|libdl|libpthread|librt|libresolv)\.so' | xargs -r cp -L -t "$RUNNER_TEMP/scalibs"
+          done
           cp -aL "$JAVA_HOME" "$RUNNER_TEMP/jdk"
           cat > "$RUNNER_TEMP/scaresolver/run-resolver.sh" <<'EOF'
           #!/bin/sh
