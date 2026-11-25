@@ -62,3 +62,10 @@ jobs:
           cx_client_id: ${{ secrets.AST_RND_SCANS_CLIENT_ID }}
           cx_client_secret: ${{ secrets.AST_RND_SCANS_CLIENT_SECRET }}
           additional_params: --tags sypher --sca-resolver "/github/runner_temp/scaresolver/run-resolver.sh" --threshold "sca-critical=1;sca-high=1;sca-medium=1;sca-low=1;sast-critical=1;sast-high=1;sast-medium=1;sast-low=1;iac-security-critical=1;iac-security-high=1;iac-security-medium=1;iac-security-low=1"
+      # TEMPORARY: print SCA Resolver's own log when the scan step fails. Remove once the resolver issue is fixed.
+      - name: SCA Resolver diagnostics
+        if: failure()
+        run: |
+          find "$GITHUB_WORKSPACE/logs" -type f 2>/dev/null | head -20
+          for f in $(find "$GITHUB_WORKSPACE/logs" -type f 2>/dev/null | head -5); do echo "=== $f"; tail -n 60 "$f"; done
+          free -m; df -h "$RUNNER_TEMP" | tail -1
