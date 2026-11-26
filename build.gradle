@@ -43,7 +43,9 @@ apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
 version = file('version.txt').text.trim()
-sourceCompatibility = 17
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+}
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.12.2'
 
@@ -55,17 +57,20 @@ repositories {
     }
 }
 
-configurations {
-    all*.exclude group: "org.slf4j", module: "slf4j-simple"
-    all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
-    all*.exclude module: 'cx-ws-fs-agent'
-    all*.exclude module: 'wss-agent-api'
+// configureEach (not `configurations { all*.exclude ... }`): on Gradle 9 `all` inside the
+// configurations block creates an empty configuration named "all", silently dropping these
+// excludes and the ext['...version'] overrides below.
+configurations.configureEach {
+    exclude group: "org.slf4j", module: "slf4j-simple"
+    exclude group: "org.slf4j", module: "slf4j-log4j12"
+    exclude module: 'cx-ws-fs-agent'
+    exclude module: 'wss-agent-api'
     // Replaced by spring-jcl (provided by spring-core). Having the real
     // commons-logging jar on the classpath triggers JCL discovery conflicts.
-    all*.exclude group: 'commons-logging', module: 'commons-logging'
+    exclude group: 'commons-logging', module: 'commons-logging'
 }
 
-ext['tomcat.version'] = '11.0.27'
+ext['tomcat.version'] = '11.0.29'
 ext['groovy.version'] = '4.0.15'
 ext['logback-classic.version'] = '1.6.5'
 ext['logback.version'] = '1.6.5'
@@ -75,6 +80,7 @@ ext['httpclient5.version'] = '5.6.4'
 ext['httpcore5.version'] = '5.4.3'
 ext['micrometer.version'] = '1.16.7'
 ext['hibernate-validator.version'] = '8.0.6.Final'
+ext['thymeleaf.version'] = '3.1.6.RELEASE' // CVE-2026-136410 (thymeleaf, thymeleaf-spring6)
 
 dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.78'
@@ -180,6 +186,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:${junitVersion}")
     testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation('org.objenesis:objenesis:3.6') // CVE-2026-116486; mockito-core 5.14.2 brings 3.3
 
     implementation("org.projectlombok:lombok:1.18.34")
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
@@ -241,10 +248,6 @@ dependencies {
 springBoot {
     mainClass = "${mainClassPath}"
     buildInfo()
-}
-
-configurations {
-    libsDirName = 'libs'
 }
 
 task componentTest(type: Test) {
