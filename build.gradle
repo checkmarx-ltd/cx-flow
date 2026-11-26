@@ -43,7 +43,9 @@ apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'com.checkmarx'
 version = file('version.txt').text.trim()
-sourceCompatibility = 17
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+}
 def cucumberVersion = '5.7.0'
 def junitVersion = '5.12.2'
 
@@ -241,10 +243,6 @@ dependencies {
 springBoot {
     mainClass = "${mainClassPath}"
     buildInfo()
-}
-
-configurations {
-    libsDirName = 'libs'
 }
 
 task componentTest(type: Test) {
