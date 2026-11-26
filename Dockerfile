@@ -1,4 +1,4 @@
-FROM alpine:3.21.7 AS java17
+FROM alpine:edge AS java17
 
 WORKDIR app
 RUN apk update && \
@@ -15,7 +15,7 @@ COPY build/libs/*.jar cx-flow.jar
 ENTRYPOINT ["java", "-Xms512m", "-Xmx2048m", "-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=web", "-jar", "cx-flow.jar"]
 EXPOSE 8080
 
-FROM reg.echohq.com/debian AS java17-debian
+FROM debian:11 AS java17-debian
 
 WORKDIR /app
 

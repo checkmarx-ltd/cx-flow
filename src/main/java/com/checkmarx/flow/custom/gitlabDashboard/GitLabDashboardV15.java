@@ -112,10 +112,11 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
 
 
     private Details getDetailsGitLabDashBoard(ScanResults.XIssue issue) {
-        Object resultsObj = issue.getAdditionalDetails().get("results");
+        Object resultsObj = issue.getAdditionalDetails() == null ? null : issue.getAdditionalDetails().get("results");
 
+        // GitLab schema requires non-empty flows, so omit "details" when there is nothing to show
         if (!(resultsObj instanceof List)) {
-            return buildEmptyDetails();
+            return null;
         }
 
         List<Map<String, Object>> results = (List<Map<String, Object>>) resultsObj;
@@ -132,8 +133,11 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
-        List<List<Item>> finalItems = Collections.singletonList(flattenedList);
-        return buildDetails(finalItems);
+        if (flattenedList.isEmpty()) {
+            return null;
+        }
+        // GitLab shows only the first code flow, so all paths go into one flow
+        return buildDetails(Collections.singletonList(flattenedList));
     }
 
 
@@ -149,7 +153,7 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
             return Collections.emptyList();
         }
 
-        Map<String, Item> flowItemMap = new HashMap<>();
+        Map<String, Item> flowItemMap = new LinkedHashMap<>();
 
         for (Map.Entry<String, Object> entry : result.entrySet()) {
             if (entry.getValue() instanceof Map) {
@@ -260,13 +264,6 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                 .build();
     }
 
-    /**
-     * Returns an empty Details object safely.
-     */
-    private Details buildEmptyDetails() {
-        return buildDetails(Collections.singletonList(Collections.emptyList()));
-    }
-
 
 
     private void getScaGitLabResultsDashboard(ScanRequest request, ScanResults results) throws MachinaException {
@@ -292,8 +289,8 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                                     StringUtils.capitalize(String.valueOf(finding.getSeverity()).toLowerCase())
                             ))
                             .solution(finding.getFixResolutionText())
-                            .identifiers(getScaIdentifiersGitLabDashBoard(results.getScaResults(),finding))
-                            .links(getLinksSCAGitlabDashboard(finding))
+                            .identifiers(getScaIdentifiersGitLabDashBoard(finding))
+                            .links(getLinksSCAGitlabDashboard(finding, results.getScaResults().getWebReportLink()))
                             .tracking(com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Tracking.builder()
                                     .lstItems(getItemsScaGitLabDashBoard(finding.getCveName()))
                                     .build())
@@ -342,11 +339,16 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
 
 
 
+    // SCA reports createdOn as 0001-01-01 when unset; GitLab rejects that, so use now.
+    private Date parseOrNow(String date) throws ParseException {
+        Date parsed = GITLAB_DATE_FORMAT.parse(date);
+        return parsed.before(new Date(0)) ? new Date() : parsed;
+    }
+
     private String formatGitlabDate(String date) {
         if (date == null) return null;
         try {
-            Date parsedDate = GITLAB_DATE_FORMAT.parse(date);
-            return GITLAB_DATE_FORMAT.format(parsedDate);
+            return GITLAB_DATE_FORMAT.format(parseOrNow(date));
         } catch (ParseException e) {
             log.error("Failed to parse date: {}", date, e);
             return null;
@@ -356,9 +358,8 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
     private String formatGitlabDate(String date, int minutes) {
         if (date == null) return null;
         try {
-            Date parsedDate = GITLAB_DATE_FORMAT.parse(date);
             Calendar cal = Calendar.getInstance();
-            cal.setTime(parsedDate);
+            cal.setTime(parseOrNow(date));
             cal.add(Calendar.MINUTE, -minutes);
             return GITLAB_DATE_FORMAT.format(cal.getTime());
         } catch (ParseException e) {
@@ -428,37 +429,31 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
                     Flag.builder()
                             .type(Flag.Type.valueOf("FLAGGED_AS_LIKELY_FALSE_POSITIVE"))
                             .origin("Cx-flow sast")
-                            .description(issue.getDescription()).build());
+                            // schema requires minLength 1
+                            .description(StringUtils.hasText(issue.getDescription()) ? issue.getDescription() : "Flagged as likely false positive").build());
         }
         return flags;
     }
 
     //SCA utils methods
-    private List<com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Identifier> getScaIdentifiersGitLabDashBoard(SCAResults results, Finding finding)  {
-        List<com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Identifier> identifiers = new ArrayList<>();
+    // Some advisory URLs (e.g. Apache mailing lists) contain raw < > which GitLab rejects as invalid URLs.
+    private static String safeUrl(String url) {
+        return url == null ? null : url.replace("<", "%3C").replace(">", "%3E").replace(" ", "%20");
+    }
 
+    private List<com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Identifier> getScaIdentifiersGitLabDashBoard(Finding finding)  {
+        List<com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Identifier> identifiers = new ArrayList<>();
+        String cve = finding.getCveName() != null ? finding.getCveName() : finding.getPackageId();
+
+        // GitLab dedups findings on the same package when ANY identifier matches, so every identifier here must be per-CVE.
         identifiers.add(
                 com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Identifier.builder()
-                        .type("checkmarx_finding")
-                        .name(CHECKMARX.concat("-").concat(finding.getPackageId()))
-                        .value(CHECKMARX.concat("-").concat(finding.getPackageId()))
-                        .url(results.getWebReportLink())
+                        .type(cve.startsWith("CVE-") ? "cve" : "checkmarx_vulnerability")
+                        .name(cve)
+                        .value(cve)
+                        .url(finding.getReferences().isEmpty() ? null : safeUrl(finding.getReferences().get(0)))
                         .build()
         );
-        if (!finding.getReferences().isEmpty()) {
-            for(String reference:finding.getReferences()){
-                identifiers.add(
-                        com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Identifier.builder()
-                                .type("cve")
-                                .name(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
-                                .value(finding.getCveName() != null ? finding.getCveName().concat("(").concat(reference).concat(")") : reference)
-                                .url(reference)
-                                .build()
-                );
-            }
-        }
-
-
         return identifiers;
     }
 
@@ -470,16 +465,19 @@ public class GitLabDashboardV15 implements GitLabDashboardStrategy {
 
         return Items;
     }
-    private List<com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Link> getLinksSCAGitlabDashboard(Finding refrences){
+    private List<com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Link> getLinksSCAGitlabDashboard(Finding refrences, String reportLink){
         List<com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Link> links = new ArrayList<>();
         refrences.getReferences().forEach((k) -> {
             links.add(
                     com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Link.builder()
                             .name(refrences.getCveName() != null ? refrences.getCveName().concat("(").concat(k).concat(")") : k)
-                            .url(k)
+                            .url(safeUrl(k))
                             .build());
 
         });
+        if (reportLink != null) {
+            links.add(com.checkmarx.flow.dto.gitlabdashboardv15.SCA.Link.builder().name("Checkmarx SCA report").url(reportLink).build());
+        }
         return links;
     }
 
